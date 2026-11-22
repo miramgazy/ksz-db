@@ -3,7 +3,7 @@ from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('administrator/', admin.site.urls),
 
     # API v1
     path('api/v1/auth/', include('apps.accounts.urls_auth')),
