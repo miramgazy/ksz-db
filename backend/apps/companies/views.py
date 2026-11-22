@@ -98,7 +98,7 @@ class CompanyViewSet(viewsets.ModelViewSet):
     )
     ordering_fields = (
         'place_name', 'city', 'status', 'updated_at', 'id', 'created_at',
-        'software_type', 'node_type', 'sort_number', 'helpdesk_its'
+        'software_type', 'node_type', 'sort_number', 'helpdesk_its', 'iiko_version'
     )
 
     def get_queryset(self):
@@ -159,6 +159,24 @@ class CompanyViewSet(viewsets.ModelViewSet):
             return qs.order_by('-place_name', '-id')
         elif ordering == 'city':
             return qs.order_by('city', 'place_name')
+        elif ordering in ('iiko_version', '-iiko_version'):
+            from django.db import connection
+            from django.db.models.expressions import RawSQL
+            if connection.vendor == 'postgresql':
+                # Semantic version array [9, 5, 8] for proper numerical comparison (e.g. 9.10 > 9.9)
+                version_arr = RawSQL(
+                    "CASE WHEN iiko_version ~ '^([0-9]+\\.)*[0-9]+$' THEN string_to_array(iiko_version, '.')::int[] ELSE NULL END",
+                    ()
+                )
+                if ordering == 'iiko_version':
+                    return qs.order_by(version_arr.asc(nulls_last=True), 'place_name', 'id')
+                else:
+                    return qs.order_by(version_arr.desc(nulls_last=True), 'place_name', 'id')
+            else:
+                if ordering == 'iiko_version':
+                    return qs.order_by(F('iiko_version').asc(nulls_last=True), 'place_name', 'id')
+                else:
+                    return qs.order_by(F('iiko_version').desc(nulls_last=True), 'place_name', 'id')
 
         return qs.order_by(ordering)
 
@@ -195,10 +213,16 @@ class CompanyViewSet(viewsets.ModelViewSet):
         if not licence_types:
             licence_types = list(Company.objects.exclude(licence_type='').values_list('licence_type', flat=True).distinct().order_by('licence_type'))
 
-        raw_versions = list(IikoDistribution.objects.values_list('iiko_version', flat=True).distinct())
-        if not raw_versions:
-            raw_versions = list(Company.objects.exclude(iiko_version='').values_list('iiko_version', flat=True).distinct())
-        iiko_versions = sorted(raw_versions, key=version_sort_key, reverse=True)
+        raw_versions = set()
+        for v in IikoDistribution.objects.values_list('iiko_version', flat=True):
+            cleaned = clean_iiko_version(v)
+            if cleaned:
+                raw_versions.add(cleaned)
+        for v in Company.objects.exclude(iiko_version='').values_list('iiko_version', flat=True):
+            cleaned = clean_iiko_version(v)
+            if cleaned:
+                raw_versions.add(cleaned)
+        iiko_versions = sorted(list(raw_versions), key=version_sort_key, reverse=True)
 
         iiko_rosta_values = list(Company.objects.exclude(iiko_rosta='').values_list('iiko_rosta', flat=True).distinct().order_by('iiko_rosta'))
 

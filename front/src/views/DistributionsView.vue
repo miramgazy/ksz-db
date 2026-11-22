@@ -145,7 +145,7 @@
           <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Версия iiko *</label>
           <InputText
             v-model="form.iiko_version"
-            placeholder="Например: 8.4.7 или 9.5.6-RMS"
+            placeholder="Например: 8.4.7 или 9.5.8"
             class="w-full font-mono text-sm"
           />
         </div>

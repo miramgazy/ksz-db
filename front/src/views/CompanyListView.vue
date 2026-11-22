@@ -255,6 +255,9 @@
           hoverableRows
           responsiveLayout="scroll"
           @row-click="onRowClick"
+          @sort="onSort"
+          :sortField="currentSortField"
+          :sortOrder="currentSortOrder"
         >
           <template #empty>
             <div class="text-center py-12 text-slate-400">
@@ -393,7 +396,7 @@
           </Column>
 
           <!-- License & Version / Distribution -->
-          <Column header="Лицензия / Версия" style="min-width: 180px; white-space: nowrap">
+          <Column field="iiko_version" header="Лицензия / Версия" :sortable="true" style="min-width: 180px; white-space: nowrap">
             <template #body="{ data }">
               <div class="flex items-center gap-1.5 text-xs whitespace-nowrap">
                 <span v-if="data.software_type !== 'ROSTA'" class="font-medium text-slate-700">
@@ -661,6 +664,8 @@ const selectedBusinessType = ref(null)
 const selectedOrdering = ref('chain_smart')
 const orderingOptions = [
   { label: 'По сетям (новые сначала)', value: 'chain_smart' },
+  { label: 'По версии iiko (новые сначала)', value: '-iiko_version' },
+  { label: 'По версии iiko (старые сначала)', value: 'iiko_version' },
   { label: 'Сначала новые (по дате)', value: '-created_at' },
   { label: 'По названию (А-Я)', value: 'place_name' },
   { label: 'По названию (Я-А)', value: '-place_name' },
@@ -759,6 +764,31 @@ const setSoftwareType = (type) => {
   selectedSoftwareType.value = type
   currentPage.value = 1
   loadCompanies()
+}
+
+const currentSortField = computed(() => {
+  if (!selectedOrdering.value || selectedOrdering.value === 'chain_smart') return null
+  if (selectedOrdering.value.startsWith('-')) {
+    return selectedOrdering.value.slice(1)
+  }
+  return selectedOrdering.value
+})
+
+const currentSortOrder = computed(() => {
+  if (!selectedOrdering.value || selectedOrdering.value === 'chain_smart') return null
+  return selectedOrdering.value.startsWith('-') ? -1 : 1
+})
+
+const onSort = (event) => {
+  if (event.sortField) {
+    if (event.sortOrder === -1) {
+      selectedOrdering.value = `-${event.sortField}`
+    } else {
+      selectedOrdering.value = event.sortField
+    }
+    currentPage.value = 1
+    loadCompanies()
+  }
 }
 
 const onFilterChange = () => {

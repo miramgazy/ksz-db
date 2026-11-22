@@ -3,12 +3,15 @@ import re
 def clean_iiko_version(v: str) -> str:
     """
     Cleans up Excel-mangled iiko versions back to human-readable semantic versions.
+    Strips redundant node-type suffixes (-RMS, -Chain, etc.).
     For example:
         '09.05.2007' -> '9.5.7'
         '07.02.2008' -> '7.2.8'
         '08.06.2009' -> '8.6.9'
-        '09.05.2007-RMS' -> '9.5.7-RMS'
-        '09.05.2007-Chain' -> '9.5.7-Chain'
+        '09.05.2007-RMS' -> '9.5.7'
+        '09.05.2007-Chain' -> '9.5.7'
+        '9.5.7-RMS' -> '9.5.7'
+        '9.5.8 - Chain' -> '9.5.8'
         '9.5.7' -> '9.5.7'
         '8.0.6' -> '8.0.6'
     """
@@ -22,7 +25,9 @@ def clean_iiko_version(v: str) -> str:
         year = int(m.group(3))
         patch = year - 2000 if year >= 2000 else year
         extra = m.group(4) or ''
-        return f"{major}.{minor}.{patch}{extra}"
+        v = f"{major}.{minor}.{patch}{extra}"
+    v = re.sub(r'[\s\-_/]+(RMS|Chain|Chains|РМС|Чейн)$', '', v, flags=re.IGNORECASE).strip()
+    v = v.strip(' -_/')
     return v
 
 
@@ -33,7 +38,8 @@ def version_sort_key(v: str):
     """
     if not v:
         return ([], '')
-    parts = re.split(r'[-_\s]', str(v).strip())
+    v_clean = clean_iiko_version(v)
+    parts = re.split(r'[-_\s]', str(v_clean).strip())
     nums = []
     for p in parts[0].split('.'):
         try:
