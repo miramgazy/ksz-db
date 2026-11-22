@@ -1,0 +1,251 @@
+from rest_framework import serializers
+from .models import Company, AnydeskStation, IikoDistribution, City, BusinessType, LicenceType, AnydeskVersion, ServiceType, CompanyService
+from apps.common.crypto import encrypt_password, decrypt_password
+from .utils import clean_iiko_version, get_distribution_link
+
+class CitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = City
+        fields = ('id', 'name', 'created_at')
+
+
+class BusinessTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BusinessType
+        fields = ('id', 'name', 'created_at')
+
+
+class LicenceTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LicenceType
+        fields = ('id', 'name', 'created_at')
+
+
+class AnydeskStationSerializer(serializers.ModelSerializer):
+    company_place_name = serializers.CharField(source='company.place_name', read_only=True)
+    company_city = serializers.CharField(source='company.city', read_only=True)
+    company_software_type = serializers.CharField(source='company.software_type', read_only=True, default='IIKO')
+
+    class Meta:
+        model = AnydeskStation
+        fields = (
+            'id', 'company', 'company_place_name', 'company_city', 'company_software_type',
+            'description', 'anydesk_id', 'any_pass',
+            'created_at', 'updated_at'
+        )
+
+
+class ChainOptionSerializer(serializers.ModelSerializer):
+    branches_count = serializers.IntegerField(source='branches.count', read_only=True)
+
+    class Meta:
+        model = Company
+        fields = ('id', 'place_name', 'city', 'branches_count')
+
+
+class ServiceTypeSerializer(serializers.ModelSerializer):
+    subscriptions_count = serializers.IntegerField(source='subscriptions.count', read_only=True)
+
+    class Meta:
+        model = ServiceType
+        fields = ('id', 'name', 'code', 'is_its', 'description', 'subscriptions_count', 'created_at')
+
+
+class CompanyServiceSerializer(serializers.ModelSerializer):
+    company_place_name = serializers.CharField(source='company.place_name', read_only=True)
+    company_city = serializers.CharField(source='company.city', read_only=True)
+    company_node_type = serializers.CharField(source='company.node_type', read_only=True)
+    company_branches_count = serializers.IntegerField(source='company.branches.count', read_only=True)
+    company_parent_chain_name = serializers.CharField(source='company.parent_chain.place_name', read_only=True, default=None)
+    service_code = serializers.CharField(source='service.code', read_only=True)
+    is_its = serializers.BooleanField(source='service.is_its', read_only=True)
+    days_remaining = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CompanyService
+        fields = (
+            'id', 'company', 'company_place_name', 'company_city', 'company_node_type',
+            'company_branches_count', 'company_parent_chain_name',
+            'service', 'service_name', 'service_code', 'is_its',
+            'period_type', 'pricing_type', 'cost_per_rms', 'total_cost',
+            'start_date', 'expires_at', 'days_remaining',
+            'status', 'comment', 'created_at', 'updated_at'
+        )
+
+    def get_days_remaining(self, obj):
+        if not obj.expires_at:
+            return None
+        from datetime import date
+        today = date.today()
+        return (obj.expires_at - today).days
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        request = self.context.get('request')
+        if request and hasattr(request, 'user') and request.user.is_authenticated:
+            role = getattr(request.user, 'role', '')
+            if role not in ['SUPERADMIN', 'MANAGER']:
+                ret['cost_per_rms'] = None
+                ret['total_cost'] = None
+        return ret
+
+
+class CompanyListSerializer(serializers.ModelSerializer):
+    stations_count = serializers.IntegerField(source='anydesk_stations.count', read_only=True)
+    branches_count = serializers.IntegerField(source='branches.count', read_only=True)
+    parent_chain_name = serializers.CharField(source='parent_chain.place_name', read_only=True, default=None)
+    system_admin_password = serializers.SerializerMethodField()
+    distribution_link = serializers.SerializerMethodField()
+    its_days_remaining = serializers.SerializerMethodField()
+    updated_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Company
+        fields = (
+            'id', 'software_type', 'node_type', 'parent_chain', 'parent_chain_name',
+            'branches_count', 'place_name', 'company_name', 'cabinet_name',
+            'crm_id', 'uid', 'system_admin_name', 'system_admin_password',
+            'business_type', 'licence_type', 'iiko_version',
+            'server_name', 'port_number', 'city', 'status',
+            'iiko_rosta', 'sort_number', 'no_ip', 'helpdesk_its', 'its_expires_at', 'its_days_remaining', 'its_cost', 'iiko_web_address',
+            'stations_count', 'distribution_link', 'created_at', 'updated_at', 'updated_by_name'
+        )
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        request = self.context.get('request')
+        if request and hasattr(request, 'user') and request.user.is_authenticated:
+            role = getattr(request.user, 'role', '')
+            if role not in ['SUPERADMIN', 'MANAGER']:
+                ret['its_cost'] = None
+        return ret
+
+    def get_system_admin_password(self, obj):
+        return obj.get_password()
+
+    def get_distribution_link(self, obj):
+        return get_distribution_link(obj.iiko_version, obj.node_type)
+
+    def get_its_days_remaining(self, obj):
+        if not obj.its_expires_at:
+            return None
+        from datetime import date
+        today = date.today()
+        return (obj.its_expires_at - today).days
+
+    def get_updated_by_name(self, obj):
+        if not obj.updated_by:
+            return None
+        return obj.updated_by.full_name or obj.updated_by.username
+
+
+class CompanyDetailSerializer(serializers.ModelSerializer):
+    anydesk_stations = AnydeskStationSerializer(many=True, read_only=True)
+    company_services = CompanyServiceSerializer(many=True, read_only=True)
+    branches_count = serializers.IntegerField(source='branches.count', read_only=True)
+    parent_chain_name = serializers.CharField(source='parent_chain.place_name', read_only=True, default=None)
+    system_admin_password = serializers.CharField(required=False, allow_blank=True, write_only=False)
+    distribution_link = serializers.SerializerMethodField()
+    its_days_remaining = serializers.SerializerMethodField()
+    updated_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Company
+        fields = (
+            'id', 'software_type', 'node_type', 'parent_chain', 'parent_chain_name',
+            'branches_count', 'place_name', 'company_name', 'cabinet_name',
+            'crm_id', 'uid', 'system_admin_name', 'system_admin_password',
+            'business_type', 'licence_type', 'iiko_version',
+            'server_name', 'port_number', 'image_link', 'no_ip',
+            'iiko_rosta', 'sort_number', 'helpdesk_its', 'its_expires_at', 'its_days_remaining', 'its_cost', 'city',
+            'status', 'iiko_web_address', 'anydesk_stations', 'company_services',
+            'distribution_link', 'created_at', 'updated_at', 'updated_by_name'
+        )
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['system_admin_password'] = instance.get_password()
+        request = self.context.get('request')
+        if request and hasattr(request, 'user') and request.user.is_authenticated:
+            role = getattr(request.user, 'role', '')
+            if role not in ['SUPERADMIN', 'MANAGER']:
+                ret['its_cost'] = None
+        return ret
+
+    def get_distribution_link(self, obj):
+        return get_distribution_link(obj.iiko_version, obj.node_type)
+
+    def get_its_days_remaining(self, obj):
+        if not obj.its_expires_at:
+            return None
+        from datetime import date
+        today = date.today()
+        return (obj.its_expires_at - today).days
+
+    def get_updated_by_name(self, obj):
+        if not obj.updated_by:
+            return None
+        return obj.updated_by.full_name or obj.updated_by.username
+
+    def create(self, validated_data):
+        password = validated_data.pop('system_admin_password', None)
+        # If node_type is CHAIN, parent_chain should be None
+        if validated_data.get('node_type') == Company.NodeType.CHAIN:
+            validated_data['parent_chain'] = None
+
+        company = super().create(validated_data)
+        if company.node_type == Company.NodeType.CHAIN and not company.sort_number:
+            company.sort_number = company.id
+            company.save(update_fields=['sort_number'])
+
+        if password is not None:
+            company.set_password(password)
+            company.save(update_fields=['system_admin_password_enc'])
+
+        # Ensure city, business_type, licence_type exist in directory tables
+        if company.city:
+            City.objects.get_or_create(name=company.city.strip())
+        if company.business_type:
+            BusinessType.objects.get_or_create(name=company.business_type.strip())
+        if company.licence_type:
+            LicenceType.objects.get_or_create(name=company.licence_type.strip())
+
+        return company
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('system_admin_password', None)
+        if validated_data.get('node_type') == Company.NodeType.CHAIN:
+            validated_data['parent_chain'] = None
+
+        company = super().update(instance, validated_data)
+        if password is not None:
+            company.set_password(password)
+            company.save(update_fields=['system_admin_password_enc'])
+
+        # Ensure city, business_type, licence_type exist in directory tables
+        if company.city:
+            City.objects.get_or_create(name=company.city.strip())
+        if company.business_type:
+            BusinessType.objects.get_or_create(name=company.business_type.strip())
+        if company.licence_type:
+            LicenceType.objects.get_or_create(name=company.licence_type.strip())
+
+        return company
+
+    def validate_iiko_version(self, value):
+        return clean_iiko_version(value)
+
+
+class IikoDistributionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IikoDistribution
+        fields = ('id', 'iiko_version', 'type', 'link_ya', 'created_at')
+
+    def validate_iiko_version(self, value):
+        return clean_iiko_version(value)
+
+
+class AnydeskVersionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AnydeskVersion
+        fields = ('id', 'name', 'exe_path', 'is_sandbox', 'sandbox_params', 'is_default', 'order', 'created_at')

@@ -1,0 +1,11 @@
+﻿id;VersionName;ExePath;IsSandbox;SandboxParams
+1;Main Anydesk;C:\Program Files (x86)\AnyDesk\AnyDesk.exe;ЛОЖЬ;
+2;Miram - 1;C:\Общая папка\Documents\AnyDesk-5.4.2\AnyDesk-5.4.2.exe;ИСТИНА;/box:AnyDesk_M1
+3;Miram - 2;C:\Общая папка\Documents\AnyDesk-5.4.2\AnyDesk-5.4.2.exe;ИСТИНА;/box:AnyDesk_M2
+4;Miram - 3;C:\Общая папка\Documents\AnyDesk-5.4.2\AnyDesk-5.4.2.exe;ИСТИНА;/box:AnyDesk_M3
+8;Nurgisa - 1;C:\Общая папка\Documents\AnyDesk-5.4.2\AnyDesk-5.4.2.exe;ИСТИНА;/box:AnyDesk_N21
+9;Nurgisa - 2;C:\Общая папка\Documents\AnyDesk-5.4.2\AnyDesk-5.4.2.exe;ИСТИНА;/box:AnyDesk_N22
+10;Nurgisa - 3;C:\Общая папка\Documents\AnyDesk-5.4.2\AnyDesk-5.4.2.exe;ИСТИНА;/box:AnyDesk_N23
+11;B11;C:\Общая папка\Documents\B11\AnyDesk-5.4.2.exe;ИСТИНА;/box:AnyDesk_B11
+12;B12;C:\Общая папка\Documents\AnyDesk-5.4.2\AnyDesk-5.4.2.exe;ИСТИНА;/box:AnyDesk_b12
+13;B13;C:\Общая папка\Documents\AnyDesk-5.4.2\AnyDesk-5.4.2.exe;ИСТИНА;/box:AnyDesk_b13
