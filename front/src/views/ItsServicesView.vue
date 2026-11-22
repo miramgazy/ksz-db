@@ -862,6 +862,7 @@
           </label>
         </div>
       </div>
+    </div>
 
       <template #footer>
         <div class="flex justify-end gap-2">
