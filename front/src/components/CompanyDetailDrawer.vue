@@ -1148,18 +1148,33 @@ const handleLaunchBackoffice = async () => {
 
 const handleInsertClearbat = async () => {
   const c = company.value
-  let plainPass = c.system_admin_password || ''
+  if (!c.server_name) {
+    toast.add({
+      severity: 'warn',
+      summary: 'ClearBat',
+      detail: 'Укажите адрес сервера (IP/домен) заведения перед добавлением в ClearBat',
+      life: 3500,
+    })
+    return
+  }
+
+  let clearbatPass = ''
   try {
     const p = await companiesApi.getClearbatParams(c.id)
-    if (p.data && p.data.password) plainPass = p.data.password
+    if (p.data && p.data.clearbat_password) {
+      clearbatPass = p.data.clearbat_password
+    } else if (p.data && p.data.password) {
+      clearbatPass = btoa(unescape(encodeURIComponent(p.data.password)))
+    }
   } catch (e) {}
 
   const res = await companionStore.insertClearbat({
+    company_id: c.id,
     name: c.place_name,
     server: c.server_name,
     port: c.port_number || '443',
     login: c.system_admin_name || 'iikoadm',
-    password: plainPass,
+    password: clearbatPass,
   })
 
   toast.add({

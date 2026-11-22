@@ -168,6 +168,24 @@ def create_tray_image():
     return image
 
 
+def ensure_clearbat_base64_password(pwd: str) -> str:
+    """
+    Гарантирует, что пароль для таблицы Entities в базе ClearBat закодирован в Base64.
+    ClearBat SQLite таблица Entities принимает ТОЛЬКО пароли в Base64 (как в MS Access Form_Company_details).
+    """
+    if not pwd:
+        return ''
+    raw = pwd.strip()
+    try:
+        decoded_bytes = base64.b64decode(raw.encode('ascii'), validate=True)
+        if base64.b64encode(decoded_bytes).decode('ascii') == raw:
+            decoded_bytes.decode('utf-8')
+            return raw
+    except Exception:
+        pass
+    return base64.b64encode(pwd.encode('utf-8')).decode('ascii')
+
+
 class AgentApp:
     def __init__(self, root):
         self.root = root
@@ -707,7 +725,10 @@ class AgentApp:
         ip = payload.get('server', payload.get('ip', '')).strip()
         port = str(payload.get('port', '443')).strip()
         login = payload.get('login', 'iikoadm').strip()
-        password = payload.get('password', '').strip()
+        raw_password = payload.get('password', '').strip()
+
+        # База ClearBat принимает только зашифрованный (Base64) пароль (как в Access Form_Company_details)
+        password = ensure_clearbat_base64_password(raw_password)
 
         settings = self.config['SETTINGS'] if 'SETTINGS' in self.config else {}
         db_path = settings.get('clearbat_db_path', get_default_clearbat_db())
@@ -726,10 +747,23 @@ class AgentApp:
             max_rev = row[0] if (row and row[0] is not None) else 0
             new_rev = max_rev + 1
 
-            cursor.execute("""
-                INSERT INTO Entities (name, type, folder, ip, port, login, password, deleted, revision)
-                VALUES (?, 'iikoOffice', NULL, ?, ?, ?, ?, 'False', ?);
-            """, (name, ip, port, login, password, new_rev))
+            # Проверяем, существует ли уже такая запись в ClearBat (по имени и не удаленная)
+            cursor.execute("SELECT id FROM Entities WHERE name = ? AND (deleted = 'False' OR deleted = 0);", (name,))
+            existing = cursor.fetchone()
+
+            if existing:
+                cursor.execute("""
+                    UPDATE Entities
+                    SET type = 'iikoOffice', ip = ?, port = ?, login = ?, password = ?, deleted = 'False', revision = ?
+                    WHERE id = ?;
+                """, (ip, port, login, password, new_rev, existing[0]))
+                action_text = f"Заведение '{name}' успешно обновлено в базе ClearBat (ревизия {new_rev})!"
+            else:
+                cursor.execute("""
+                    INSERT INTO Entities (name, type, folder, ip, port, login, password, deleted, revision)
+                    VALUES (?, 'iikoOffice', NULL, ?, ?, ?, ?, 'False', ?);
+                """, (name, ip, port, login, password, new_rev))
+                action_text = f"Заведение '{name}' успешно добавлено в базу ClearBat (ревизия {new_rev})!"
 
             conn.commit()
             conn.close()
@@ -737,10 +771,10 @@ class AgentApp:
             return {
                 "success": True,
                 "revision": new_rev,
-                "message": f"Заведение '{name}' успешно добавлено в базу ClearBat!"
+                "message": action_text
             }
         except Exception as e:
-            return {"success": False, "message": f"Ошибка записи в SQLite базу: {str(e)}"}
+            return {"success": False, "message": f"Ошибка записи в SQLite базу ClearBat: {str(e)}"}
 
 
 def main():

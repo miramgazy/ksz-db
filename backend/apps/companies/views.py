@@ -258,12 +258,16 @@ class CompanyViewSet(viewsets.ModelViewSet):
     def clearbat_params(self, request, pk=None):
         """
         Calculates and returns pre-encoded parameters for ClearBat protocol and helper launch.
+        ClearBat SQLite database (Entities table) strictly requires passwords to be Base64-encoded.
         """
         company = self.get_object()
         server = company.server_name or ''
         port = company.port_number or '443'
         login = company.system_admin_name or 'iikoadm'
         password = company.get_password() or ''
+
+        # Base64 encrypted/encoded password for ClearBat Entities SQLite
+        clearbat_password = base64.b64encode(password.encode('utf-8')).decode('ascii') if password else ''
 
         # V2 parameter format from MS Access: ?type=iiko?url=host:port?login=user?password=pass
         raw_params = f"?type=iiko?url={server}:{port}?login={login}?password={password}"
@@ -278,6 +282,7 @@ class CompanyViewSet(viewsets.ModelViewSet):
             'port': port,
             'login': login,
             'password': password,
+            'clearbat_password': clearbat_password,
             'raw_params': raw_params,
             'base64_params': final_base64,
             'clearbat_url': full_url,

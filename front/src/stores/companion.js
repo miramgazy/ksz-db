@@ -98,7 +98,7 @@ export const useCompanionStore = defineStore('companion', {
       return { success: false, message: 'Не удалось запустить обновление лицензии' }
     },
 
-    async insertClearbat({ name, server, port, login, password }) {
+    async insertClearbat(payload) {
       await this.checkStatus()
       if (!this.isOnline) {
         return {
@@ -108,7 +108,7 @@ export const useCompanionStore = defineStore('companion', {
       }
 
       try {
-        const res = await companionApi.insertClearbat({ name, server, port, login, password })
+        const res = await companionApi.insertClearbat(payload)
         return { success: true, message: res.data.message, revision: res.data.revision }
       } catch (err) {
         const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Ошибка записи в ClearBat'

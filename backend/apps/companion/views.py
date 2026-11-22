@@ -1,3 +1,4 @@
+import base64
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -10,6 +11,24 @@ from .services import (
     send_task_and_wait,
     send_task_async,
 )
+
+
+def ensure_clearbat_base64_password(pwd: str) -> str:
+    """
+    ClearBat SQLite database (Entities table) strictly requires passwords
+    to be encoded in Base64 (as verified in MS Access Form_Company_details).
+    """
+    if not pwd:
+        return ''
+    raw = pwd.strip()
+    try:
+        decoded_bytes = base64.b64decode(raw.encode('ascii'), validate=True)
+        if base64.b64encode(decoded_bytes).decode('ascii') == raw:
+            decoded_bytes.decode('utf-8')
+            return raw
+    except Exception:
+        pass
+    return base64.b64encode(pwd.encode('utf-8')).decode('ascii')
 
 class CompanionStatusView(APIView):
     permission_classes = [IsAuthenticated]
@@ -49,7 +68,26 @@ class CompanionInsertClearbatView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        res = send_task_and_wait(request.user.id, "insert_clearbat", request.data)
+        data = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
+        company_id = data.get('company_id')
+        if company_id:
+            try:
+                from apps.companies.models import Company
+                comp = Company.objects.get(id=company_id)
+                data['name'] = comp.place_name
+                data['server'] = comp.server_name or ''
+                data['port'] = comp.port_number or '443'
+                data['login'] = comp.system_admin_name or 'iikoadm'
+                plain_pass = comp.get_password() or ''
+                data['password'] = base64.b64encode(plain_pass.encode('utf-8')).decode('ascii') if plain_pass else ''
+            except Exception:
+                pass
+        else:
+            pwd = data.get('password', '')
+            if pwd:
+                data['password'] = ensure_clearbat_base64_password(pwd)
+
+        res = send_task_and_wait(request.user.id, "insert_clearbat", data)
         http_status = status.HTTP_200_OK if res.get("success") else status.HTTP_400_BAD_REQUEST
         return Response(res, status=http_status)
 
