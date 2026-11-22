@@ -424,6 +424,18 @@
                   title="Редактировать услугу"
                 />
 
+                <!-- Duplicate Button -->
+                <Button
+                  v-if="authStore.canEdit"
+                  icon="pi pi-copy"
+                  size="small"
+                  severity="info"
+                  text
+                  rounded
+                  @click="duplicateService(data)"
+                  title="Клонировать услугу для другой компании"
+                />
+
                 <!-- Delete Button -->
                 <Button
                   v-if="authStore.canEdit"
@@ -556,33 +568,44 @@
             placeholder="Выберите компанию"
             filter
             class="w-full text-xs"
-            :disabled="!!editingServiceId"
             @change="onCompanySelect"
           >
             <template #option="{ option }">
               <div class="flex justify-between items-center w-full">
                 <span class="font-semibold">{{ option.place_name }}</span>
                 <span class="text-xs text-slate-400 font-mono">
-                  {{ option.city || '' }}
-                  {{ option.node_type === 'CHAIN' ? `(Сеть: ${option.branches_count || 0} филиалов)` : '' }}
+                  {{ option.city ? `${option.city} • ` : '' }}
+                  {{ option.node_type === 'CHAIN' ? `(Сеть: ${option.branches_count || 0} филиалов)` : (option.parent_chain_name ? `(Филиал: ${option.parent_chain_name})` : '(Точка RMS)') }}
                 </span>
               </div>
             </template>
           </Select>
         </div>
 
-        <!-- Service Catalog Selector -->
-        <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Вид услуги *</label>
-          <Select
-            v-model="serviceForm.service"
-            :options="serviceTypesList"
-            optionLabel="name"
-            optionValue="id"
-            placeholder="Выберите услугу из каталога"
-            class="w-full text-xs"
-            @change="onServiceTypeSelect"
-          />
+        <!-- Service Catalog Selector + Custom Name -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Вид услуги (Каталог) *</label>
+            <Select
+              v-model="serviceForm.service"
+              :options="serviceTypesList"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Выберите услугу из каталога"
+              class="w-full text-xs"
+              @change="onServiceTypeSelect"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">
+              Название тарифа / услуги
+            </label>
+            <InputText
+              v-model="serviceForm.service_name"
+              placeholder="Например: ИТС (Стандарт), VIP"
+              class="w-full text-xs"
+            />
+          </div>
         </div>
 
         <!-- Period Type -->
@@ -1147,6 +1170,25 @@ const openEditService = (sub) => {
     start_date: sub.start_date || '',
     expires_at: sub.expires_at,
     status: sub.status,
+    comment: sub.comment || '',
+  }
+  showServiceModal.value = true
+}
+
+const duplicateService = (sub) => {
+  editingServiceId.value = null
+  serviceForm.value = {
+    company: null,
+    service: sub.service,
+    service_name: sub.service_name || '',
+    period_type: sub.period_type || 'MONTHLY',
+    pricing_type: sub.pricing_type || 'MANUAL',
+    cost_per_rms: Number(sub.cost_per_rms) || 0,
+    quantity: 1,
+    total_cost: Number(sub.total_cost) || 0,
+    start_date: sub.start_date || new Date().toISOString().split('T')[0],
+    expires_at: sub.expires_at || '2026-12-31',
+    status: true,
     comment: sub.comment || '',
   }
   showServiceModal.value = true

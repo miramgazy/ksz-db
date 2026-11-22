@@ -295,6 +295,15 @@ class CompanyService(models.Model):
         return self.total_cost
 
     def save(self, *args, **kwargs):
+        old_company_id = None
+        if self.pk:
+            try:
+                old_inst = CompanyService.objects.only('company_id').get(pk=self.pk)
+                if old_inst.company_id != self.company_id:
+                    old_company_id = old_inst.company_id
+            except CompanyService.DoesNotExist:
+                pass
+
         if not self.service_name and self.service_id:
             self.service_name = self.service.name
         if self.pricing_type in [self.PricingType.PER_RMS, self.PricingType.PER_FRONT] and self.cost_per_rms > 0:
@@ -315,4 +324,34 @@ class CompanyService(models.Model):
                         helpdesk_its='Да',
                         its_expires_at=self.expires_at
                     )
+            else:
+                has_active = CompanyService.objects.filter(company_id=self.company_id, service__is_its=True, status=True).exclude(pk=self.pk).exists()
+                if not has_active:
+                    Company.objects.filter(id=self.company_id).update(
+                        helpdesk_its='Нет',
+                        its_expires_at=None,
+                        its_cost=None
+                    )
+
+            if old_company_id:
+                has_active_old = CompanyService.objects.filter(company_id=old_company_id, service__is_its=True, status=True).exists()
+                if not has_active_old:
+                    Company.objects.filter(id=old_company_id).update(
+                        helpdesk_its='Нет',
+                        its_expires_at=None,
+                        its_cost=None
+                    )
+
+    def delete(self, *args, **kwargs):
+        cid = self.company_id
+        is_its = bool(self.service and self.service.is_its)
+        super().delete(*args, **kwargs)
+        if is_its:
+            has_other = CompanyService.objects.filter(company_id=cid, service__is_its=True, status=True).exists()
+            if not has_other:
+                Company.objects.filter(id=cid).update(
+                    helpdesk_its='Нет',
+                    its_expires_at=None,
+                    its_cost=None
+                )
 
