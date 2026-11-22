@@ -53,6 +53,9 @@ staticfiles/
 ksz_helper.ini
 companion/ksz_helper.ini
 companion/*.ini
+*.spec
+companion/build/
+companion/dist/
 
 # Local data & agent workflows
 .agent/
