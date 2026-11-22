@@ -756,7 +756,7 @@
                     {{ srv.service_name || 'Услуга' }}
                   </div>
                   <div class="text-[11px] text-slate-500">
-                    {{ getPeriodLabel(srv.period_type) }} • {{ srv.pricing_type === 'PER_RMS' ? 'По точкам RMS' : 'Фиксированный тариф' }}
+                    {{ getPeriodLabel(srv.period_type) }} • {{ srv.pricing_type === 'PER_RMS' ? `По точкам RMS (${srv.quantity || 1} шт.)` : (srv.pricing_type === 'PER_FRONT' ? `По кассам Front (${srv.quantity || 1} шт.)` : 'Фиксированный тариф') }}
                   </div>
                 </div>
               </div>

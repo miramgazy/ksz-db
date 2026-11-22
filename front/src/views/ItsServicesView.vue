@@ -344,7 +344,10 @@
                 </div>
                 <div class="text-[11px] text-slate-500 mt-0.5">
                   <span v-if="data.pricing_type === 'PER_RMS'" class="text-indigo-600 font-medium">
-                    За RMS ({{ formatCurrency(data.cost_per_rms) }} × {{ data.company_node_type === 'CHAIN' ? Math.max(data.company_branches_count, 1) : 1 }} точ.)
+                    За RMS ({{ formatCurrency(data.cost_per_rms) }} × {{ data.quantity || (data.company_node_type === 'CHAIN' ? Math.max(data.company_branches_count, 1) : 1) }} точ.)
+                  </span>
+                  <span v-else-if="data.pricing_type === 'PER_FRONT'" class="text-emerald-700 font-medium">
+                    За Front ({{ formatCurrency(data.cost_per_rms) }} × {{ data.quantity || data.company_stations_count || 1 }} касс)
                   </span>
                   <span v-else class="text-slate-500">
                     Фиксированная сумма
@@ -594,7 +597,7 @@
           />
         </div>
 
-        <!-- Pricing Type Selector (Manual vs Per RMS) -->
+        <!-- Pricing Type Selector (Manual vs Per RMS vs Per Front) -->
         <div>
           <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Способ расчёта стоимости</label>
           <Select
@@ -603,29 +606,67 @@
             optionLabel="label"
             optionValue="value"
             class="w-full text-xs"
-            @change="recalculateCost"
+            @change="onPricingTypeChange"
           />
         </div>
 
-        <!-- Price Input Fields -->
-        <div v-if="serviceForm.pricing_type === 'PER_RMS'" class="p-3 bg-indigo-50/70 border border-indigo-200 rounded-xl flex flex-col gap-2">
+        <!-- Price Input Fields for PER_RMS or PER_FRONT -->
+        <div v-if="serviceForm.pricing_type === 'PER_RMS' || serviceForm.pricing_type === 'PER_FRONT'" class="p-3.5 bg-indigo-50/70 border border-indigo-200 rounded-xl flex flex-col gap-3">
           <div class="flex justify-between items-center text-xs">
-            <span class="text-indigo-900 font-semibold">Активных точек (RMS) в сети:</span>
-            <span class="font-bold font-mono text-indigo-950">{{ selectedCompanyRmsCount }} точ.</span>
+            <span class="text-indigo-900 font-semibold">
+              {{ serviceForm.pricing_type === 'PER_RMS' ? 'Точек (RMS) в базе данных:' : 'Касс (Front) в базе данных:' }}
+            </span>
+            <div class="flex items-center gap-1.5">
+              <span class="font-bold font-mono text-indigo-950">
+                {{ serviceForm.pricing_type === 'PER_RMS' ? getDatabaseRmsCount(serviceForm.company) : getDatabaseFrontCount(serviceForm.company) }}
+                {{ serviceForm.pricing_type === 'PER_RMS' ? 'точ.' : 'касс' }}
+              </span>
+              <button
+                type="button"
+                class="text-[10px] text-indigo-600 hover:text-indigo-800 underline font-medium cursor-pointer"
+                @click="serviceForm.quantity = (serviceForm.pricing_type === 'PER_RMS' ? getDatabaseRmsCount(serviceForm.company) : getDatabaseFrontCount(serviceForm.company)); recalculateCost()"
+              >
+                Подставить
+              </button>
+            </div>
           </div>
-          <div>
-            <label class="block text-xs font-semibold text-indigo-900 mb-1">Ставка за 1 RMS в месяц (₸) *</label>
-            <InputText
-              v-model.number="serviceForm.cost_per_rms"
-              type="number"
-              placeholder="Например: 10000"
-              class="w-full font-mono text-sm"
-              @input="recalculateCost"
-            />
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-indigo-900 mb-1">
+                {{ serviceForm.pricing_type === 'PER_RMS' ? 'Количество точек RMS *' : 'Количество касс Front *' }}
+              </label>
+              <InputText
+                v-model.number="serviceForm.quantity"
+                type="number"
+                min="1"
+                placeholder="1"
+                class="w-full font-mono text-sm"
+                @input="recalculateCost"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-indigo-900 mb-1">
+                {{ serviceForm.pricing_type === 'PER_RMS' ? 'Ставка за 1 RMS в месяц (₸) *' : 'Ставка за 1 Front в месяц (₸) *' }}
+              </label>
+              <InputText
+                v-model.number="serviceForm.cost_per_rms"
+                type="number"
+                placeholder="Например: 10000"
+                class="w-full font-mono text-sm"
+                @input="recalculateCost"
+              />
+            </div>
           </div>
-          <div class="flex justify-between items-center text-xs pt-1 border-t border-indigo-200">
+
+          <div class="flex justify-between items-center text-xs pt-2 border-t border-indigo-200/80">
             <span class="text-indigo-900 font-bold">Итоговая сумма:</span>
-            <span class="font-mono font-extrabold text-sm text-indigo-950">{{ formatCurrency(serviceForm.total_cost) }}</span>
+            <div class="flex items-baseline gap-2">
+              <span class="text-[11px] text-slate-500 font-mono">
+                ({{ formatCurrency(serviceForm.cost_per_rms) }} × {{ serviceForm.quantity || 1 }} {{ serviceForm.pricing_type === 'PER_RMS' ? 'точ.' : 'касс' }}) =
+              </span>
+              <span class="font-mono font-extrabold text-base text-indigo-950">{{ formatCurrency(serviceForm.total_cost) }}</span>
+            </div>
           </div>
         </div>
 
@@ -639,40 +680,50 @@
           />
         </div>
 
-        <!-- Expiration Date with Quick Buttons -->
-        <div>
-          <div class="flex justify-between items-center mb-1">
-            <label class="block text-xs font-bold text-slate-700 uppercase">Срок действия (до) *</label>
-            <div class="flex gap-1">
-              <button
-                type="button"
-                class="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded"
-                @click="setFormDate(1)"
-              >
-                +1 мес
-              </button>
-              <button
-                type="button"
-                class="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded"
-                @click="setFormDate(12)"
-              >
-                +1 год
-              </button>
-              <button
-                type="button"
-                class="text-[10px] bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-1.5 py-0.5 rounded font-bold"
-                @click="serviceForm.expires_at = '2026-12-31'"
-              >
-                31.12.2026
-              </button>
-            </div>
+        <!-- Dates: Start Date and Expiration Date -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Дата начала</label>
+            <input
+              type="date"
+              v-model="serviceForm.start_date"
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono"
+            />
           </div>
-          <input
-            type="date"
-            v-model="serviceForm.expires_at"
-            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono"
-            required
-          />
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <label class="block text-xs font-bold text-slate-700 uppercase">Срок действия (до) *</label>
+              <div class="flex gap-1">
+                <button
+                  type="button"
+                  class="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded"
+                  @click="setFormDate(1)"
+                >
+                  +1 мес
+                </button>
+                <button
+                  type="button"
+                  class="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded"
+                  @click="setFormDate(12)"
+                >
+                  +1 год
+                </button>
+                <button
+                  type="button"
+                  class="text-[10px] bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-1.5 py-0.5 rounded font-bold"
+                  @click="serviceForm.expires_at = '2026-12-31'"
+                >
+                  31.12.2026
+                </button>
+              </div>
+            </div>
+            <input
+              type="date"
+              v-model="serviceForm.expires_at"
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono"
+              required
+            />
+          </div>
         </div>
 
         <!-- Comment / Contract -->
@@ -843,6 +894,7 @@ const periodOptions = [
 const pricingTypeOptions = [
   { label: 'Фиксированная сумма', value: 'MANUAL' },
   { label: 'За каждую точку RMS (ставка × кол-во точек)', value: 'PER_RMS' },
+  { label: 'За каждый Front (ставка × кол-во касс)', value: 'PER_FRONT' },
 ]
 
 // Modals
@@ -861,6 +913,7 @@ const serviceForm = ref({
   period_type: 'MONTHLY',
   pricing_type: 'MANUAL',
   cost_per_rms: 0,
+  quantity: 1,
   total_cost: 0,
   start_date: '',
   expires_at: '2026-12-31',
@@ -904,16 +957,39 @@ const serviceTypeFilterOptions = computed(() => {
   return serviceTypesList.value.map(s => ({ id: s.id, name: s.name }))
 })
 
-const selectedCompanyRmsCount = computed(() => {
-  if (!serviceForm.value.company) return 1
-  const comp = companiesList.value.find(c => c.id === serviceForm.value.company)
+const getDatabaseRmsCount = (companyId) => {
+  if (!companyId) return 1
+  const comp = companiesList.value.find(c => c.id === companyId)
   if (comp && comp.node_type === 'CHAIN') {
     return Math.max(comp.branches_count || 0, 1)
   }
   return 1
-})
+}
+
+const getDatabaseFrontCount = (companyId) => {
+  if (!companyId) return 1
+  const comp = companiesList.value.find(c => c.id === companyId)
+  if (comp) {
+    return Math.max(comp.stations_count || comp.anydesk_stations_count || (comp.anydesk_stations && comp.anydesk_stations.length) || 1, 1)
+  }
+  return 1
+}
 
 const onCompanySelect = () => {
+  if (serviceForm.value.pricing_type === 'PER_RMS') {
+    serviceForm.value.quantity = getDatabaseRmsCount(serviceForm.value.company)
+  } else if (serviceForm.value.pricing_type === 'PER_FRONT') {
+    serviceForm.value.quantity = getDatabaseFrontCount(serviceForm.value.company)
+  }
+  recalculateCost()
+}
+
+const onPricingTypeChange = () => {
+  if (serviceForm.value.pricing_type === 'PER_RMS') {
+    serviceForm.value.quantity = getDatabaseRmsCount(serviceForm.value.company)
+  } else if (serviceForm.value.pricing_type === 'PER_FRONT') {
+    serviceForm.value.quantity = getDatabaseFrontCount(serviceForm.value.company)
+  }
   recalculateCost()
 }
 
@@ -925,9 +1001,10 @@ const onServiceTypeSelect = () => {
 }
 
 const recalculateCost = () => {
-  if (serviceForm.value.pricing_type === 'PER_RMS') {
+  if (serviceForm.value.pricing_type === 'PER_RMS' || serviceForm.value.pricing_type === 'PER_FRONT') {
     const rate = Number(serviceForm.value.cost_per_rms) || 0
-    serviceForm.value.total_cost = rate * selectedCompanyRmsCount.value
+    const qty = Number(serviceForm.value.quantity) || 1
+    serviceForm.value.total_cost = rate * qty
   }
 }
 
@@ -1038,6 +1115,7 @@ const openAddServiceModal = () => {
     period_type: 'MONTHLY',
     pricing_type: 'MANUAL',
     cost_per_rms: 0,
+    quantity: 1,
     total_cost: 0,
     start_date: new Date().toISOString().split('T')[0],
     expires_at: '2026-12-31',
@@ -1049,6 +1127,14 @@ const openAddServiceModal = () => {
 
 const openEditService = (sub) => {
   editingServiceId.value = sub.id
+  let defaultQty = Number(sub.quantity) || 1
+  if (!sub.quantity) {
+    if (sub.pricing_type === 'PER_RMS') {
+      defaultQty = getDatabaseRmsCount(sub.company)
+    } else if (sub.pricing_type === 'PER_FRONT') {
+      defaultQty = getDatabaseFrontCount(sub.company)
+    }
+  }
   serviceForm.value = {
     company: sub.company,
     service: sub.service,
@@ -1056,6 +1142,7 @@ const openEditService = (sub) => {
     period_type: sub.period_type || 'MONTHLY',
     pricing_type: sub.pricing_type || 'MANUAL',
     cost_per_rms: Number(sub.cost_per_rms) || 0,
+    quantity: defaultQty,
     total_cost: Number(sub.total_cost) || 0,
     start_date: sub.start_date || '',
     expires_at: sub.expires_at,
@@ -1078,11 +1165,16 @@ const saveService = async () => {
   savingService.value = true
   try {
     recalculateCost()
+    const payload = {
+      ...serviceForm.value,
+      start_date: serviceForm.value.start_date ? serviceForm.value.start_date : null,
+      quantity: Number(serviceForm.value.quantity) || 1,
+    }
     if (editingServiceId.value) {
-      await servicesApi.updateCompanyService(editingServiceId.value, serviceForm.value)
+      await servicesApi.updateCompanyService(editingServiceId.value, payload)
       toast.add({ severity: 'success', summary: 'Успешно', detail: 'Данные услуги обновлены', life: 2500 })
     } else {
-      await servicesApi.createCompanyService(serviceForm.value)
+      await servicesApi.createCompanyService(payload)
       toast.add({ severity: 'success', summary: 'Успешно', detail: 'Услуга успешно подключена', life: 2500 })
     }
     showServiceModal.value = false

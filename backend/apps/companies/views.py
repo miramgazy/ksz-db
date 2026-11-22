@@ -460,7 +460,9 @@ class CompanyServiceViewSet(viewsets.ModelViewSet):
         total_points = 0
         its_companies_count = its_subs.values('company').distinct().count()
         for s in its_subs.select_related('company'):
-            if s.company.node_type == Company.NodeType.CHAIN:
+            if s.pricing_type in [CompanyService.PricingType.PER_RMS, CompanyService.PricingType.PER_FRONT]:
+                total_points += s.quantity if (s.quantity and s.quantity > 0) else 1
+            elif s.company.node_type == Company.NodeType.CHAIN:
                 total_points += max(s.company.branches.filter(status=True).count(), 1)
             else:
                 total_points += 1

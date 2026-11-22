@@ -56,21 +56,35 @@ class CompanyServiceSerializer(serializers.ModelSerializer):
     company_city = serializers.CharField(source='company.city', read_only=True)
     company_node_type = serializers.CharField(source='company.node_type', read_only=True)
     company_branches_count = serializers.IntegerField(source='company.branches.count', read_only=True)
+    company_stations_count = serializers.IntegerField(source='company.anydesk_stations.count', read_only=True)
     company_parent_chain_name = serializers.CharField(source='company.parent_chain.place_name', read_only=True, default=None)
     service_code = serializers.CharField(source='service.code', read_only=True)
     is_its = serializers.BooleanField(source='service.is_its', read_only=True)
     days_remaining = serializers.SerializerMethodField()
+    start_date = serializers.DateField(required=False, allow_null=True)
 
     class Meta:
         model = CompanyService
         fields = (
             'id', 'company', 'company_place_name', 'company_city', 'company_node_type',
-            'company_branches_count', 'company_parent_chain_name',
+            'company_branches_count', 'company_stations_count', 'company_parent_chain_name',
             'service', 'service_name', 'service_code', 'is_its',
-            'period_type', 'pricing_type', 'cost_per_rms', 'total_cost',
+            'period_type', 'pricing_type', 'cost_per_rms', 'quantity', 'total_cost',
             'start_date', 'expires_at', 'days_remaining',
             'status', 'comment', 'created_at', 'updated_at'
         )
+
+    def to_internal_value(self, data):
+        # Prevent validation error {"start_date":["Неправильный формат date..."]} when start_date is empty string or full ISO string
+        if 'start_date' in data:
+            val = data.get('start_date')
+            if val == '' or val is None:
+                data = data.copy() if hasattr(data, 'copy') else dict(data)
+                data['start_date'] = None
+            elif isinstance(val, str) and 'T' in val:
+                data = data.copy() if hasattr(data, 'copy') else dict(data)
+                data['start_date'] = val.split('T')[0]
+        return super().to_internal_value(data)
 
     def get_days_remaining(self, obj):
         if not obj.expires_at:

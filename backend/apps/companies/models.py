@@ -224,6 +224,7 @@ class CompanyService(models.Model):
     class PricingType(models.TextChoices):
         MANUAL = 'MANUAL', 'Фиксированная сумма'
         PER_RMS = 'PER_RMS', 'За каждую точку (RMS)'
+        PER_FRONT = 'PER_FRONT', 'За каждый Front'
 
     class PeriodType(models.TextChoices):
         MONTHLY = 'MONTHLY', 'Ежемесячная подписка'
@@ -260,7 +261,11 @@ class CompanyService(models.Model):
         max_digits=12,
         decimal_places=2,
         default=0,
-        verbose_name='Ставка за 1 RMS (₸)'
+        verbose_name='Ставка за 1 ед. (RMS / Front) (₸)'
+    )
+    quantity = models.PositiveIntegerField(
+        default=1,
+        verbose_name='Количество точек / касс'
     )
     total_cost = models.DecimalField(
         max_digits=12,
@@ -284,20 +289,17 @@ class CompanyService(models.Model):
         return f"{self.company.place_name} — {self.service_name or self.service.name} (до {self.expires_at})"
 
     def calculate_cost(self):
-        if self.pricing_type == self.PricingType.PER_RMS:
-            if self.company.node_type == Company.NodeType.CHAIN:
-                branches_count = self.company.branches.filter(status=True).count()
-                rms_count = max(branches_count, 1)
-            else:
-                rms_count = 1
-            return self.cost_per_rms * rms_count
+        if self.pricing_type in [self.PricingType.PER_RMS, self.PricingType.PER_FRONT]:
+            qty = self.quantity if (self.quantity is not None and self.quantity > 0) else 1
+            return self.cost_per_rms * qty
         return self.total_cost
 
     def save(self, *args, **kwargs):
         if not self.service_name and self.service_id:
             self.service_name = self.service.name
-        if self.pricing_type == self.PricingType.PER_RMS and self.cost_per_rms > 0:
-            self.total_cost = self.calculate_cost()
+        if self.pricing_type in [self.PricingType.PER_RMS, self.PricingType.PER_FRONT] and self.cost_per_rms > 0:
+            qty = self.quantity if (self.quantity is not None and self.quantity > 0) else 1
+            self.total_cost = self.cost_per_rms * qty
         super().save(*args, **kwargs)
 
         # Synchronize Company.helpdesk_its and its_expires_at if this is an ITS service
