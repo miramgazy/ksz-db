@@ -151,6 +151,21 @@ SIMPLE_JWT = {
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
+# CSRF settings (trusted origins for non-standard ports and admin forms)
+csrf_env = os.getenv('CSRF_TRUSTED_ORIGINS', os.getenv('CORS_ALLOWED_ORIGINS', ''))
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost',
+    'http://127.0.0.1',
+    'http://localhost:5173',
+    'http://localhost:8000',
+    'http://192.168.1.253:17676',
+]
+if csrf_env:
+    for origin in csrf_env.split(','):
+        origin = origin.strip()
+        if origin and origin not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(origin)
+
 # Fernet secret key for encrypting stored passwords
 FERNET_SECRET_KEY = os.getenv('FERNET_SECRET_KEY', 'XUZtgJj3iTRXLjYDM2S3tSIdBTmf5hsqHR0FkaxsJJo=')
 
