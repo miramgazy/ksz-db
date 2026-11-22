@@ -58,3 +58,7 @@ companion/*.ini
 .agent/
 examles/
 examples/
+
+# Database dumps and backups
+*.sql
+backup_ksz_db.sql
