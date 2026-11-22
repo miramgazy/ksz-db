@@ -46,6 +46,37 @@ def submit_agent_result(task_id: str, result: dict):
     r.rpush(result_key, json.dumps(result))
     r.expire(result_key, 30)
 
+def send_task_async(user_id: int, action: str, payload: dict):
+    """
+    Pushes an action to the user's agent queue asynchronously (fire-and-forget).
+    Returns immediately without blocking the web request or Django worker thread.
+    Ideal for launching desktop apps (ClearBat, AnyDesk) where result is handled locally.
+    """
+    online, meta = get_agent_online(user_id)
+    if not online:
+        return {
+            "success": False,
+            "message": "Локальный агент не запущен на вашем рабочем месте. Запустите агент на ПК."
+        }
+
+    r = get_redis_client()
+    task_id = str(uuid.uuid4())
+    task_data = {
+        "task_id": task_id,
+        "action": action,
+        "payload": payload,
+        "async": True
+    }
+
+    queue_key = f"companion:queue:{user_id}"
+    r.rpush(queue_key, json.dumps(task_data))
+
+    return {
+        "success": True,
+        "message": "Команда передана локальному агенту.",
+        "task_id": task_id
+    }
+
 def send_task_and_wait(user_id: int, action: str, payload: dict, timeout: int = 12):
     """
     Pushes an action to the user's agent queue and waits synchronously

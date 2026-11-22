@@ -1119,35 +1119,47 @@ const handleLaunchBackoffice = async () => {
   }
 
   let clearbatUrl = ''
+  let plainPass = c.system_admin_password || ''
   try {
     const p = await companiesApi.getClearbatParams(c.id)
     clearbatUrl = p.data.clearbat_url
+    if (p.data && p.data.password) plainPass = p.data.password
   } catch (e) {}
 
-  const res = await companionStore.launchBackoffice({
-    server: c.server_name,
-    port: c.port_number || '443',
-    login: c.system_admin_name || 'iikoadm',
-    password: c.system_admin_password || '',
-    clearbatUrl,
-  })
+  if (companionStore.isOnline) {
+    companionStore.launchBackoffice({
+      server: c.server_name,
+      port: c.port_number || '443',
+      login: c.system_admin_name || 'iikoadm',
+      password: plainPass,
+      clearbatUrl,
+    })
+  } else if (clearbatUrl) {
+    window.location.href = clearbatUrl
+  }
 
   toast.add({
-    severity: res.success ? 'success' : 'warn',
-    summary: res.success ? 'Запуск BackOffice' : 'Ошибка',
-    detail: res.message,
-    life: 3000,
+    severity: 'info',
+    summary: 'Запуск BackOffice',
+    detail: 'Запрос на открытие отправлен...',
+    life: 2500,
   })
 }
 
 const handleInsertClearbat = async () => {
   const c = company.value
+  let plainPass = c.system_admin_password || ''
+  try {
+    const p = await companiesApi.getClearbatParams(c.id)
+    if (p.data && p.data.password) plainPass = p.data.password
+  } catch (e) {}
+
   const res = await companionStore.insertClearbat({
     name: c.place_name,
     server: c.server_name,
     port: c.port_number || '443',
     login: c.system_admin_name || 'iikoadm',
-    password: c.system_admin_password || '',
+    password: plainPass,
   })
 
   toast.add({
@@ -1161,23 +1173,31 @@ const handleInsertClearbat = async () => {
 const handleLaunchLicense = async () => {
   const c = company.value
   let licenseUrl = ''
+  let plainPass = c.system_admin_password || ''
   try {
     const p = await companiesApi.getClearbatParams(c.id)
     licenseUrl = p.data.license_url
+    if (p.data && p.data.password) plainPass = p.data.password
   } catch (e) {}
 
   if (companionStore.isOnline) {
-    await companionStore.launchLicense({
+    companionStore.launchLicense({
       server: c.server_name,
       port: c.port_number || '443',
       login: c.system_admin_name || 'iikoadm',
-      password: c.system_admin_password || '',
+      password: plainPass,
+      licenseUrl,
     })
   } else if (licenseUrl) {
     window.location.href = licenseUrl
   }
 
-  toast.add({ severity: 'info', summary: 'Обновление лицензии', detail: 'Команда отправлена', life: 2500 })
+  toast.add({
+    severity: 'info',
+    summary: 'Обновление лицензии',
+    detail: 'Запрос на обновление отправлен...',
+    life: 2500,
+  })
 }
 
 const openIikoWeb = () => {

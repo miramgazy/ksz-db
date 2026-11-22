@@ -108,10 +108,17 @@ def copy_to_clipboard(text: str):
 
 
 def launch_protocol_url(url: str):
+    """Открывает URL-протокол (например, clearbat:// или anydesk://) в сеансе Windows."""
     try:
         if sys.platform.startswith('win'):
-            cmd = f'rundll32.exe url.dll,FileProtocolHandler "{url}"'
-            subprocess.Popen(cmd, shell=True)
+            # os.startfile — нативный, самый надежный способ Win32 ShellExecute в Python:
+            # - Не вызывает cmd.exe
+            # - Не спотыкается о символы &, %, ?, кавычки, пробелы в паролях
+            # - Напрямую передает команду зарегистрированному протоколу Windows
+            try:
+                os.startfile(url)
+            except Exception:
+                subprocess.Popen(['rundll32.exe', 'url.dll,FileProtocolHandler', url])
         elif sys.platform == 'darwin':
             subprocess.Popen(['open', url])
         else:
@@ -500,7 +507,8 @@ class AgentApp:
                 data=json.dumps(meta).encode('utf-8'),
                 headers={
                     "Content-Type": "application/json; charset=utf-8",
-                    "Authorization": f"Bearer {self.access_token}"
+                    "Authorization": f"Bearer {self.access_token}",
+                    "Connection": "close"
                 }
             )
 
@@ -508,30 +516,50 @@ class AgentApp:
                 with urllib.request.urlopen(req, timeout=35) as resp:
                     resp_data = json.loads(resp.read().decode('utf-8'))
                     st = resp_data.get('status')
-                    if st == 'command':
-                        task = resp_data.get('task', {})
-                        task_id = task.get('task_id')
-                        res = self.execute_task(task)
-                        if task_id:
-                            self.send_task_result(api_url, task_id, res)
-                    elif st == 'idle':
-                        continue
+                    task = resp_data.get('task', {})
+
+                # Опрос прошел успешно - гарантированно восстанавливаем статус В сети
+                self.set_status_ui("green", "В сети (Ожидание команд)")
+
+                if st == 'command' and task:
+                    task_id = task.get('task_id')
+                    is_async = task.get('async', False) or task.get('action') in ('launch_license', 'launch_backoffice', 'launch_anydesk')
+                    res = self.execute_task(task)
+                    # Результат отправляем только для синхронных задач (например, insert_clearbat)
+                    if task_id and not is_async:
+                        self.send_task_result(api_url, task_id, res)
+                elif st == 'idle':
+                    continue
+
             except urllib.error.HTTPError as e:
                 if e.code == 401:
                     self.log("[!] Токен истек, автоматическое обновление...")
                     self.refresh_access_token(api_url)
                 else:
-                    self.log(f"[!] HTTP ошибка {e.code}, повтор через 3 сек...")
+                    self.log(f"[!] HTTP ошибка {e.code}: {e.reason}, повтор через 3 сек...")
+                    time.sleep(3)
+            except urllib.error.URLError as e:
+                if not self.stop_event.is_set():
+                    self.log(f"[!] Связь с сервером прервана ({e.reason}). Восстановление через 3 сек...")
+                    self.set_status_ui("yellow", "Восстановление связи...")
                     time.sleep(3)
             except Exception as e:
                 if not self.stop_event.is_set():
+                    self.log(f"[!] Ошибка связи: {str(e)}. Повтор через 3 сек...")
                     self.set_status_ui("yellow", "Восстановление связи...")
                     time.sleep(3)
 
     def refresh_access_token(self, api_url):
         refresh_url = f"{api_url}/auth/token/refresh/"
         payload = json.dumps({"refresh": self.refresh_token}).encode('utf-8')
-        req = urllib.request.Request(refresh_url, data=payload, headers={"Content-Type": "application/json"})
+        req = urllib.request.Request(
+            refresh_url,
+            data=payload,
+            headers={
+                "Content-Type": "application/json; charset=utf-8",
+                "Connection": "close"
+            }
+        )
         try:
             with urllib.request.urlopen(req, timeout=10) as resp:
                 data = json.loads(resp.read().decode('utf-8'))
@@ -548,7 +576,8 @@ class AgentApp:
             data=body,
             headers={
                 "Content-Type": "application/json; charset=utf-8",
-                "Authorization": f"Bearer {self.access_token}"
+                "Authorization": f"Bearer {self.access_token}",
+                "Connection": "close"
             }
         )
         try:

@@ -1,4 +1,4 @@
-﻿# Сборка автономного KSZ-Agent.exe через PowerShell
+# Сборка автономного KSZ-Agent.exe через PowerShell
 $ErrorActionPreference = "Stop"
 
 Write-Host "=================================================" -ForegroundColor Cyan

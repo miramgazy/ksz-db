@@ -104,8 +104,14 @@ def launch_protocol_url(url: str):
     """Открывает URL-протокол (например, clearbat:// или anydesk://) в сеансе Windows."""
     try:
         if sys.platform.startswith('win'):
-            cmd = f'rundll32.exe url.dll,FileProtocolHandler "{url}"'
-            subprocess.Popen(cmd, shell=True)
+            # os.startfile — нативный, самый надежный способ Win32 ShellExecute в Python:
+            # - Не вызывает cmd.exe
+            # - Не спотыкается о символы &, %, ?, кавычки, пробелы в паролях
+            # - Напрямую передает команду зарегистрированному протоколу Windows
+            try:
+                os.startfile(url)
+            except Exception:
+                subprocess.Popen(['rundll32.exe', 'url.dll,FileProtocolHandler', url])
         elif sys.platform == 'darwin':
             subprocess.Popen(['open', url])
         else:
@@ -412,7 +418,8 @@ class KSZClientAgent:
             data=body,
             headers={
                 "Content-Type": "application/json; charset=utf-8",
-                "Authorization": f"Bearer {self.access_token}"
+                "Authorization": f"Bearer {self.access_token}",
+                "Connection": "close"
             }
         )
         try:
@@ -444,7 +451,8 @@ class KSZClientAgent:
                 data=payload,
                 headers={
                     "Content-Type": "application/json; charset=utf-8",
-                    "Authorization": f"Bearer {self.access_token}"
+                    "Authorization": f"Bearer {self.access_token}",
+                    "Connection": "close"
                 }
             )
 
@@ -453,16 +461,17 @@ class KSZClientAgent:
                 with urllib.request.urlopen(req, timeout=35) as resp:
                     resp_data = json.loads(resp.read().decode('utf-8'))
                     st = resp_data.get('status')
+                    task = resp_data.get('task', {})
 
-                    if st == 'command':
-                        task = resp_data.get('task', {})
-                        task_id = task.get('task_id')
-                        result = self.execute_task(task)
-                        if task_id:
-                            self.send_task_result(task_id, result)
-                    elif st == 'idle':
-                        # Сервер вернул idle по истечению таймаута — сразу начинаем следующий цикл
-                        continue
+                if st == 'command' and task:
+                    task_id = task.get('task_id')
+                    is_async = task.get('async', False) or task.get('action') in ('launch_license', 'launch_backoffice', 'launch_anydesk')
+                    result = self.execute_task(task)
+                    if task_id and not is_async:
+                        self.send_task_result(task_id, result)
+                elif st == 'idle':
+                    # Сервер вернул idle по истечению таймаута — сразу начинаем следующий цикл
+                    continue
 
             except urllib.error.HTTPError as e:
                 if e.code == 401:

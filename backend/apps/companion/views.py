@@ -8,6 +8,7 @@ from .services import (
     poll_agent_task,
     submit_agent_result,
     send_task_and_wait,
+    send_task_async,
 )
 
 class CompanionStatusView(APIView):
@@ -30,7 +31,7 @@ class CompanionLaunchBackofficeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        res = send_task_and_wait(request.user.id, "launch_backoffice", request.data)
+        res = send_task_async(request.user.id, "launch_backoffice", request.data)
         http_status = status.HTTP_200_OK if res.get("success") else status.HTTP_400_BAD_REQUEST
         return Response(res, status=http_status)
 
@@ -39,7 +40,7 @@ class CompanionLaunchLicenseView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        res = send_task_and_wait(request.user.id, "launch_license", request.data)
+        res = send_task_async(request.user.id, "launch_license", request.data)
         http_status = status.HTTP_200_OK if res.get("success") else status.HTTP_400_BAD_REQUEST
         return Response(res, status=http_status)
 
@@ -57,7 +58,7 @@ class CompanionLaunchAnydeskView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        res = send_task_and_wait(request.user.id, "launch_anydesk", request.data)
+        res = send_task_async(request.user.id, "launch_anydesk", request.data)
         http_status = status.HTTP_200_OK if res.get("success") else status.HTTP_400_BAD_REQUEST
         return Response(res, status=http_status)
 
