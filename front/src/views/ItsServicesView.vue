@@ -2,7 +2,7 @@
   <div class="min-h-screen flex flex-col bg-slate-50">
     <Navbar />
 
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-5">
+    <main class="flex-1 w-full px-4 sm:px-6 lg:px-8 2xl:px-10 py-6 flex flex-col gap-5">
       <!-- Header Bar -->
       <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>

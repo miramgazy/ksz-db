@@ -1,6 +1,6 @@
 <template>
   <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="w-full px-4 sm:px-6 lg:px-8 2xl:px-10">
       <div class="flex justify-between h-14 items-center">
         <!-- Left: Logo & Nav Links -->
         <div class="flex items-center gap-6">

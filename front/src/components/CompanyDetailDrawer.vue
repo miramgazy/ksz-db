@@ -2,7 +2,7 @@
   <Drawer
     v-model:visible="visible"
     position="right"
-    class="!w-full md:!w-[640px] lg:!w-[720px]"
+    class="!w-full md:!w-[640px] lg:!w-[760px] 2xl:!w-[880px]"
   >
     <template #header>
       <div class="flex items-center gap-3">
