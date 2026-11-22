@@ -549,41 +549,130 @@
       </template>
     </Dialog>
 
-    <!-- Add / Edit Service Modal -->
+    <!-- Add / Edit / Assign Service Modal -->
     <Dialog
       v-model:visible="showServiceModal"
       modal
-      :header="editingServiceId ? 'Редактирование услуги' : 'Подключение новой услуги'"
-      :style="{ width: '560px' }"
+      :header="modalHeader"
+      :style="{ width: '580px' }"
     >
-      <div class="flex flex-col gap-3 py-1 text-sm">
-        <!-- Company Selector -->
+      <div class="flex flex-col gap-4 py-1 text-sm">
+        <!-- 1. Company Assignment Block -->
         <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Заведение / Сеть *</label>
-          <Select
-            v-model="serviceForm.company"
-            :options="companiesList"
-            optionLabel="place_name"
-            optionValue="id"
-            placeholder="Выберите компанию"
-            filter
-            class="w-full text-xs"
-            @change="onCompanySelect"
+          <div class="flex justify-between items-center mb-1">
+            <label class="block text-xs font-bold text-slate-700 uppercase">
+              Заведение / Сеть *
+            </label>
+            <button
+              v-if="selectedCompany && !isChangingCompany"
+              type="button"
+              class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold cursor-pointer flex items-center gap-1"
+              @click="isChangingCompany = true"
+            >
+              <i class="pi pi-sync text-[10px]"></i>
+              Сменить компанию
+            </button>
+          </div>
+
+          <!-- Display Selected Company Card -->
+          <div
+            v-if="selectedCompany && !isChangingCompany"
+            class="p-3 bg-gradient-to-r from-slate-50 to-indigo-50/40 border border-slate-200 rounded-xl flex items-center justify-between"
           >
-            <template #option="{ option }">
-              <div class="flex justify-between items-center w-full">
-                <span class="font-semibold">{{ option.place_name }}</span>
-                <span class="text-xs text-slate-400 font-mono">
-                  {{ option.city ? `${option.city} • ` : '' }}
-                  {{ option.node_type === 'CHAIN' ? `(Сеть: ${option.branches_count || 0} филиалов)` : (option.parent_chain_name ? `(Филиал: ${option.parent_chain_name})` : '(Точка RMS)') }}
-                </span>
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm shrink-0">
+                <i class="pi pi-building"></i>
               </div>
-            </template>
-          </Select>
+              <div>
+                <div class="font-bold text-slate-900 text-sm flex items-center gap-1.5 flex-wrap">
+                  <span>{{ selectedCompany.place_name }}</span>
+                  <Tag
+                    :value="selectedCompany.node_type === 'CHAIN' ? `Сеть (${selectedCompany.branches_count || 0} фил.)` : (selectedCompany.parent_chain_name ? `Филиал: ${selectedCompany.parent_chain_name}` : 'Точка RMS')"
+                    :severity="selectedCompany.node_type === 'CHAIN' ? 'warn' : 'secondary'"
+                    class="!text-[9px]"
+                  />
+                </div>
+                <div class="text-[11px] text-slate-500 font-mono mt-0.5">
+                  <span v-if="selectedCompany.city">{{ selectedCompany.city }} • </span>
+                  <span>{{ selectedCompany.node_type === 'CHAIN' ? `${selectedCompany.branches_count || 1} RMS` : '1 RMS' }}</span>
+                  <span v-if="selectedCompany.stations_count"> • {{ selectedCompany.stations_count }} касс (Front)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Search Company Input (When no company selected or changing company) -->
+          <div v-else class="flex flex-col gap-1.5">
+            <div class="relative">
+              <IconField iconPosition="left">
+                <InputIcon class="pi pi-search" />
+                <InputText
+                  v-model="companySearchInput"
+                  placeholder="Начните вводить название заведения (от 3 букв)..."
+                  class="w-full text-xs font-medium"
+                  @input="onCompanySearchInput"
+                  autofocus
+                />
+              </IconField>
+              <div v-if="isSearchingCompany" class="absolute right-3 top-2.5">
+                <i class="pi pi-spin pi-spinner text-slate-400 text-xs"></i>
+              </div>
+            </div>
+
+            <!-- Cancel button if was changing company -->
+            <div v-if="selectedCompany && isChangingCompany" class="flex justify-end">
+              <button
+                type="button"
+                class="text-[11px] text-slate-500 hover:text-slate-800 underline cursor-pointer"
+                @click="isChangingCompany = false"
+              >
+                Отмена (оставить {{ selectedCompany.place_name }})
+              </button>
+            </div>
+
+            <!-- Live Search Results Dropdown -->
+            <div
+              v-if="companySearchResults.length > 0"
+              class="max-h-48 overflow-y-auto border border-indigo-200 rounded-lg bg-white shadow-xl flex flex-col divide-y divide-slate-100 z-50"
+            >
+              <div
+                v-for="comp in companySearchResults"
+                :key="comp.id"
+                class="p-2.5 hover:bg-indigo-50/80 cursor-pointer transition flex items-center justify-between text-xs"
+                @click="chooseCompany(comp)"
+              >
+                <div>
+                  <span class="font-bold text-slate-900">{{ comp.place_name }}</span>
+                  <span v-if="comp.city" class="text-slate-500 ml-1.5 font-mono text-[11px]">({{ comp.city }})</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <Tag
+                    :value="comp.node_type === 'CHAIN' ? `Сеть (${comp.branches_count || 0})` : (comp.parent_chain_name ? `Филиал` : 'RMS')"
+                    :severity="comp.node_type === 'CHAIN' ? 'warn' : 'secondary'"
+                    class="!text-[9px]"
+                  />
+                  <span class="text-slate-400 font-mono text-[11px]">{{ comp.stations_count || 0 }} касс</span>
+                </div>
+              </div>
+            </div>
+
+            <div
+              v-else-if="companySearchInput.trim().length >= 3 && !isSearchingCompany && hasSearchedCompanies"
+              class="text-[11px] text-slate-400 italic px-1 py-1"
+            >
+              Заведений по запросу «{{ companySearchInput }}» не найдено
+            </div>
+            <div
+              v-else-if="companySearchInput.trim().length > 0 && companySearchInput.trim().length < 3"
+              class="text-[11px] text-amber-600 px-1 py-0.5 font-medium"
+            >
+              Введите ещё минимум {{ 3 - companySearchInput.trim().length }} символ(а) для поиска
+            </div>
+          </div>
         </div>
 
-        <!-- Service Catalog Selector + Custom Name -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <!-- 2. Service Catalog Selector + Custom Name -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100">
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Вид услуги (Каталог) *</label>
             <Select
@@ -607,6 +696,12 @@
             />
           </div>
         </div>
+
+        <!-- 3. Individual Properties for this company -->
+        <div class="pt-2 border-t border-slate-100 flex flex-col gap-3">
+          <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+            Индивидуальные свойства услуги для заведения
+          </div>
 
         <!-- Period Type -->
         <div>
@@ -771,7 +866,12 @@
       <template #footer>
         <div class="flex justify-end gap-2">
           <Button label="Отмена" severity="secondary" text @click="showServiceModal = false" />
-          <Button label="Сохранить" icon="pi pi-check" :loading="savingService" @click="saveService" />
+          <Button
+            :label="editingServiceId ? 'Сохранить изменения' : 'Присвоить услугу'"
+            icon="pi pi-check"
+            :loading="savingService"
+            @click="saveService"
+          />
         </div>
       </template>
     </Dialog>
@@ -887,7 +987,6 @@ const loading = ref(false)
 const services = ref([])
 const stats = ref({})
 const serviceTypesList = ref([])
-const companiesList = ref([])
 
 const searchQuery = ref('')
 const selectedServiceType = ref(null)
@@ -944,6 +1043,61 @@ const serviceForm = ref({
   comment: '',
 })
 
+// Company selection & dynamic search state (lazy load on >= 3 chars)
+const selectedCompany = ref(null)
+const isChangingCompany = ref(false)
+const companySearchInput = ref('')
+const companySearchResults = ref([])
+const isSearchingCompany = ref(false)
+const hasSearchedCompanies = ref(false)
+let companySearchTimeout = null
+
+const modalHeader = computed(() => {
+  if (editingServiceId.value) {
+    const compName = selectedCompany.value?.place_name || 'заведения'
+    return `Свойства услуги для: ${compName}`
+  }
+  return 'Присвоение услуги заведению'
+})
+
+const onCompanySearchInput = () => {
+  clearTimeout(companySearchTimeout)
+  const q = companySearchInput.value.trim()
+  if (q.length < 3) {
+    companySearchResults.value = []
+    hasSearchedCompanies.value = false
+    return
+  }
+  companySearchTimeout = setTimeout(async () => {
+    isSearchingCompany.value = true
+    hasSearchedCompanies.value = true
+    try {
+      const res = await companiesApi.getCompanies({ search: q, page_size: 30 })
+      companySearchResults.value = res.data.results || res.data
+    } catch (err) {
+      companySearchResults.value = []
+    } finally {
+      isSearchingCompany.value = false
+    }
+  }, 300)
+}
+
+const chooseCompany = (comp) => {
+  selectedCompany.value = comp
+  serviceForm.value.company = comp.id
+  isChangingCompany.value = false
+  companySearchInput.value = ''
+  companySearchResults.value = []
+  hasSearchedCompanies.value = false
+
+  if (serviceForm.value.pricing_type === 'PER_RMS') {
+    serviceForm.value.quantity = comp.node_type === 'CHAIN' ? Math.max(comp.branches_count || 0, 1) : 1
+  } else if (serviceForm.value.pricing_type === 'PER_FRONT') {
+    serviceForm.value.quantity = Math.max(comp.stations_count || comp.anydesk_stations_count || 1, 1)
+  }
+  recalculateCost()
+}
+
 const showCatalogModal = ref(false)
 const showNewTypeForm = ref(false)
 const savingType = ref(false)
@@ -981,19 +1135,18 @@ const serviceTypeFilterOptions = computed(() => {
 })
 
 const getDatabaseRmsCount = (companyId) => {
-  if (!companyId) return 1
-  const comp = companiesList.value.find(c => c.id === companyId)
-  if (comp && comp.node_type === 'CHAIN') {
-    return Math.max(comp.branches_count || 0, 1)
+  if (selectedCompany.value && (selectedCompany.value.id === companyId || !companyId)) {
+    if (selectedCompany.value.node_type === 'CHAIN') {
+      return Math.max(selectedCompany.value.branches_count || 0, 1)
+    }
+    return 1
   }
   return 1
 }
 
 const getDatabaseFrontCount = (companyId) => {
-  if (!companyId) return 1
-  const comp = companiesList.value.find(c => c.id === companyId)
-  if (comp) {
-    return Math.max(comp.stations_count || comp.anydesk_stations_count || (comp.anydesk_stations && comp.anydesk_stations.length) || 1, 1)
+  if (selectedCompany.value && (selectedCompany.value.id === companyId || !companyId)) {
+    return Math.max(selectedCompany.value.stations_count || selectedCompany.value.anydesk_stations_count || 1, 1)
   }
   return 1
 }
@@ -1048,13 +1201,6 @@ const loadServiceTypes = async () => {
   try {
     const res = await servicesApi.getServiceTypes()
     serviceTypesList.value = res.data.results || res.data
-  } catch (e) {}
-}
-
-const loadCompanies = async () => {
-  try {
-    const res = await companiesApi.getCompanies({ page_size: 1000 })
-    companiesList.value = res.data.results || res.data
   } catch (e) {}
 }
 
@@ -1130,6 +1276,12 @@ const handleDateRenew = async (new_date) => {
 // Add / Edit Service
 const openAddServiceModal = () => {
   editingServiceId.value = null
+  selectedCompany.value = null
+  isChangingCompany.value = false
+  companySearchInput.value = ''
+  companySearchResults.value = []
+  hasSearchedCompanies.value = false
+
   const itsSrv = serviceTypesList.value.find(s => s.is_its) || serviceTypesList.value[0]
   serviceForm.value = {
     company: null,
@@ -1150,6 +1302,20 @@ const openAddServiceModal = () => {
 
 const openEditService = (sub) => {
   editingServiceId.value = sub.id
+  selectedCompany.value = {
+    id: sub.company,
+    place_name: sub.company_place_name || 'Заведение',
+    city: sub.company_city || '',
+    node_type: sub.company_node_type,
+    branches_count: sub.company_branches_count,
+    stations_count: sub.company_stations_count,
+    parent_chain_name: sub.company_parent_chain_name,
+  }
+  isChangingCompany.value = false
+  companySearchInput.value = ''
+  companySearchResults.value = []
+  hasSearchedCompanies.value = false
+
   let defaultQty = Number(sub.quantity) || 1
   if (!sub.quantity) {
     if (sub.pricing_type === 'PER_RMS') {
@@ -1177,6 +1343,12 @@ const openEditService = (sub) => {
 
 const duplicateService = (sub) => {
   editingServiceId.value = null
+  selectedCompany.value = null
+  isChangingCompany.value = true
+  companySearchInput.value = ''
+  companySearchResults.value = []
+  hasSearchedCompanies.value = false
+
   serviceForm.value = {
     company: null,
     service: sub.service,
@@ -1196,7 +1368,7 @@ const duplicateService = (sub) => {
 
 const saveService = async () => {
   if (!serviceForm.value.company) {
-    toast.add({ severity: 'warn', summary: 'Внимание', detail: 'Выберите компанию', life: 3000 })
+    toast.add({ severity: 'warn', summary: 'Внимание', detail: 'Выберите заведение для присвоения услуги', life: 3000 })
     return
   }
   if (!serviceForm.value.expires_at) {
@@ -1354,7 +1526,6 @@ onMounted(() => {
   Promise.all([
     loadStats(),
     loadServiceTypes(),
-    loadCompanies(),
     loadServices(),
   ])
 })
