@@ -157,8 +157,8 @@
       </div>
 
       <!-- Mode Switch: View vs Edit -->
-      <div class="flex justify-between items-center border-b border-slate-200 pb-2">
-        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700">
+      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-2">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">
           {{ !company?.id ? 'Параметры нового заведения' : 'Реквизиты заведения' }}
         </h3>
         <div v-if="authStore.canEdit">
@@ -179,36 +179,36 @@
 
       <!-- View Mode: Credentials & Properties with 1-Click Copy -->
       <div v-if="!isEditing" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-        <div class="p-3 bg-white border border-slate-200 rounded-lg">
-          <div class="text-xs text-slate-500 font-medium">Сервер / IP:</div>
+        <div class="p-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg">
+          <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Сервер / IP:</div>
           <div class="mt-0.5">
             <QuickCopyBtn :text="company.server_name" label="Сервер" />
             <span v-if="company.port_number && company.port_number !== '443'" class="text-xs text-slate-400 font-mono">:{{ company.port_number }}</span>
           </div>
         </div>
 
-        <div class="p-3 bg-white border border-slate-200 rounded-lg">
-          <div class="text-xs text-slate-500 font-medium">CRM ID / UID:</div>
+        <div class="p-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg">
+          <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">CRM ID / UID:</div>
           <div class="flex items-center gap-2 mt-0.5">
             <QuickCopyBtn :text="company.crm_id" label="CRM ID" />
-            <span class="text-slate-300">|</span>
+            <span class="text-slate-300 dark:text-slate-600">|</span>
             <QuickCopyBtn :text="company.uid" label="UID" />
           </div>
         </div>
 
-        <div class="p-3 bg-white border border-slate-200 rounded-lg">
-          <div class="text-xs text-slate-500 font-medium">Логин администратора:</div>
+        <div class="p-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg">
+          <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Логин администратора:</div>
           <div class="mt-0.5">
             <QuickCopyBtn :text="company.system_admin_name" label="Логин" />
           </div>
         </div>
 
-        <div class="p-3 bg-white border border-slate-200 rounded-lg">
-          <div class="text-xs text-slate-500 font-medium flex justify-between">
+        <div class="p-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg">
+          <div class="text-xs text-slate-500 dark:text-slate-400 font-medium flex justify-between">
             <span>Пароль администратора:</span>
             <button
               type="button"
-              class="text-xs text-blue-600 hover:underline"
+              class="text-xs text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
               @click="showPassword = !showPassword"
             >
               {{ showPassword ? 'Скрыть' : 'Показать' }}
@@ -224,27 +224,27 @@
           </div>
         </div>
 
-        <div class="p-3 bg-white border border-slate-200 rounded-lg">
-          <div class="text-xs text-slate-500 font-medium">Тип узла:</div>
-          <div class="mt-0.5 font-semibold text-slate-800 flex items-center gap-2">
+        <div class="p-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg">
+          <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Тип узла:</div>
+          <div class="mt-0.5 font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
             <Tag
               :value="company.node_type === 'CHAIN' ? 'Chain' : 'RMS'"
               :severity="company.node_type === 'CHAIN' ? 'help' : 'info'"
               class="!text-xs font-bold"
             />
-            <span v-if="company.node_type === 'CHAIN' && company.branches_count" class="text-xs text-slate-500 font-normal">
+            <span v-if="company.node_type === 'CHAIN' && company.branches_count" class="text-xs text-slate-500 dark:text-slate-400 font-normal">
               ({{ company.branches_count }} филиалов)
             </span>
-            <span v-else-if="company.parent_chain_name" class="text-xs text-indigo-700 font-medium">
+            <span v-else-if="company.parent_chain_name" class="text-xs text-indigo-700 dark:text-indigo-400 font-medium">
               ↳ {{ company.parent_chain_name }}
             </span>
           </div>
         </div>
 
-        <div class="p-3 bg-white border border-slate-200 rounded-lg flex items-center justify-between">
+        <div class="p-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg flex items-center justify-between">
           <div>
-            <div class="text-xs text-slate-500 font-medium">Лицензия & Версия:</div>
-            <div class="mt-0.5 font-semibold text-slate-800">
+            <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Лицензия & Версия:</div>
+            <div class="mt-0.5 font-semibold text-slate-800 dark:text-slate-100">
               {{ company.licence_type || '—' }} • {{ company.iiko_version || '—' }}
             </div>
           </div>
@@ -255,32 +255,75 @@
             severity="secondary"
             text
             size="small"
-            class="!text-xs text-blue-600"
+            class="!text-xs text-blue-600 dark:text-blue-400"
             @click="copyDistributionLink(company)"
           />
         </div>
 
-        <div class="p-3 bg-white border border-slate-200 rounded-lg">
-          <div class="text-xs text-slate-500 font-medium">Компания / Юр. лицо:</div>
-          <div class="mt-0.5 font-semibold text-slate-800 truncate" :title="company.company_name">
+        <div class="p-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg">
+          <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Компания / Юр. лицо:</div>
+          <div class="mt-0.5 font-semibold text-slate-800 dark:text-slate-100 truncate" :title="company.company_name">
             {{ company.company_name || '—' }}
           </div>
         </div>
 
-        <div class="p-3 bg-white border border-slate-200 rounded-lg">
-          <div class="text-xs text-slate-500 font-medium">Тип бизнеса / Кабинет:</div>
-          <div class="mt-0.5 text-slate-800">
+        <div class="p-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg">
+          <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Тип бизнеса / Кабинет:</div>
+          <div class="mt-0.5 text-slate-800 dark:text-slate-100">
             <span class="font-semibold">{{ company.business_type || '—' }}</span>
-            <span class="text-slate-400 mx-1.5">•</span>
-            <span class="font-medium text-slate-700">{{ company.cabinet_name || company.company_name || '—' }}</span>
+            <span class="text-slate-400 dark:text-slate-600 mx-1.5">•</span>
+            <span class="font-medium text-slate-700 dark:text-slate-300">{{ company.cabinet_name || company.company_name || '—' }}</span>
           </div>
         </div>
 
+        <!-- iikoWeb Address Block -->
+        <div
+          v-if="company.software_type !== 'ROSTA' || company.iiko_web_address"
+          class="p-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg col-span-1 md:col-span-2 flex items-center justify-between gap-3"
+        >
+          <div class="flex-1 min-w-0">
+            <div class="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1.5">
+              <i class="pi pi-globe text-xs text-blue-500 dark:text-blue-400"></i>
+              <span>Адрес iikoWeb:</span>
+            </div>
+            <div class="mt-0.5 flex items-center gap-2 flex-wrap">
+              <template v-if="company.iiko_web_address">
+                <QuickCopyBtn :text="company.iiko_web_address" label="Адрес iikoWeb" class="max-w-md sm:max-w-xl">
+                  <span class="truncate block max-w-xs sm:max-w-md text-xs font-mono">{{ company.iiko_web_address }}</span>
+                </QuickCopyBtn>
+                <a
+                  :href="company.iiko_web_address.startsWith('http') ? company.iiko_web_address : `https://${company.iiko_web_address}`"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline shrink-0 ml-1"
+                  title="Открыть в браузере"
+                >
+                  <i class="pi pi-external-link text-[10px]"></i>
+                  <span>Перейти</span>
+                </a>
+              </template>
+              <span v-else class="text-slate-400 dark:text-slate-500 text-xs italic">
+                Не указан
+              </span>
+            </div>
+          </div>
+          <Button
+            v-if="company.iiko_web_address"
+            icon="pi pi-external-link"
+            label="Открыть"
+            size="small"
+            severity="secondary"
+            outlined
+            class="!text-xs shrink-0"
+            @click="openIikoWeb"
+          />
+        </div>
+
         <!-- Connected Services Block (Replaces old ITS tile) -->
-        <div class="p-3 bg-white border border-slate-200 rounded-lg flex items-center justify-between col-span-1 md:col-span-2">
+        <div class="p-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg flex items-center justify-between col-span-1 md:col-span-2">
           <div class="flex-1 min-w-0 pr-3">
-            <div class="text-xs text-slate-500 font-medium flex items-center gap-1.5">
-              <i class="pi pi-box text-xs text-indigo-600"></i>
+            <div class="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1.5">
+              <i class="pi pi-box text-xs text-indigo-600 dark:text-indigo-400"></i>
               Доп. услуги:
             </div>
             <div class="mt-1 flex items-center gap-1.5 flex-wrap">
@@ -291,7 +334,7 @@
                   class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md border"
                   :class="srv.is_its || srv.service_code === 'ITS'
                     ? getExpirationBadgeClass(srv.days_remaining)
-                    : (srv.service_code === 'NOIP' ? 'bg-blue-100 text-blue-900 border-blue-300' : 'bg-slate-100 text-slate-800 border-slate-300')"
+                    : (srv.service_code === 'NOIP' ? 'bg-blue-100 text-blue-900 border-blue-300 dark:bg-blue-950/80 dark:text-blue-300 dark:border-blue-800' : 'bg-slate-100 text-slate-800 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700')"
                 >
                   <i :class="['text-[10px]', getServiceIcon(srv)]"></i>
                   <span>{{ srv.service_name || 'Услуга' }}</span>
@@ -312,7 +355,7 @@
                   </span>
                 </span>
               </template>
-              <span v-else class="text-xs text-slate-400 italic">
+              <span v-else class="text-xs text-slate-400 dark:text-slate-500 italic">
                 Нет подключенных услуг
               </span>
             </div>
@@ -329,32 +372,32 @@
         </div>
 
         <!-- Launch Date & Audit Block -->
-        <div class="p-3 bg-white border border-slate-200 rounded-lg col-span-1 md:col-span-2">
+        <div class="p-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg col-span-1 md:col-span-2">
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <div class="text-xs text-slate-500 font-medium flex items-center gap-1">
-                <i class="pi pi-calendar text-blue-600"></i>
+              <div class="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+                <i class="pi pi-calendar text-blue-600 dark:text-blue-400"></i>
                 Дата запуска заведения:
               </div>
-              <div class="mt-0.5 text-xs font-semibold text-slate-800 font-mono">
+              <div class="mt-0.5 text-xs font-semibold text-slate-800 dark:text-slate-200 font-mono">
                 {{ formatDateTime(company.created_at) }}
               </div>
             </div>
             <div>
-              <div class="text-xs text-slate-500 font-medium flex items-center gap-1">
-                <i class="pi pi-history text-indigo-600"></i>
+              <div class="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+                <i class="pi pi-history text-indigo-600 dark:text-indigo-400"></i>
                 Дата последнего обновления:
               </div>
-              <div class="mt-0.5 text-xs font-semibold text-slate-800 font-mono">
+              <div class="mt-0.5 text-xs font-semibold text-slate-800 dark:text-slate-200 font-mono">
                 {{ formatDateTime(company.updated_at) }}
               </div>
             </div>
             <div>
-              <div class="text-xs text-slate-500 font-medium flex items-center gap-1">
-                <i class="pi pi-user text-slate-500"></i>
+              <div class="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+                <i class="pi pi-user text-slate-500 dark:text-slate-400"></i>
                 Автор обновления:
               </div>
-              <div class="mt-0.5 text-xs font-semibold text-slate-800">
+              <div class="mt-0.5 text-xs font-semibold text-slate-800 dark:text-slate-200">
                 {{ company.updated_by_name || 'Не указан' }}
               </div>
             </div>
@@ -1216,8 +1259,13 @@ const handleLaunchLicense = async () => {
 }
 
 const openIikoWeb = () => {
-  const url = company.value.iiko_web_address || `https://${company.value.server_name}:443/navigator/index.html#/auth/login`
-  window.open(url, '_blank')
+  let url = company.value.iiko_web_address || (company.value.server_name ? `https://${company.value.server_name}:443/navigator/index.html#/auth/login` : '')
+  if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+    url = `https://${url}`
+  }
+  if (url) {
+    window.open(url, '_blank')
+  }
 }
 
 const copyToClipboard = async (text, label) => {
