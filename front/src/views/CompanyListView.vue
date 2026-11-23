@@ -175,17 +175,39 @@
 
         <!-- Filter Controls Row (7 Columns) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2.5 pt-3 border-t border-slate-100">
-          <!-- Search input -->
-          <div class="sm:col-span-2">
-            <IconField iconPosition="left">
-              <InputIcon class="pi pi-search" />
-              <InputText
-                v-model="searchQuery"
-                placeholder="Поиск (название, CRM, UID, сервер, город)..."
-                class="w-full text-xs"
-                @input="onSearchInput"
-              />
-            </IconField>
+          <!-- Search input with Reset Filters & Sorting button on the left -->
+          <div class="sm:col-span-2 flex items-center gap-1.5">
+            <button
+              type="button"
+              class="self-stretch w-[34px] shrink-0 rounded-lg flex items-center justify-center border transition-all cursor-pointer"
+              :class="hasActiveFiltersOrSort
+                ? 'bg-rose-50 border-rose-300 text-rose-600 hover:bg-rose-100 hover:border-rose-400 shadow-2xs'
+                : 'bg-white border-slate-200 text-slate-400 hover:text-slate-600 hover:border-slate-300 hover:bg-slate-50'"
+              title="Сбросить все фильтры и сортировку"
+              @click="resetAllFiltersAndSorting"
+            >
+              <i class="pi pi-filter-slash text-sm"></i>
+            </button>
+            <div class="relative flex-1 min-w-0">
+              <IconField iconPosition="left" class="w-full">
+                <InputIcon class="pi pi-search" />
+                <InputText
+                  v-model="searchQuery"
+                  placeholder="Поиск (название, CRM, UID, сервер, город)..."
+                  class="w-full text-xs !pr-7"
+                  @input="onSearchInput"
+                />
+              </IconField>
+              <button
+                v-if="searchQuery"
+                type="button"
+                class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition cursor-pointer p-0.5"
+                title="Очистить поиск"
+                @click="clearSearch"
+              >
+                <i class="pi pi-times text-[10px]"></i>
+              </button>
+            </div>
           </div>
 
           <!-- Chain filter (MS Access co_list equivalent) -->
@@ -775,6 +797,19 @@ const isFiltered = computed(() => {
   )
 })
 
+const hasActiveFiltersOrSort = computed(() => {
+  return !!(
+    searchQuery.value.trim() ||
+    selectedNodeType.value ||
+    selectedChain.value ||
+    selectedCity.value ||
+    (selectedStatus.value !== null && selectedStatus.value !== undefined && selectedStatus.value !== '') ||
+    selectedIts.value ||
+    selectedBusinessType.value ||
+    (selectedOrdering.value && selectedOrdering.value !== 'chain_smart')
+  )
+})
+
 const statusOptions = [
   { label: 'Активный', value: 'true' },
   { label: 'Неактивный', value: 'false' },
@@ -899,6 +934,39 @@ const activeChainName = computed(() => {
   const c = filterOptions.value.chains?.find((ch) => ch.id === selectedChain.value)
   return c ? c.place_name : `Сеть #${selectedChain.value}`
 })
+
+const clearSearch = () => {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+    searchTimeout = null
+  }
+  searchQuery.value = ''
+  currentPage.value = 1
+  loadCompanies()
+}
+
+const resetAllFiltersAndSorting = () => {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+    searchTimeout = null
+  }
+  searchQuery.value = ''
+  selectedNodeType.value = null
+  selectedChain.value = null
+  selectedCity.value = null
+  selectedStatus.value = null
+  selectedIts.value = null
+  selectedBusinessType.value = null
+  selectedOrdering.value = 'chain_smart'
+  currentPage.value = 1
+  loadCompanies()
+  toast.add({
+    severity: 'info',
+    summary: 'Фильтры сброшены',
+    detail: 'Все фильтры и сортировка сброшены к значениям по умолчанию',
+    life: 2500,
+  })
+}
 
 const clearChainFilter = () => {
   selectedChain.value = null

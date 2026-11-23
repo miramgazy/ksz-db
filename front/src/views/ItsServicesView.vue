@@ -178,16 +178,40 @@
       <!-- Filter Controls Bar -->
       <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-3 flex flex-wrap items-center justify-between gap-3">
         <div class="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
-          <!-- Search input -->
-          <IconField iconPosition="left" class="w-full sm:w-64">
-            <InputIcon class="pi pi-search" />
-            <InputText
-              v-model="searchQuery"
-              placeholder="Поиск по компании, городу..."
-              class="w-full text-xs"
-              @input="onSearchInput"
-            />
-          </IconField>
+          <!-- Search input with Reset Filters button on the left -->
+          <div class="flex items-center gap-1.5 w-full sm:w-72">
+            <button
+              type="button"
+              class="self-stretch w-[34px] shrink-0 rounded-lg flex items-center justify-center border transition-all cursor-pointer"
+              :class="hasActiveFilters
+                ? 'bg-rose-50 border-rose-300 text-rose-600 hover:bg-rose-100 hover:border-rose-400 shadow-2xs'
+                : 'bg-white border-slate-200 text-slate-400 hover:text-slate-600 hover:border-slate-300 hover:bg-slate-50'"
+              title="Сбросить все фильтры"
+              @click="resetFilters"
+            >
+              <i class="pi pi-filter-slash text-sm"></i>
+            </button>
+            <div class="relative flex-1 min-w-0">
+              <IconField iconPosition="left" class="w-full">
+                <InputIcon class="pi pi-search" />
+                <InputText
+                  v-model="searchQuery"
+                  placeholder="Поиск по компании, городу..."
+                  class="w-full text-xs !pr-7"
+                  @input="onSearchInput"
+                />
+              </IconField>
+              <button
+                v-if="searchQuery"
+                type="button"
+                class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition cursor-pointer p-0.5"
+                title="Очистить поиск"
+                @click="clearSearch"
+              >
+                <i class="pi pi-times text-[10px]"></i>
+              </button>
+            </div>
+          </div>
 
           <!-- Service Type filter -->
           <Select
@@ -1112,12 +1136,31 @@ const hasActiveFilters = computed(() => {
   return !!(searchQuery.value.trim() || selectedServiceType.value || selectedNodeType.value || selectedExpStatus.value)
 })
 
+const clearSearch = () => {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+    searchTimeout = null
+  }
+  searchQuery.value = ''
+  loadServices()
+}
+
 const resetFilters = () => {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+    searchTimeout = null
+  }
   searchQuery.value = ''
   selectedServiceType.value = null
   selectedNodeType.value = null
   selectedExpStatus.value = null
   loadServices()
+  toast.add({
+    severity: 'info',
+    summary: 'Фильтры сброшены',
+    detail: 'Все фильтры сброшены к значениям по умолчанию',
+    life: 2500,
+  })
 }
 
 const toggleExpStatusFilter = (statusVal) => {
