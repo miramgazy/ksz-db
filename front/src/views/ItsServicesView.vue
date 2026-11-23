@@ -809,38 +809,36 @@
             />
           </div>
           <div>
-            <div class="flex justify-between items-center mb-1">
-              <label class="block text-xs font-bold text-slate-700 uppercase">Срок действия (до) *</label>
-              <div class="flex gap-1">
-                <button
-                  type="button"
-                  class="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded"
-                  @click="setFormDate(1)"
-                >
-                  +1 мес
-                </button>
-                <button
-                  type="button"
-                  class="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded"
-                  @click="setFormDate(12)"
-                >
-                  +1 год
-                </button>
-                <button
-                  type="button"
-                  class="text-[10px] bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-1.5 py-0.5 rounded font-bold"
-                  @click="serviceForm.expires_at = '2026-12-31'"
-                >
-                  31.12.2026
-                </button>
-              </div>
-            </div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Срок действия (до) *</label>
             <input
               type="date"
               v-model="serviceForm.expires_at"
               class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono"
               required
             />
+            <div class="flex items-center gap-1.5 mt-1.5">
+              <button
+                type="button"
+                class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-medium transition cursor-pointer"
+                @click="setFormDate(1)"
+              >
+                +1 мес
+              </button>
+              <button
+                type="button"
+                class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-medium transition cursor-pointer"
+                @click="setFormDate(12)"
+              >
+                +1 год
+              </button>
+              <button
+                type="button"
+                class="text-[11px] bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded font-bold transition cursor-pointer"
+                @click="serviceForm.expires_at = '2026-12-31'"
+              >
+                31.12.2026
+              </button>
+            </div>
           </div>
         </div>
 
