@@ -21,7 +21,7 @@ app.use(PrimeVue, {
     preset: Aura,
     options: {
       prefix: 'p',
-      darkModeSelector: false, // force clean light mode for daytime office CRM
+      darkModeSelector: '.dark',
       cssLayer: false
     }
   }

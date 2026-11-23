@@ -7,21 +7,21 @@
   >
     <div class="flex flex-col gap-4 py-2">
       <!-- Target Station Info Box -->
-      <div v-if="station" class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+      <div v-if="station" class="p-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center justify-between">
         <div>
-          <div class="text-xs text-slate-500 font-medium">Подключение к рабочей станции:</div>
-          <div class="font-bold text-slate-900 text-sm mt-0.5 flex items-center gap-2">
+          <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Подключение к рабочей станции:</div>
+          <div class="font-bold text-slate-900 dark:text-slate-100 text-sm mt-0.5 flex items-center gap-2">
             <span>{{ station.description || 'Рабочее место' }}</span>
-            <span class="font-mono text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-xs border border-blue-200">
+            <span class="font-mono text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded text-xs border border-blue-200 dark:border-blue-800">
               {{ station.anydesk_id }}
             </span>
           </div>
         </div>
         <div v-if="station.any_pass" class="text-right">
-          <span class="text-[11px] text-emerald-700 font-semibold flex items-center justify-end gap-1">
+          <span class="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold flex items-center justify-end gap-1">
             <i class="pi pi-check-circle text-[10px]"></i> Пароль задан
           </span>
-          <span class="text-xs font-mono font-medium text-slate-500">
+          <span class="text-xs font-mono font-medium text-slate-500 dark:text-slate-400">
             скопируется в буфер при запуске
           </span>
         </div>
@@ -29,7 +29,7 @@
 
       <!-- Profiles List Header & Manage button -->
       <div class="flex items-center justify-between pt-1">
-        <span class="text-xs font-bold uppercase tracking-wider text-slate-600">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
           Доступные профили запуска ({{ companionStore.profiles.length }})
         </span>
         <Button
@@ -38,18 +38,18 @@
           icon="pi pi-cog"
           text
           size="small"
-          class="!p-0 !text-xs text-blue-600"
+          class="!p-0 !text-xs text-blue-600 dark:text-blue-400"
           @click="openManagement"
         />
       </div>
 
       <!-- Profiles List -->
       <div class="flex flex-col gap-2 max-h-72 overflow-y-auto pr-1">
-        <div v-if="loading" class="text-center py-8 text-slate-400">
+        <div v-if="loading" class="text-center py-8 text-slate-400 dark:text-slate-500">
           <i class="pi pi-spin pi-spinner text-2xl"></i>
         </div>
 
-        <div v-else-if="!companionStore.profiles.length" class="text-center py-8 text-slate-400 text-sm">
+        <div v-else-if="!companionStore.profiles.length" class="text-center py-8 text-slate-400 dark:text-slate-500 text-sm">
           Нет настроенных профилей AnyDesk.
         </div>
 
@@ -58,8 +58,8 @@
           :key="prof.id"
           class="p-3 rounded-xl border transition cursor-pointer flex items-center justify-between"
           :class="selectedProfileId === prof.id
-            ? 'border-blue-500 bg-blue-50/50 ring-1 ring-blue-500'
-            : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/70'"
+            ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/40 ring-1 ring-blue-500'
+            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50/70 dark:hover:bg-slate-800/60'"
           @click="selectedProfileId = prof.id"
           @dblclick="selectAndLaunch(prof.id)"
           title="Нажмите для выбора, дважды кликните или нажмите Enter для запуска"
@@ -74,7 +74,7 @@
 
             <div class="flex flex-col">
               <div class="flex items-center gap-2">
-                <span class="font-bold text-slate-900 text-sm">{{ prof.name }}</span>
+                <span class="font-bold text-slate-900 dark:text-slate-100 text-sm">{{ prof.name }}</span>
                 <!-- Sandbox Badge -->
                 <Tag
                   v-if="prof.is_sandbox"
@@ -92,12 +92,12 @@
                 <!-- Default Tag -->
                 <span
                   v-if="companionStore.preferredProfileId === prof.id"
-                  class="text-[10px] font-semibold bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded"
+                  class="text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 px-1.5 py-0.2 rounded"
                 >
                   Мой выбор
                 </span>
               </div>
-              <span class="text-[11px] text-slate-400 truncate max-w-sm font-mono mt-0.5">
+              <span class="text-[11px] text-slate-400 dark:text-slate-500 truncate max-w-sm font-mono mt-0.5">
                 {{ prof.exe_path || 'C:\\Program Files (x86)\\AnyDesk\\AnyDesk.exe' }}
               </span>
             </div>

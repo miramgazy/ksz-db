@@ -1,45 +1,45 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-slate-50">
+  <div class="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 transition-colors">
     <Navbar />
 
     <main class="flex-1 w-full px-4 sm:px-6 lg:px-8 2xl:px-10 py-6 flex flex-col gap-5">
       <!-- Top Action & Filter Bar -->
-      <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 flex flex-col gap-4">
+      <div class="bg-white dark:bg-slate-900 rounded-xl shadow-xs border border-slate-200 dark:border-slate-800 p-4 flex flex-col gap-4">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
-            <h1 class="text-xl font-bold text-slate-900 tracking-tight flex flex-wrap items-center gap-2">
+            <h1 class="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight flex flex-wrap items-center gap-2">
               <span>Клиентская база заведений</span>
               <span
-                class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-mono border border-slate-200"
+                class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-mono border border-slate-200 dark:border-slate-700"
                 title="Всего заведений в выбранной системе"
               >
-                <i class="pi pi-building text-[10px] text-slate-500"></i>
+                <i class="pi pi-building text-[10px] text-slate-500 dark:text-slate-400"></i>
                 Всего: {{ currentTotalCount }}
               </span>
               <span
-                class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono"
+                class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-mono"
                 title="Количество активных заведений"
               >
-                <i class="pi pi-check-circle text-[10px] text-emerald-600"></i>
+                <i class="pi pi-check-circle text-[10px] text-emerald-600 dark:text-emerald-400"></i>
                 Активных: {{ activeCount }}
               </span>
               <span
-                class="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 font-mono shadow-2xs"
+                class="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700 font-mono shadow-2xs"
                 title="ИТС: всего заведений (точек) и количество уникальных компаний/сетей"
               >
-                <i class="pi pi-shield text-[10px] text-emerald-700"></i>
+                <i class="pi pi-shield text-[10px] text-emerald-700 dark:text-emerald-400"></i>
                 <span>На ИТС: {{ itsCount }} всего ({{ itsCompaniesCount }} комп.)</span>
               </span>
               <span
                 v-if="isFiltered"
-                class="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-mono"
+                class="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-mono"
                 title="Найдено заведений по текущим фильтрам"
               >
-                <i class="pi pi-filter text-[10px] text-blue-500"></i>
+                <i class="pi pi-filter text-[10px] text-blue-500 dark:text-blue-400"></i>
                 Найдено: {{ totalCount }}
               </span>
             </h1>
-            <p class="text-xs text-slate-500 mt-0.5">Управление параметрами подключения, серверами и учетными записями</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Управление параметрами подключения, серверами и учетными записями</p>
           </div>
 
           <div class="flex items-center gap-2 w-full sm:w-auto">
@@ -58,26 +58,38 @@
               size="small"
               title="Обновить список"
               :loading="loading"
+              class="transition-colors cursor-pointer"
+              :class="themeStore.isDark ? '!text-slate-200 !border-slate-700 hover:!bg-slate-800' : '!text-slate-600 !border-slate-300 hover:!bg-slate-100'"
               @click="handleRefresh"
+            />
+            <Button
+              :icon="themeStore.isDark ? 'pi pi-sun' : 'pi pi-moon'"
+              severity="secondary"
+              outlined
+              size="small"
+              :title="themeStore.isDark ? 'Переключить на светлую тему' : 'Переключить на тёмную тему'"
+              class="transition-colors cursor-pointer"
+              :class="themeStore.isDark ? '!text-amber-400 !border-slate-700 hover:!bg-slate-800' : '!text-slate-600 !border-slate-300 hover:!bg-slate-100'"
+              @click="themeStore.toggleTheme"
             />
           </div>
         </div>
 
         <!-- Software System Toggle (iiko vs Rosta) & Node Type Quick Filter -->
-        <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
-          <div class="inline-flex p-1 bg-slate-100 rounded-lg border border-slate-200">
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+          <div class="inline-flex p-1 bg-slate-100 dark:bg-slate-800/80 rounded-lg border border-slate-200 dark:border-slate-700">
             <!-- iiko button -->
             <button
               type="button"
-              class="px-3.5 py-1.5 text-xs font-bold rounded-md transition-all flex items-center gap-2"
-              :class="selectedSoftwareType === 'IIKO' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+              class="px-3.5 py-1.5 text-xs font-bold rounded-md transition-all flex items-center gap-2 cursor-pointer"
+              :class="selectedSoftwareType === 'IIKO' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
               @click="setSoftwareType('IIKO')"
             >
               <i class="pi pi-server"></i>
               <span>iiko</span>
               <span
                 class="px-1.5 py-0.2 rounded-full text-[10px]"
-                :class="selectedSoftwareType === 'IIKO' ? 'bg-blue-700 text-white' : 'bg-slate-200 text-slate-700'"
+                :class="selectedSoftwareType === 'IIKO' ? 'bg-blue-700 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'"
               >
                 {{ filterOptions.iiko_count || 907 }}
               </span>
@@ -86,15 +98,15 @@
             <!-- Rosta button -->
             <button
               type="button"
-              class="px-3.5 py-1.5 text-xs font-bold rounded-md transition-all flex items-center gap-2"
-              :class="selectedSoftwareType === 'ROSTA' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'"
+              class="px-3.5 py-1.5 text-xs font-bold rounded-md transition-all flex items-center gap-2 cursor-pointer"
+              :class="selectedSoftwareType === 'ROSTA' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'"
               @click="setSoftwareType('ROSTA')"
             >
               <i class="pi pi-tags"></i>
               <span>Rosta</span>
               <span
                 class="px-1.5 py-0.2 rounded-full text-[10px]"
-                :class="selectedSoftwareType === 'ROSTA' ? 'bg-emerald-700 text-white' : 'bg-slate-200 text-slate-700'"
+                :class="selectedSoftwareType === 'ROSTA' ? 'bg-emerald-700 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'"
               >
                 {{ filterOptions.rosta_count || 79 }}
               </span>
@@ -103,14 +115,14 @@
             <!-- All systems button -->
             <button
               type="button"
-              class="px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5"
-              :class="selectedSoftwareType === '' ? 'bg-white text-slate-900 shadow-xs border border-slate-200' : 'text-slate-500 hover:text-slate-800'"
+              class="px-3 py-1.5 text-xs font-medium rounded-md transition-all flex items-center gap-1.5 cursor-pointer"
+              :class="selectedSoftwareType === '' ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs border border-slate-200 dark:border-slate-700' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'"
               @click="setSoftwareType('')"
             >
               <span>Все системы</span>
               <span
                 class="px-1.5 py-0.2 rounded-full text-[10px]"
-                :class="selectedSoftwareType === '' ? 'bg-slate-200 text-slate-800' : 'bg-slate-200 text-slate-600'"
+                :class="selectedSoftwareType === '' ? 'bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'"
               >
                 {{ filterOptions.total_count || 985 }}
               </span>
@@ -121,7 +133,7 @@
           <div class="flex flex-wrap items-center gap-3">
             <!-- Quick Node Type Filter -->
             <div class="flex items-center gap-2">
-              <span class="text-xs text-slate-500 font-medium whitespace-nowrap">Тип заведения:</span>
+              <span class="text-xs text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">Тип заведения:</span>
               <Select
                 v-model="selectedNodeType"
                 :options="nodeTypeFilterOptions"
@@ -135,8 +147,8 @@
             </div>
 
             <!-- Quick AnyDesk Launch -->
-            <div class="flex items-center gap-1.5 pl-3 border-l border-slate-200">
-              <span class="text-xs text-slate-500 font-medium whitespace-nowrap">Быстрый AnyDesk:</span>
+            <div class="flex items-center gap-1.5 pl-3 border-l border-slate-200 dark:border-slate-700">
+              <span class="text-xs text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">Быстрый AnyDesk:</span>
               <div class="flex items-center gap-1">
                 <div class="relative flex items-center">
                   <IconField iconPosition="left">
@@ -151,7 +163,7 @@
                   <button
                     v-if="quickAnydeskId"
                     type="button"
-                    class="absolute right-2 text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                    class="absolute right-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition cursor-pointer"
                     title="Очистить"
                     @click="quickAnydeskId = ''"
                   >
@@ -174,15 +186,15 @@
         </div>
 
         <!-- Filter Controls Row (7 Columns) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2.5 pt-3 border-t border-slate-100">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
           <!-- Search input with Reset Filters & Sorting button on the left -->
           <div class="sm:col-span-2 flex items-center gap-1.5">
             <button
               type="button"
               class="self-stretch w-[34px] shrink-0 rounded-lg flex items-center justify-center border transition-all cursor-pointer"
               :class="hasActiveFiltersOrSort
-                ? 'bg-rose-50 border-rose-300 text-rose-600 hover:bg-rose-100 hover:border-rose-400 shadow-2xs'
-                : 'bg-white border-slate-200 text-slate-400 hover:text-slate-600 hover:border-slate-300 hover:bg-slate-50'"
+                ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-700 text-rose-600 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 shadow-2xs'
+                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'"
               title="Сбросить все фильтры и сортировку"
               @click="resetAllFiltersAndSorting"
             >
@@ -201,7 +213,7 @@
               <button
                 v-if="searchQuery"
                 type="button"
-                class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition cursor-pointer p-0.5"
+                class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition cursor-pointer p-0.5"
                 title="Очистить поиск"
                 @click="clearSearch"
               >
@@ -283,13 +295,13 @@
         <!-- Active Chain Filter Banner -->
         <div
           v-if="selectedChain"
-          class="mt-3 flex items-center justify-between px-3 py-2 bg-indigo-50/90 border border-indigo-200 rounded-lg text-xs text-indigo-900"
+          class="mt-3 flex items-center justify-between px-3 py-2 bg-indigo-50/90 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 rounded-lg text-xs text-indigo-900 dark:text-indigo-200"
         >
           <div class="flex items-center gap-2">
-            <i class="pi pi-sitemap text-indigo-600 font-bold"></i>
+            <i class="pi pi-sitemap text-indigo-600 dark:text-indigo-400 font-bold"></i>
             <span>
               Показаны только заведения сети:
-              <strong class="font-bold underline text-indigo-950">{{ activeChainName }}</strong>
+              <strong class="font-bold underline text-indigo-950 dark:text-indigo-100">{{ activeChainName }}</strong>
               (головной узел и все филиалы)
             </span>
           </div>
@@ -299,14 +311,14 @@
             severity="secondary"
             size="small"
             text
-            class="!text-xs !p-1 text-indigo-700 hover:text-indigo-900"
+            class="!text-xs !p-1 text-indigo-700 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-100"
             @click="clearChainFilter"
           />
         </div>
       </div>
 
       <!-- Main Data Table -->
-      <div class="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+      <div class="bg-white dark:bg-slate-900 rounded-xl shadow-xs border border-slate-200 dark:border-slate-800 overflow-hidden">
         <DataTable
           :value="companies"
           :loading="loading"
@@ -322,7 +334,7 @@
           :sortOrder="currentSortOrder"
         >
           <template #empty>
-            <div class="text-center py-12 text-slate-400">
+            <div class="text-center py-12 text-slate-400 dark:text-slate-500">
               <i class="pi pi-inbox text-4xl mb-2"></i>
               <p>Заведения не найдены по заданным критериям поиска.</p>
             </div>
@@ -340,8 +352,8 @@
                     @click.stop="toggleChainFilter(data.id, data.place_name)"
                     class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md border transition cursor-pointer group"
                     :class="selectedChain === data.id
-                      ? 'bg-purple-700 text-white border-purple-700 shadow-xs ring-2 ring-purple-200'
-                      : 'text-purple-800 bg-purple-50 border-purple-200 hover:bg-purple-100 hover:border-purple-300'"
+                      ? 'bg-purple-700 text-white border-purple-700 shadow-xs ring-2 ring-purple-200 dark:ring-purple-900'
+                      : 'text-purple-800 dark:text-purple-200 bg-purple-50 dark:bg-purple-950/60 border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/60'"
                     :title="selectedChain === data.id
                       ? `Нажмите, чтобы сбросить фильтр по сети '${data.place_name}'`
                       : `Показать только сеть '${data.place_name}' (${data.branches_count || 0} филиалов)`"
@@ -365,8 +377,8 @@
                     @click.stop="toggleChainFilter(data.parent_chain, data.parent_chain_name)"
                     class="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md border transition cursor-pointer group"
                     :class="selectedChain === data.parent_chain
-                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs ring-2 ring-indigo-200'
-                      : 'text-indigo-700 bg-indigo-50 border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300'"
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs ring-2 ring-indigo-200 dark:ring-indigo-900'
+                      : 'text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/60'"
                     :title="selectedChain === data.parent_chain
                       ? `Нажмите, чтобы сбросить фильтр по сети '${data.parent_chain_name}'`
                       : `Показать сеть '${data.parent_chain_name}' и все её филиалы`"
@@ -385,7 +397,7 @@
                   <!-- Place name with ITS color gradation highlighting & shield/clock/alert badge -->
                   <span
                     class="font-bold transition cursor-pointer inline-flex items-center gap-1.5"
-                    :class="data.status && data.helpdesk_its === 'Да' ? getExpirationTextClass(data.its_days_remaining ?? getDaysRemaining(data.its_expires_at), true) : 'text-slate-900 hover:text-blue-600'"
+                    :class="data.status && data.helpdesk_its === 'Да' ? getExpirationTextClass(data.its_days_remaining ?? getDaysRemaining(data.its_expires_at), true) : 'text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400'"
                   >
                     <span>{{ data.place_name }}</span>
                     <span
@@ -406,8 +418,8 @@
                   </span>
                 </div>
 
-                <span class="text-[11px] text-slate-500 mt-0.5">
-                  {{ data.company_name || '—' }} • <span class="font-medium text-slate-600">{{ data.city || 'Город не указан' }}</span>
+                <span class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  {{ data.company_name || '—' }} • <span class="font-medium text-slate-600 dark:text-slate-300">{{ data.city || 'Город не указан' }}</span>
                 </span>
               </div>
             </template>
@@ -434,7 +446,7 @@
             <template #body="{ data }">
               <div class="flex items-center gap-1 font-mono text-xs whitespace-nowrap">
                 <QuickCopyBtn :text="data.server_name" label="Сервер" />
-                <span v-if="data.port_number && data.port_number !== '443'" class="text-slate-400 shrink-0">
+                <span v-if="data.port_number && data.port_number !== '443'" class="text-slate-400 dark:text-slate-500 shrink-0">
                   :{{ data.port_number }}
                 </span>
               </div>
@@ -461,10 +473,10 @@
           <Column field="iiko_version" header="Лицензия / Версия" :sortable="true" style="min-width: 180px; white-space: nowrap">
             <template #body="{ data }">
               <div class="flex items-center gap-1.5 text-xs whitespace-nowrap">
-                <span v-if="data.software_type !== 'ROSTA'" class="font-medium text-slate-700">
+                <span v-if="data.software_type !== 'ROSTA'" class="font-medium text-slate-700 dark:text-slate-200">
                   {{ data.licence_type || '—' }} • {{ data.iiko_version || '—' }}
                 </span>
-                <span v-else class="text-emerald-600 font-semibold">
+                <span v-else class="text-emerald-600 dark:text-emerald-400 font-semibold">
                   {{ data.licence_type || 'Rosta' }}
                 </span>
 
@@ -475,7 +487,7 @@
                   @click.stop="copyDistributionLink(data)"
                   :title="data.distribution_link ? `Скопировать ссылку на дистрибутив (${data.iiko_version})` : `Ссылка на дистрибутив (${data.iiko_version}) не найдена`"
                   class="inline-flex items-center justify-center w-6 h-6 rounded-md transition shrink-0 cursor-pointer"
-                  :class="data.distribution_link ? 'text-blue-500 hover:text-blue-700 hover:bg-blue-50' : 'text-slate-300 opacity-40 hover:bg-slate-100'"
+                  :class="data.distribution_link ? 'text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-slate-800' : 'text-slate-300 dark:text-slate-600 opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800'"
                 >
                   <i class="pi pi-copy text-xs"></i>
                 </button>
@@ -538,18 +550,18 @@
         </DataTable>
 
         <!-- Pagination -->
-        <div class="p-3 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-slate-600 bg-slate-50">
+        <div class="p-3 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900">
           <div class="flex items-center gap-3 flex-wrap">
             <span class="whitespace-nowrap font-medium">Показано {{ companies.length }} из {{ totalCount }} заведений</span>
-            <div class="flex items-center gap-1.5 border-l border-slate-200 pl-3">
-              <span class="text-slate-500 whitespace-nowrap">Показывать по:</span>
+            <div class="flex items-center gap-1.5 border-l border-slate-200 dark:border-slate-700 pl-3">
+              <span class="text-slate-500 dark:text-slate-400 whitespace-nowrap">Показывать по:</span>
               <Select
                 v-model="pageSize"
                 :options="pageSizeOptions"
                 optionLabel="label"
                 optionValue="value"
                 size="small"
-                class="w-24 text-xs bg-white font-medium"
+                class="w-24 text-xs font-medium"
                 @change="onPageSizeChange"
               />
             </div>
@@ -560,7 +572,7 @@
             <!-- First Page Button -->
             <button
               type="button"
-              class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+              class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
               :disabled="currentPage <= 1"
               @click="changePage(1)"
               title="Первая страница"
@@ -571,7 +583,7 @@
             <!-- Previous Page Button -->
             <button
               type="button"
-              class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+              class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
               :disabled="currentPage <= 1"
               @click="changePage(currentPage - 1)"
               title="Предыдущая страница"
@@ -583,7 +595,7 @@
             <template v-for="(p, idx) in visiblePages" :key="idx">
               <span
                 v-if="p === '...'"
-                class="w-6 h-8 flex items-center justify-center text-slate-400 font-mono select-none"
+                class="w-6 h-8 flex items-center justify-center text-slate-400 dark:text-slate-500 font-mono select-none"
               >
                 ...
               </span>
@@ -594,7 +606,7 @@
                 class="min-w-8 h-8 px-2 flex items-center justify-center rounded-lg text-xs font-mono font-medium transition cursor-pointer"
                 :class="p === currentPage
                   ? 'bg-blue-600 text-white font-bold shadow-xs'
-                  : 'text-slate-700 hover:bg-slate-200 hover:text-blue-600'"
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400'"
               >
                 {{ p }}
               </button>
@@ -603,7 +615,7 @@
             <!-- Next Page Button -->
             <button
               type="button"
-              class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+              class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
               :disabled="currentPage >= totalPages"
               @click="changePage(currentPage + 1)"
               title="Следующая страница"
@@ -614,7 +626,7 @@
             <!-- Last Page Button -->
             <button
               type="button"
-              class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+              class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
               :disabled="currentPage >= totalPages"
               @click="changePage(totalPages)"
               title="Последняя страница"
@@ -655,6 +667,7 @@ import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useAuthStore } from '../stores/auth'
 import { useCompanionStore } from '../stores/companion'
+import { useThemeStore } from '../stores/theme'
 import { companiesApi } from '../api/companies'
 import Navbar from '../components/Navbar.vue'
 import QuickCopyBtn from '../components/QuickCopyBtn.vue'
@@ -675,6 +688,7 @@ const toast = useToast()
 const confirm = useConfirm()
 const authStore = useAuthStore()
 const companionStore = useCompanionStore()
+const themeStore = useThemeStore()
 
 const loading = ref(false)
 const companies = ref([])
@@ -1004,7 +1018,7 @@ const toggleChainFilter = (chainId, chainName) => {
 
 const rowClass = (data) => {
   if (data.status && data.helpdesk_its === 'Да') {
-    return 'bg-emerald-50/30 hover:!bg-emerald-50/70 border-l-4 border-l-emerald-600 transition-colors'
+    return 'bg-emerald-50/30 dark:bg-emerald-950/20 hover:!bg-emerald-50/70 dark:hover:!bg-emerald-950/40 border-l-4 border-l-emerald-600 dark:border-l-emerald-500 transition-colors'
   }
   return ''
 }

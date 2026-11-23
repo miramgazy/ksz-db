@@ -1,19 +1,19 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-slate-50">
+  <div class="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 transition-colors">
     <Navbar />
 
     <main class="flex-1 w-full px-4 sm:px-6 lg:px-8 2xl:px-10 py-6 flex flex-col gap-5">
       <!-- Header Bar -->
-      <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div class="bg-white dark:bg-slate-900 rounded-xl shadow-xs border border-slate-200 dark:border-slate-800 p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 class="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <i class="pi pi-shield text-emerald-600"></i>
+          <h1 class="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
+            <i class="pi pi-shield text-emerald-600 dark:text-emerald-400"></i>
             <span>ИТС и дополнительные услуги</span>
-            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-mono border border-slate-200">
+            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-mono border border-slate-200 dark:border-slate-700">
               {{ services.length }} подписок
             </span>
           </h1>
-          <p class="text-xs text-slate-500 mt-0.5">Управление договорами техсопровождения, сроками действия подписок и тарифами</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Управление договорами техсопровождения, сроками действия подписок и тарифами</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
@@ -176,7 +176,7 @@
       </div>
 
       <!-- Filter Controls Bar -->
-      <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="bg-white dark:bg-slate-900 rounded-xl shadow-xs border border-slate-200 dark:border-slate-800 p-3 flex flex-wrap items-center justify-between gap-3">
         <div class="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
           <!-- Search input with Reset Filters button on the left -->
           <div class="flex items-center gap-1.5 w-full sm:w-72">
@@ -184,8 +184,8 @@
               type="button"
               class="self-stretch w-[34px] shrink-0 rounded-lg flex items-center justify-center border transition-all cursor-pointer"
               :class="hasActiveFilters
-                ? 'bg-rose-50 border-rose-300 text-rose-600 hover:bg-rose-100 hover:border-rose-400 shadow-2xs'
-                : 'bg-white border-slate-200 text-slate-400 hover:text-slate-600 hover:border-slate-300 hover:bg-slate-50'"
+                ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-700 text-rose-600 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 shadow-2xs'
+                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'"
               title="Сбросить все фильтры"
               @click="resetFilters"
             >
@@ -204,7 +204,7 @@
               <button
                 v-if="searchQuery"
                 type="button"
-                class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition cursor-pointer p-0.5"
+                class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition cursor-pointer p-0.5"
                 title="Очистить поиск"
                 @click="clearSearch"
               >
@@ -263,7 +263,7 @@
       </div>
 
       <!-- Main Data Table -->
-      <div class="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+      <div class="bg-white dark:bg-slate-900 rounded-xl shadow-xs border border-slate-200 dark:border-slate-800 overflow-hidden">
         <DataTable
           :value="services"
           :loading="loading"

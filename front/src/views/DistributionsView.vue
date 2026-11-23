@@ -1,18 +1,18 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-slate-50">
+  <div class="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 transition-colors">
     <Navbar />
 
     <main class="flex-1 w-full px-4 sm:px-6 lg:px-8 2xl:px-10 py-6 flex flex-col gap-5">
       <!-- Top Action & Search Bar -->
-      <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div class="bg-white dark:bg-slate-900 rounded-xl shadow-xs border border-slate-200 dark:border-slate-800 p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 class="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+          <h1 class="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
             <span>Дистрибутивы iiko Office</span>
-            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-mono">
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono">
               {{ distributions.length }} версий
             </span>
           </h1>
-          <p class="text-xs text-slate-500 mt-0.5">Ссылки на скачивание установочных пакетов iiko Office с Яндекс.Диска</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Ссылки на скачивание установочных пакетов iiko Office с Яндекс.Диска</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
@@ -48,7 +48,7 @@
       </div>
 
       <!-- Main Table -->
-      <div class="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+      <div class="bg-white dark:bg-slate-900 rounded-xl shadow-xs border border-slate-200 dark:border-slate-800 overflow-hidden">
         <DataTable
           :value="distributions"
           :loading="loading"
@@ -59,7 +59,7 @@
           responsiveLayout="scroll"
         >
           <template #empty>
-            <div class="text-center py-12 text-slate-400">
+            <div class="text-center py-12 text-slate-400 dark:text-slate-500">
               <i class="pi pi-inbox text-4xl mb-2"></i>
               <p>Дистрибутивы не найдены.</p>
             </div>
@@ -68,8 +68,8 @@
           <Column field="iiko_version" header="Версия iiko" :sortable="true" style="min-width: 160px">
             <template #body="{ data }">
               <div class="flex items-center gap-2">
-                <i class="pi pi-box text-blue-600"></i>
-                <span class="font-bold font-mono text-slate-800 text-sm">{{ data.iiko_version }}</span>
+                <i class="pi pi-box text-blue-600 dark:text-blue-400"></i>
+                <span class="font-bold font-mono text-slate-800 dark:text-slate-200 text-sm">{{ data.iiko_version }}</span>
               </div>
             </template>
           </Column>

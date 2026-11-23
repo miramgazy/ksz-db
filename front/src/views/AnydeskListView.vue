@@ -1,18 +1,18 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-slate-50">
+  <div class="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 transition-colors">
     <Navbar />
 
     <main class="flex-1 w-full px-4 sm:px-6 lg:px-8 2xl:px-10 py-6 flex flex-col gap-5">
       <!-- Top Action & Search Bar -->
-      <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div class="bg-white dark:bg-slate-900 rounded-xl shadow-xs border border-slate-200 dark:border-slate-800 p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 class="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+          <h1 class="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
             <span>Реестр подключений AnyDesk</span>
-            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-mono">
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono">
               {{ totalCount }} станций
             </span>
           </h1>
-          <p class="text-xs text-slate-500 mt-0.5">Единая база удаленных рабочих мест инженеров по всем заведениям</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Единая база удаленных рабочих мест инженеров по всем заведениям</p>
         </div>
 
         <div class="flex items-center gap-3 w-full sm:w-auto">
@@ -44,7 +44,7 @@
       </div>
 
       <!-- Main AnyDesk Table -->
-      <div class="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
+      <div class="bg-white dark:bg-slate-900 rounded-xl shadow-xs border border-slate-200 dark:border-slate-800 overflow-hidden">
         <DataTable
           :value="stations"
           :loading="loading"

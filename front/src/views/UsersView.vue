@@ -1,16 +1,16 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-slate-50">
+  <div class="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 transition-colors">
     <Navbar />
 
     <main class="flex-1 w-full px-4 sm:px-6 lg:px-8 2xl:px-10 py-6 flex flex-col gap-5">
       <!-- Header -->
-      <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div class="bg-white dark:bg-slate-900 rounded-xl shadow-xs border border-slate-200 dark:border-slate-800 p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 class="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+          <h1 class="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
             <span>Управление пользователями и доступом</span>
             <Tag value="Суперадмин" severity="help" class="!text-[11px]" />
           </h1>
-          <p class="text-xs text-slate-500 mt-0.5">Модерация заявок на регистрацию, распределение ролей и контроль учетных записей</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Модерация заявок на регистрацию, распределение ролей и контроль учетных записей</p>
         </div>
 
         <Button

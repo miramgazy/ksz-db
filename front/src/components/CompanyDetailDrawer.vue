@@ -6,17 +6,17 @@
   >
     <template #header>
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-lg">
+        <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 flex items-center justify-center font-bold text-lg">
           <i class="pi pi-building"></i>
         </div>
         <div>
           <div v-if="!company?.id">
-            <h2 class="text-lg font-bold text-slate-900 leading-tight">Создание нового заведения</h2>
-            <p class="text-xs text-slate-500 mt-0.5">Заполните реквизиты для добавления в базу данных</p>
+            <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100 leading-tight">Создание нового заведения</h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Заполните реквизиты для добавления в базу данных</p>
           </div>
           <div v-else>
             <div class="flex flex-wrap items-center gap-2">
-              <h2 class="text-lg font-bold text-slate-900 leading-tight">{{ company?.place_name }}</h2>
+              <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100 leading-tight">{{ company?.place_name }}</h2>
               <!-- Status Badge: Активный / Неактивный -->
               <Tag
                 :value="company?.status ? 'Активный' : 'Неактивный'"
@@ -51,15 +51,15 @@
                 icon="pi pi-shield"
               />
             </div>
-            <p class="text-xs text-slate-500 mt-0.5 flex flex-wrap items-center gap-1.5">
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex flex-wrap items-center gap-1.5">
               <span>{{ company?.company_name || 'Юр. лицо не указано' }}</span>
               <span>•</span>
-              <span class="font-medium text-slate-700">{{ company?.city || 'Город не указан' }}</span>
+              <span class="font-medium text-slate-700 dark:text-slate-300">{{ company?.city || 'Город не указан' }}</span>
               <template v-if="company?.created_at">
                 <span class="text-slate-400">•</span>
-                <span class="inline-flex items-center gap-1 text-slate-600 font-medium" title="Дата запуска (создания записи в базе)">
-                  <i class="pi pi-calendar text-[11px] text-blue-600"></i>
-                  Запуск: <span class="font-bold text-slate-800">{{ formatDate(company.created_at) }}</span>
+                <span class="inline-flex items-center gap-1 text-slate-600 dark:text-slate-300 font-medium" title="Дата запуска (создания записи в базе)">
+                  <i class="pi pi-calendar text-[11px] text-blue-600 dark:text-blue-400"></i>
+                  Запуск: <span class="font-bold text-slate-800 dark:text-slate-200">{{ formatDate(company.created_at) }}</span>
                 </span>
               </template>
             </p>
@@ -74,8 +74,8 @@
 
     <div v-else-if="company" class="flex flex-col gap-6 py-2">
       <!-- Quick Operational Action Buttons -->
-      <div v-if="company?.id && !isEditing" class="p-4 bg-slate-100 rounded-xl border border-slate-200">
-        <div class="text-xs font-bold uppercase text-slate-500 mb-2.5 tracking-wider">Быстрые действия и запуск:</div>
+      <div v-if="company?.id && !isEditing" class="p-4 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700">
+        <div class="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 mb-2.5 tracking-wider">Быстрые действия и запуск:</div>
         <div class="flex flex-wrap gap-2">
           <!-- BackOffice launch (for iiko) -->
           <Button

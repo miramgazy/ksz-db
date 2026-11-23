@@ -11,6 +11,13 @@ body {
   padding: 0;
   background-color: #f8fafc;
   color: #1e293b;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.dark body,
+html.dark body {
+  background-color: #030712;
+  color: #f9fafb;
 }
 
 /* Custom scrollbars */
@@ -21,12 +28,21 @@ body {
 ::-webkit-scrollbar-track {
   background: #f1f5f9;
 }
+.dark ::-webkit-scrollbar-track {
+  background: #111827;
+}
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 4px;
 }
+.dark ::-webkit-scrollbar-thumb {
+  background: #374151;
+}
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
 }
 
 /* Compact data table styling */
@@ -37,13 +53,111 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.025em;
   background-color: #f1f5f9;
+  color: #475569;
+  border-color: #e2e8f0;
 }
 
 .p-datatable-sm .p-datatable-tbody > tr > td {
   padding: 0.45rem 0.65rem;
   font-size: 0.8125rem;
+  border-color: #f1f5f9;
 }
 
 .p-datatable .p-datatable-tbody > tr:hover {
   background-color: #f8fafc;
+}
+
+/* Dark mode data table styling with high contrast */
+.dark .p-datatable-sm .p-datatable-thead > tr > th {
+  background-color: #111827 !important;
+  color: #e5e7eb !important;
+  border-color: #1f2937 !important;
+}
+
+.dark .p-datatable-sm .p-datatable-tbody > tr > td {
+  background-color: #030712 !important;
+  color: #f3f4f6 !important;
+  border-color: #1f2937 !important;
+}
+
+.dark .p-datatable .p-datatable-tbody > tr.p-row-odd > td {
+  background-color: #0b0f19 !important;
+}
+
+.dark .p-datatable .p-datatable-tbody > tr:hover > td {
+  background-color: #1f2937 !important;
+}
+
+/* Dark mode inputs, selects & popups */
+.dark .p-inputtext,
+.dark .p-select {
+  background-color: #111827 !important;
+  color: #f9fafb !important;
+  border-color: #374151 !important;
+}
+
+.dark .p-inputtext:hover,
+.dark .p-select:hover {
+  border-color: #4b5563 !important;
+}
+
+.dark .p-inputtext:focus,
+.dark .p-select:focus,
+.dark .p-select.p-focus {
+  border-color: #3b82f6 !important;
+}
+
+.dark .p-inputtext::placeholder {
+  color: #9ca3af !important;
+}
+
+.dark .p-select-label {
+  color: #f9fafb !important;
+}
+
+.dark .p-select-overlay,
+.dark .p-select-list-container {
+  background-color: #111827 !important;
+  border-color: #374151 !important;
+}
+
+.dark .p-select-option {
+  color: #e5e7eb !important;
+}
+
+.dark .p-select-option:hover,
+.dark .p-select-option.p-focus {
+  background-color: #1f2937 !important;
+  color: #ffffff !important;
+}
+
+.dark .p-select-option.p-select-option-selected {
+  background-color: #1e3a8a !important;
+  color: #93c5fd !important;
+}
+
+.dark .p-dialog {
+  background-color: #111827 !important;
+  color: #f9fafb !important;
+  border-color: #374151 !important;
+}
+
+.dark .p-dialog-header,
+.dark .p-dialog-content,
+.dark .p-dialog-footer {
+  background-color: #111827 !important;
+  color: #f9fafb !important;
+}
+
+.dark .p-drawer {
+  background-color: #0b0f19 !important;
+  color: #f9fafb !important;
+  border-color: #1f2937 !important;
+}
+
+.dark .p-drawer-header,
+.dark .p-drawer-content,
+.dark .p-drawer-footer {
+  background-color: #0b0f19 !important;
+  color: #f9fafb !important;
 }
