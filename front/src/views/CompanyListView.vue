@@ -117,19 +117,59 @@
             </button>
           </div>
 
-          <!-- Quick Node Type Filter -->
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-slate-500 font-medium">Тип заведения:</span>
-            <Select
-              v-model="selectedNodeType"
-              :options="nodeTypeFilterOptions"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Все типы"
-              showClear
-              class="w-44 text-xs"
-              @change="onFilterChange"
-            />
+          <!-- Quick Node Type Filter & Quick AnyDesk -->
+          <div class="flex flex-wrap items-center gap-3">
+            <!-- Quick Node Type Filter -->
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-slate-500 font-medium whitespace-nowrap">Тип заведения:</span>
+              <Select
+                v-model="selectedNodeType"
+                :options="nodeTypeFilterOptions"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Все типы"
+                showClear
+                class="w-40 text-xs"
+                @change="onFilterChange"
+              />
+            </div>
+
+            <!-- Quick AnyDesk Launch -->
+            <div class="flex items-center gap-1.5 pl-3 border-l border-slate-200">
+              <span class="text-xs text-slate-500 font-medium whitespace-nowrap">Быстрый AnyDesk:</span>
+              <div class="flex items-center gap-1">
+                <div class="relative flex items-center">
+                  <IconField iconPosition="left">
+                    <InputIcon class="pi pi-desktop text-red-500 text-xs" />
+                    <InputText
+                      v-model="quickAnydeskId"
+                      placeholder="AnyDesk ID (Enter)..."
+                      class="w-44 text-xs font-mono !pl-7 !pr-6"
+                      @keydown.enter.stop.prevent="launchQuickAnydesk"
+                    />
+                  </IconField>
+                  <button
+                    v-if="quickAnydeskId"
+                    type="button"
+                    class="absolute right-2 text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                    title="Очистить"
+                    @click="quickAnydeskId = ''"
+                  >
+                    <i class="pi pi-times text-[10px]"></i>
+                  </button>
+                </div>
+                <Button
+                  icon="pi pi-arrow-right"
+                  severity="danger"
+                  size="small"
+                  outlined
+                  class="!p-1.5 !w-7 !h-7"
+                  title="Выбрать профиль и подключиться (Enter)"
+                  :disabled="!quickAnydeskId.trim()"
+                  @click="launchQuickAnydesk"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -570,6 +610,12 @@
       :company-id="selectedCompanyId"
       @updated="handleUpdated"
     />
+
+    <!-- Quick Anydesk Launch Modal -->
+    <AnydeskVersionSelectModal
+      v-model="showQuickAnydeskModal"
+      :station="quickAnydeskStation"
+    />
   </div>
 </template>
 
@@ -591,6 +637,8 @@ import { companiesApi } from '../api/companies'
 import Navbar from '../components/Navbar.vue'
 import QuickCopyBtn from '../components/QuickCopyBtn.vue'
 import CompanyDetailDrawer from '../components/CompanyDetailDrawer.vue'
+import AnydeskVersionSelectModal from '../components/AnydeskVersionSelectModal.vue'
+import { anydeskApi } from '../api/anydesk'
 import {
   getDaysRemaining,
   getExpirationBadgeClass,
@@ -750,6 +798,56 @@ const itsFilterOptions = [
 
 const showDrawer = ref(false)
 const selectedCompanyId = ref(null)
+
+const quickAnydeskId = ref('')
+const showQuickAnydeskModal = ref(false)
+const quickAnydeskStation = ref(null)
+
+const launchQuickAnydesk = async () => {
+  const rawId = quickAnydeskId.value.trim()
+  if (!rawId) {
+    toast.add({
+      severity: 'warn',
+      summary: 'AnyDesk ID',
+      detail: 'Введите AnyDesk ID для подключения',
+      life: 2500,
+    })
+    return
+  }
+
+  const cleanDigits = rawId.replace(/\D/g, '')
+  let matchedStation = null
+
+  if (cleanDigits) {
+    try {
+      const res = await anydeskApi.getAnydeskStations({ search: rawId })
+      const results = res.data?.results || res.data || []
+      matchedStation = results.find(
+        (s) => s.anydesk_id && s.anydesk_id.replace(/\D/g, '') === cleanDigits
+      )
+    } catch (e) {
+      // Ignore lookup errors
+    }
+  }
+
+  if (matchedStation) {
+    quickAnydeskStation.value = {
+      anydesk_id: matchedStation.anydesk_id,
+      description: matchedStation.company_name
+        ? `${matchedStation.company_name} (${matchedStation.description || 'Рабочее место'})`
+        : (matchedStation.description || 'Быстрое подключение'),
+      any_pass: matchedStation.any_pass || '',
+    }
+  } else {
+    quickAnydeskStation.value = {
+      anydesk_id: rawId,
+      description: 'Быстрое подключение',
+      any_pass: '',
+    }
+  }
+
+  showQuickAnydeskModal.value = true
+}
 
 let searchTimeout = null
 const onSearchInput = () => {

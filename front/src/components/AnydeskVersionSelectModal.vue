@@ -168,7 +168,11 @@ watch(() => props.modelValue, (val) => {
   visible.value = val
   if (val) {
     initSelection()
-    window.addEventListener('keydown', handleKeydown)
+    setTimeout(() => {
+      if (visible.value) {
+        window.addEventListener('keydown', handleKeydown)
+      }
+    }, 150)
   } else {
     window.removeEventListener('keydown', handleKeydown)
   }
@@ -187,6 +191,26 @@ const handleKeydown = (e) => {
   if (e.key === 'Enter') {
     e.preventDefault()
     confirmLaunch()
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    const profiles = companionStore.profiles
+    if (!profiles || !profiles.length) return
+    const idx = profiles.findIndex(p => p.id === selectedProfileId.value)
+    if (idx === -1 || idx === profiles.length - 1) {
+      selectedProfileId.value = profiles[0].id
+    } else {
+      selectedProfileId.value = profiles[idx + 1].id
+    }
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    const profiles = companionStore.profiles
+    if (!profiles || !profiles.length) return
+    const idx = profiles.findIndex(p => p.id === selectedProfileId.value)
+    if (idx <= 0) {
+      selectedProfileId.value = profiles[profiles.length - 1].id
+    } else {
+      selectedProfileId.value = profiles[idx - 1].id
+    }
   }
 }
 
