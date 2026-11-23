@@ -109,16 +109,16 @@ export const getItsTooltip = (data) => {
 
 export const getExpirationDrawerBg = (days) => {
   if (days === null || days === undefined || days > 30) {
-    return '!bg-emerald-50/50 !border-emerald-300'
+    return '!bg-emerald-50/50 !border-emerald-300 dark:!bg-emerald-950/40 dark:!border-emerald-800'
   }
   if (days >= 8 && days <= 30) {
-    return '!bg-amber-50/50 !border-amber-300'
+    return '!bg-amber-50/50 !border-amber-300 dark:!bg-amber-950/40 dark:!border-amber-800'
   }
   if (days >= 1 && days <= 7) {
-    return '!bg-orange-50/50 !border-orange-300'
+    return '!bg-orange-50/50 !border-orange-300 dark:!bg-orange-950/40 dark:!border-orange-800'
   }
   if (days === 0) {
-    return '!bg-amber-100/60 !border-amber-400'
+    return '!bg-amber-100/60 !border-amber-400 dark:!bg-amber-950/50 dark:!border-amber-700'
   }
-  return '!bg-rose-50/60 !border-rose-300'
+  return '!bg-rose-50/60 !border-rose-300 dark:!bg-rose-950/40 dark:!border-rose-800'
 }

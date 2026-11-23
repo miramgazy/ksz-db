@@ -50,16 +50,16 @@
       <!-- KPI Statistics Cards -->
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
         <!-- Total on ITS -->
-        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs flex flex-col">
-          <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-            <i class="pi pi-shield text-emerald-600 text-[10px]"></i>
+        <div class="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs flex flex-col">
+          <div class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1">
+            <i class="pi pi-shield text-emerald-600 dark:text-emerald-400 text-[10px]"></i>
             Всего на ИТС
           </div>
           <div class="mt-1 flex items-baseline gap-1">
-            <span class="text-lg font-bold text-slate-900 font-mono">{{ stats.total_its_companies || 0 }}</span>
-            <span class="text-xs text-slate-500 font-mono">комп.</span>
+            <span class="text-lg font-bold text-slate-900 dark:text-white font-mono">{{ stats.total_its_companies || 0 }}</span>
+            <span class="text-xs text-slate-500 dark:text-slate-400 font-mono">комп.</span>
           </div>
-          <div class="text-[11px] text-slate-400 mt-0.5">
+          <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
             {{ stats.total_its_points || 0 }} точек (RMS)
           </div>
         </div>
@@ -68,110 +68,110 @@
         <div
           class="p-3 rounded-xl border transition cursor-pointer flex flex-col"
           :class="selectedExpStatus === 'over_month'
-            ? 'bg-emerald-100 border-emerald-400 ring-2 ring-emerald-300'
-            : 'bg-emerald-50/70 border-emerald-200 hover:bg-emerald-100/70'"
+            ? 'bg-emerald-100 dark:bg-emerald-950/80 border-emerald-400 dark:border-emerald-600 ring-2 ring-emerald-300 dark:ring-emerald-700'
+            : 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/80 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/40'"
           @click="toggleExpStatusFilter('over_month')"
           title="Срок действия больше месяца (> 30 дней)"
         >
-          <div class="text-[11px] font-semibold text-emerald-800 uppercase tracking-wider flex items-center justify-between">
+          <div class="text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider flex items-center justify-between">
             <span>🟢 > 1 месяца</span>
             <i v-if="selectedExpStatus === 'over_month'" class="pi pi-check text-[10px]"></i>
           </div>
-          <div class="text-lg font-bold text-emerald-950 font-mono mt-1">
+          <div class="text-lg font-bold text-emerald-950 dark:text-emerald-100 font-mono mt-1">
             {{ stats.over_month || 0 }}
           </div>
-          <div class="text-[11px] text-emerald-700 mt-0.5">Плановые</div>
+          <div class="text-[11px] text-emerald-700 dark:text-emerald-400 mt-0.5">Плановые</div>
         </div>
 
         <!-- 8 - 30 Days (Yellow/Amber) -->
         <div
           class="p-3 rounded-xl border transition cursor-pointer flex flex-col"
           :class="selectedExpStatus === 'week_month'
-            ? 'bg-amber-100 border-amber-400 ring-2 ring-amber-300'
-            : 'bg-amber-50/70 border-amber-200 hover:bg-amber-100/70'"
+            ? 'bg-amber-100 dark:bg-amber-950/80 border-amber-400 dark:border-amber-600 ring-2 ring-amber-300 dark:ring-amber-700'
+            : 'bg-amber-50/70 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/80 hover:bg-amber-100/70 dark:hover:bg-amber-900/40'"
           @click="toggleExpStatusFilter('week_month')"
           title="Срок действия от 8 до 30 дней (подходит срок в текущем месяце)"
         >
-          <div class="text-[11px] font-semibold text-amber-800 uppercase tracking-wider flex items-center justify-between">
+          <div class="text-[11px] font-semibold text-amber-800 dark:text-amber-300 uppercase tracking-wider flex items-center justify-between">
             <span>🟡 8–30 дней</span>
             <i v-if="selectedExpStatus === 'week_month'" class="pi pi-check text-[10px]"></i>
           </div>
-          <div class="text-lg font-bold text-amber-950 font-mono mt-1">
+          <div class="text-lg font-bold text-amber-950 dark:text-amber-100 font-mono mt-1">
             {{ stats.week_month || 0 }}
           </div>
-          <div class="text-[11px] text-amber-700 mt-0.5">Срок в этом месяце</div>
+          <div class="text-[11px] text-amber-700 dark:text-amber-400 mt-0.5">Срок в этом месяце</div>
         </div>
 
         <!-- 1 - 7 Days (Orange) -->
         <div
           class="p-3 rounded-xl border transition cursor-pointer flex flex-col"
           :class="selectedExpStatus === 'week'
-            ? 'bg-orange-100 border-orange-400 ring-2 ring-orange-300'
-            : 'bg-orange-50/70 border-orange-200 hover:bg-orange-100/70'"
+            ? 'bg-orange-100 dark:bg-orange-950/80 border-orange-400 dark:border-orange-600 ring-2 ring-orange-300 dark:ring-orange-700'
+            : 'bg-orange-50/70 dark:bg-orange-950/40 border-orange-200 dark:border-orange-800/80 hover:bg-orange-100/70 dark:hover:bg-orange-900/40'"
           @click="toggleExpStatusFilter('week')"
           title="Срок действия меньше недели (1 - 7 дней)"
         >
-          <div class="text-[11px] font-semibold text-orange-900 uppercase tracking-wider flex items-center justify-between">
+          <div class="text-[11px] font-semibold text-orange-900 dark:text-orange-300 uppercase tracking-wider flex items-center justify-between">
             <span>🟠 &lt; 1 недели</span>
             <i v-if="selectedExpStatus === 'week'" class="pi pi-check text-[10px]"></i>
           </div>
-          <div class="text-lg font-bold text-orange-950 font-mono mt-1">
+          <div class="text-lg font-bold text-orange-950 dark:text-orange-100 font-mono mt-1">
             {{ stats.week || 0 }}
           </div>
-          <div class="text-[11px] text-orange-800 mt-0.5">Требует внимания</div>
+          <div class="text-[11px] text-orange-800 dark:text-orange-400 mt-0.5">Требует внимания</div>
         </div>
 
         <!-- < 1 Day / Today (Dark Orange) -->
         <div
           class="p-3 rounded-xl border transition cursor-pointer flex flex-col"
           :class="selectedExpStatus === 'day'
-            ? 'bg-amber-200 border-amber-500 ring-2 ring-amber-400'
-            : 'bg-amber-100/60 border-amber-300 hover:bg-amber-200/60'"
+            ? 'bg-amber-200 dark:bg-amber-950/90 border-amber-500 dark:border-amber-600 ring-2 ring-amber-400 dark:ring-amber-700'
+            : 'bg-amber-100/60 dark:bg-amber-950/50 border-amber-300 dark:border-amber-800 hover:bg-amber-200/60 dark:hover:bg-amber-900/50'"
           @click="toggleExpStatusFilter('day')"
           title="Истекает сегодня (< 24 часов)"
         >
-          <div class="text-[11px] font-semibold text-amber-950 uppercase tracking-wider flex items-center justify-between">
+          <div class="text-[11px] font-semibold text-amber-950 dark:text-amber-200 uppercase tracking-wider flex items-center justify-between">
             <span>🟤 Сегодня</span>
             <i v-if="selectedExpStatus === 'day'" class="pi pi-check text-[10px]"></i>
           </div>
-          <div class="text-lg font-extrabold text-amber-950 font-mono mt-1">
+          <div class="text-lg font-extrabold text-amber-950 dark:text-amber-100 font-mono mt-1">
             {{ stats.day || 0 }}
           </div>
-          <div class="text-[11px] text-amber-900 mt-0.5">Критично</div>
+          <div class="text-[11px] text-amber-900 dark:text-amber-400 mt-0.5">Критично</div>
         </div>
 
         <!-- Expired (Red) -->
         <div
           class="p-3 rounded-xl border transition cursor-pointer flex flex-col"
           :class="selectedExpStatus === 'expired'
-            ? 'bg-rose-100 border-rose-400 ring-2 ring-rose-300'
-            : 'bg-rose-50/70 border-rose-200 hover:bg-rose-100/70'"
+            ? 'bg-rose-100 dark:bg-rose-950/80 border-rose-400 dark:border-rose-600 ring-2 ring-rose-300 dark:ring-rose-700'
+            : 'bg-rose-50/70 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/80 hover:bg-rose-100/70 dark:hover:bg-rose-900/40'"
           @click="toggleExpStatusFilter('expired')"
           title="Срок действия истек"
         >
-          <div class="text-[11px] font-semibold text-rose-900 uppercase tracking-wider flex items-center justify-between">
+          <div class="text-[11px] font-semibold text-rose-900 dark:text-rose-300 uppercase tracking-wider flex items-center justify-between">
             <span>🔴 Просрочен</span>
             <i v-if="selectedExpStatus === 'expired'" class="pi pi-check text-[10px]"></i>
           </div>
-          <div class="text-lg font-bold text-rose-950 font-mono mt-1">
+          <div class="text-lg font-bold text-rose-950 dark:text-rose-100 font-mono mt-1">
             {{ stats.expired || 0 }}
           </div>
-          <div class="text-[11px] text-rose-800 mt-0.5">Не оплачен</div>
+          <div class="text-[11px] text-rose-800 dark:text-rose-400 mt-0.5">Не оплачен</div>
         </div>
 
         <!-- Monthly Volume (SuperAdmin / Manager only) -->
         <div
           v-if="authStore.canEdit"
-          class="bg-blue-50/70 p-3 rounded-xl border border-blue-200 shadow-2xs flex flex-col col-span-2 sm:col-span-1"
+          class="bg-blue-50/70 dark:bg-blue-950/40 p-3 rounded-xl border border-blue-200 dark:border-blue-900 shadow-2xs flex flex-col col-span-2 sm:col-span-1"
         >
-          <div class="text-[11px] font-semibold text-blue-900 uppercase tracking-wider flex items-center gap-1">
-            <i class="pi pi-wallet text-blue-600 text-[10px]"></i>
+          <div class="text-[11px] font-semibold text-blue-900 dark:text-blue-300 uppercase tracking-wider flex items-center gap-1">
+            <i class="pi pi-wallet text-blue-600 dark:text-blue-400 text-[10px]"></i>
             Оборот / месяц
           </div>
-          <div class="text-base font-bold text-blue-950 font-mono mt-1 truncate" :title="formatCurrency(stats.total_monthly_sum)">
+          <div class="text-base font-bold text-blue-950 dark:text-blue-100 font-mono mt-1 truncate" :title="formatCurrency(stats.total_monthly_sum)">
             {{ formatCurrency(stats.total_monthly_sum) }}
           </div>
-          <div class="text-[11px] text-blue-700 mt-0.5">Только админ/менеджер</div>
+          <div class="text-[11px] text-blue-700 dark:text-blue-400 mt-0.5">Только админ/менеджер</div>
         </div>
       </div>
 
@@ -288,7 +288,7 @@
                   <!-- Chain Badge -->
                   <span
                     v-if="data.company_node_type === 'CHAIN'"
-                    class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-50 text-purple-800 border border-purple-200"
+                    class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800"
                   >
                     <i class="pi pi-sitemap text-[10px]"></i>
                     Chain • {{ data.company_branches_count || 0 }} филиалов
@@ -297,19 +297,19 @@
                   <!-- Branch Badge -->
                   <span
                     v-else-if="data.company_parent_chain_name"
-                    class="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200"
+                    class="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800"
                   >
                     ↳ {{ data.company_parent_chain_name }}
                   </span>
 
-                  <span class="font-bold text-slate-900">
+                  <span class="font-bold text-slate-900 dark:text-white">
                     {{ data.company_place_name }}
                   </span>
                 </div>
 
-                <span class="text-[11px] text-slate-500 mt-0.5">
-                  <span class="font-medium text-slate-600">{{ data.company_city || 'Город не указан' }}</span>
-                  <span v-if="data.comment" class="text-slate-400 ml-1.5">• {{ data.comment }}</span>
+                <span class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  <span class="font-medium text-slate-600 dark:text-slate-300">{{ data.company_city || 'Город не указан' }}</span>
+                  <span v-if="data.comment" class="text-slate-400 dark:text-slate-500 ml-1.5">• {{ data.comment }}</span>
                 </span>
               </div>
             </template>
@@ -322,37 +322,37 @@
                 <!-- ITS Badge -->
                 <span
                   v-if="data.is_its || data.service_code === 'ITS'"
-                  class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 shadow-2xs"
+                  class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800 shadow-2xs"
                   title="ИТС"
                 >
-                  <i class="pi pi-shield text-[10px] text-emerald-700"></i>
+                  <i class="pi pi-shield text-[10px] text-emerald-700 dark:text-emerald-400"></i>
                   {{ data.service_name || 'ИТС' }}
                 </span>
 
                 <!-- noIP Badge -->
                 <span
                   v-else-if="data.service_code === 'NOIP'"
-                  class="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-900 border border-blue-300"
+                  class="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950/80 text-blue-900 dark:text-blue-200 border border-blue-300 dark:border-blue-800"
                 >
-                  <i class="pi pi-server text-[10px] text-blue-700"></i>
+                  <i class="pi pi-server text-[10px] text-blue-700 dark:text-blue-400"></i>
                   {{ data.service_name || 'Сервер noIP' }}
                 </span>
 
                 <!-- WhatsApp Badge -->
                 <span
                   v-else-if="data.service_code === 'WHATSAPP'"
-                  class="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-md bg-green-100 text-green-900 border border-green-300"
+                  class="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-md bg-green-100 dark:bg-green-950/80 text-green-900 dark:text-green-200 border border-green-300 dark:border-green-800"
                 >
-                  <i class="pi pi-whatsapp text-[10px] text-green-700"></i>
+                  <i class="pi pi-whatsapp text-[10px] text-green-700 dark:text-green-400"></i>
                   {{ data.service_name || 'WhatsApp' }}
                 </span>
 
                 <!-- Custom Service Badge -->
                 <span
                   v-else
-                  class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-300"
+                  class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700"
                 >
-                  <i class="pi pi-box text-[10px] text-slate-600"></i>
+                  <i class="pi pi-box text-[10px] text-slate-600 dark:text-slate-400"></i>
                   {{ data.service_name }}
                 </span>
               </div>
@@ -363,17 +363,17 @@
           <Column header="Тариф / Расчёт" style="min-width: 170px">
             <template #body="{ data }">
               <div class="text-xs">
-                <div class="font-medium text-slate-800">
+                <div class="font-medium text-slate-800 dark:text-slate-200">
                   {{ getPeriodLabel(data.period_type) }}
                 </div>
-                <div class="text-[11px] text-slate-500 mt-0.5">
-                  <span v-if="data.pricing_type === 'PER_RMS'" class="text-indigo-600 font-medium">
+                <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  <span v-if="data.pricing_type === 'PER_RMS'" class="text-indigo-600 dark:text-indigo-400 font-medium">
                     За RMS ({{ formatCurrency(data.cost_per_rms) }} × {{ data.quantity || (data.company_node_type === 'CHAIN' ? Math.max(data.company_branches_count, 1) : 1) }} точ.)
                   </span>
-                  <span v-else-if="data.pricing_type === 'PER_FRONT'" class="text-emerald-700 font-medium">
+                  <span v-else-if="data.pricing_type === 'PER_FRONT'" class="text-emerald-700 dark:text-emerald-400 font-medium">
                     За Front ({{ formatCurrency(data.cost_per_rms) }} × {{ data.quantity || data.company_stations_count || 1 }} касс)
                   </span>
-                  <span v-else class="text-slate-500">
+                  <span v-else class="text-slate-500 dark:text-slate-400">
                     Фиксированная сумма
                   </span>
                 </div>
@@ -384,7 +384,7 @@
           <!-- Cost (Visible ONLY to SuperAdmin and Manager) -->
           <Column v-if="authStore.canEdit" header="Стоимость" style="min-width: 130px">
             <template #body="{ data }">
-              <div class="font-mono text-sm font-bold text-slate-900">
+              <div class="font-mono text-sm font-bold text-slate-900 dark:text-white">
                 {{ formatCurrency(data.total_cost) }}
               </div>
             </template>
@@ -1533,25 +1533,25 @@ const formatDaysRemaining = (days) => {
 }
 
 const getExpirationClass = (days) => {
-  if (days === null || days === undefined) return 'bg-slate-50 text-slate-600 border-slate-200'
+  if (days === null || days === undefined) return 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
   if (days > 30) {
     // Green (> 1 month)
-    return 'bg-emerald-50 text-emerald-800 border-emerald-300 font-semibold'
+    return 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800 font-semibold'
   }
   if (days >= 8 && days <= 30) {
     // Yellow / Amber (8 - 30 days)
-    return 'bg-amber-50 text-amber-900 border-amber-300 font-semibold'
+    return 'bg-amber-50 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-800 font-semibold'
   }
   if (days >= 1 && days <= 7) {
     // Orange (< 1 week)
-    return 'bg-orange-100 text-orange-950 border-orange-400 font-bold'
+    return 'bg-orange-100 dark:bg-orange-950/70 text-orange-950 dark:text-orange-200 border-orange-400 dark:border-orange-800 font-bold'
   }
   if (days === 0) {
     // Dark Orange (< 1 day / Today)
-    return 'bg-amber-200 text-amber-950 border-amber-500 font-extrabold animate-pulse'
+    return 'bg-amber-200 dark:bg-amber-950/90 text-amber-950 dark:text-amber-200 border-amber-500 dark:border-amber-700 font-extrabold animate-pulse'
   }
   // Expired (< 0 days)
-  return 'bg-rose-100 text-rose-950 border-rose-400 font-extrabold'
+  return 'bg-rose-100 dark:bg-rose-950/80 text-rose-950 dark:text-rose-200 border-rose-400 dark:border-rose-800 font-extrabold'
 }
 
 const getPeriodLabel = (period) => {

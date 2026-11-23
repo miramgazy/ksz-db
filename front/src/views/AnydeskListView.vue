@@ -67,13 +67,13 @@
               <div class="flex flex-col">
                 <button
                   type="button"
-                  class="text-left font-bold text-blue-600 hover:underline hover:text-blue-800 transition cursor-pointer text-sm"
+                  class="text-left font-bold text-blue-600 dark:text-blue-400 hover:underline hover:text-blue-800 dark:hover:text-blue-300 transition cursor-pointer text-sm"
                   @click="openCompany(data.company)"
                 >
                   {{ data.company_place_name || `Заведение #${data.company}` }}
                 </button>
-                <span class="text-xs text-slate-500 font-medium mt-0.5 flex items-center gap-1">
-                  <i class="pi pi-map-marker text-[10px] text-slate-400"></i>
+                <span class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 flex items-center gap-1">
+                  <i class="pi pi-map-marker text-[10px] text-slate-400 dark:text-slate-500"></i>
                   {{ data.company_city || 'Город не указан' }}
                 </span>
               </div>
@@ -94,8 +94,8 @@
           <!-- 3. Workstation Description -->
           <Column field="description" header="Рабочее место" style="min-width: 180px">
             <template #body="{ data }">
-              <div class="flex items-center gap-1.5 font-medium text-slate-800 text-sm">
-                <i class="pi pi-desktop text-xs text-slate-400 shrink-0"></i>
+              <div class="flex items-center gap-1.5 font-medium text-slate-800 dark:text-slate-200 text-sm">
+                <i class="pi pi-desktop text-xs text-slate-400 dark:text-slate-500 shrink-0"></i>
                 <span>{{ data.description || 'Рабочее место' }}</span>
               </div>
             </template>
@@ -105,7 +105,7 @@
           <Column field="anydesk_id" header="AnyDesk ID" style="min-width: 140px">
             <template #body="{ data }">
               <QuickCopyBtn :text="data.anydesk_id" label="AnyDesk ID">
-                <span class="font-mono font-bold text-slate-900 text-sm tracking-wide">{{ data.anydesk_id }}</span>
+                <span class="font-mono font-bold text-slate-900 dark:text-white text-sm tracking-wide">{{ data.anydesk_id }}</span>
               </QuickCopyBtn>
             </template>
           </Column>
@@ -116,7 +116,7 @@
               <QuickCopyBtn v-if="data.any_pass" :text="data.any_pass" label="Пароль AnyDesk">
                 <span class="font-mono text-xs">••••••••</span>
               </QuickCopyBtn>
-              <span v-else class="text-xs text-slate-400 font-mono italic">без пароля</span>
+              <span v-else class="text-xs text-slate-400 dark:text-slate-500 font-mono italic">без пароля</span>
             </template>
           </Column>
 
@@ -169,18 +169,18 @@
         </DataTable>
 
         <!-- Pagination -->
-        <div class="p-3 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-slate-600 bg-slate-50">
+        <div class="p-3 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/60">
           <div class="flex items-center gap-3 flex-wrap">
-            <span class="whitespace-nowrap font-medium">Показано {{ stations.length }} из {{ totalCount }} подключений</span>
-            <div class="flex items-center gap-1.5 border-l border-slate-200 pl-3">
-              <span class="text-slate-500 whitespace-nowrap">Показывать по:</span>
+            <span class="whitespace-nowrap font-medium text-slate-600 dark:text-slate-300">Показано {{ stations.length }} из {{ totalCount }} подключений</span>
+            <div class="flex items-center gap-1.5 border-l border-slate-200 dark:border-slate-700 pl-3">
+              <span class="text-slate-500 dark:text-slate-400 whitespace-nowrap">Показывать по:</span>
               <Select
                 v-model="pageSize"
                 :options="pageSizeOptions"
                 optionLabel="label"
                 optionValue="value"
                 size="small"
-                class="w-24 text-xs bg-white font-medium"
+                class="w-24 text-xs font-medium"
                 @change="onPageSizeChange"
               />
             </div>
@@ -191,7 +191,7 @@
             <!-- First Page Button -->
             <button
               type="button"
-              class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+              class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
               :disabled="currentPage <= 1"
               @click="changePage(1)"
               title="Первая страница"
@@ -202,7 +202,7 @@
             <!-- Previous Page Button -->
             <button
               type="button"
-              class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+              class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
               :disabled="currentPage <= 1"
               @click="changePage(currentPage - 1)"
               title="Предыдущая страница"
@@ -214,7 +214,7 @@
             <template v-for="(p, idx) in visiblePages" :key="idx">
               <span
                 v-if="p === '...'"
-                class="w-6 h-8 flex items-center justify-center text-slate-400 font-mono select-none"
+                class="w-6 h-8 flex items-center justify-center text-slate-400 dark:text-slate-500 font-mono select-none"
               >
                 ...
               </span>
@@ -225,7 +225,7 @@
                 class="min-w-8 h-8 px-2 flex items-center justify-center rounded-lg text-xs font-mono font-medium transition cursor-pointer"
                 :class="p === currentPage
                   ? 'bg-blue-600 text-white font-bold shadow-xs'
-                  : 'text-slate-700 hover:bg-slate-200 hover:text-blue-600'"
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400'"
               >
                 {{ p }}
               </button>
@@ -234,7 +234,7 @@
             <!-- Next Page Button -->
             <button
               type="button"
-              class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+              class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
               :disabled="currentPage >= totalPages"
               @click="changePage(currentPage + 1)"
               title="Следующая страница"
@@ -245,7 +245,7 @@
             <!-- Last Page Button -->
             <button
               type="button"
-              class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+              class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
               :disabled="currentPage >= totalPages"
               @click="changePage(totalPages)"
               title="Последняя страница"

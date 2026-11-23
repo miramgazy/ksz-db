@@ -82,6 +82,16 @@
             @click="showPassGen = true"
           />
 
+          <!-- Theme Toggle Button -->
+          <Button
+            :icon="themeStore.isDark ? 'pi pi-sun' : 'pi pi-moon'"
+            text
+            rounded
+            severity="secondary"
+            :title="themeStore.isDark ? 'Переключить на светлую тему' : 'Переключить на тёмную тему'"
+            @click="themeStore.toggleTheme"
+          />
+
           <!-- User info tag -->
           <div class="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-700">
             <div class="text-right hidden sm:block">
@@ -117,11 +127,13 @@ import Badge from 'primevue/badge'
 import Button from 'primevue/button'
 import { useAuthStore } from '../stores/auth'
 import { useCompanionStore } from '../stores/companion'
+import { useThemeStore } from '../stores/theme'
 import { usersApi } from '../api/users'
 import PasswordGeneratorModal from './PasswordGeneratorModal.vue'
 
 const authStore = useAuthStore()
 const companionStore = useCompanionStore()
+const themeStore = useThemeStore()
 const showPassGen = ref(false)
 const pendingCount = ref(0)
 
