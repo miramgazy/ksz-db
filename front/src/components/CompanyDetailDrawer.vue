@@ -319,8 +319,11 @@
           />
         </div>
 
-        <!-- Connected Services Block (Replaces old ITS tile) -->
-        <div class="p-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg flex items-center justify-between col-span-1 md:col-span-2">
+        <!-- Connected Services Block (shown only if company has services) -->
+        <div
+          v-if="companyServicesList.length > 0 || company.helpdesk_its === 'Да'"
+          class="p-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg flex items-center justify-between col-span-1 md:col-span-2"
+        >
           <div class="flex-1 min-w-0 pr-3">
             <div class="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1.5">
               <i class="pi pi-box text-xs text-indigo-600 dark:text-indigo-400"></i>
