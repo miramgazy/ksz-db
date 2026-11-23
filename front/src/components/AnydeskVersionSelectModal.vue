@@ -3,7 +3,7 @@
     v-model:visible="visible"
     header="Выбор профиля запуска AnyDesk"
     :modal="true"
-    :style="{ width: '540px' }"
+    :style="{ width: '560px', maxWidth: '95vw' }"
   >
     <div class="flex flex-col gap-4 py-2">
       <!-- Target Station Info Box -->
@@ -43,8 +43,8 @@
         />
       </div>
 
-      <!-- Profiles List -->
-      <div class="flex flex-col gap-2 max-h-72 overflow-y-auto pr-1">
+      <!-- Profiles List in 2 Columns -->
+      <div class="max-h-72 overflow-y-auto pr-1">
         <div v-if="loading" class="text-center py-8 text-slate-400 dark:text-slate-500">
           <i class="pi pi-spin pi-spinner text-2xl"></i>
         </div>
@@ -53,67 +53,72 @@
           Нет настроенных профилей AnyDesk.
         </div>
 
-        <div
-          v-for="prof in companionStore.profiles"
-          :key="prof.id"
-          class="p-3 rounded-xl border transition cursor-pointer flex items-center justify-between"
-          :class="selectedProfileId === prof.id
-            ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/40 ring-1 ring-blue-500'
-            : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50/70 dark:hover:bg-slate-800/60'"
-          @click="selectedProfileId = prof.id"
-          @dblclick="selectAndLaunch(prof.id)"
-          title="Нажмите для выбора, дважды кликните или нажмите Enter для запуска"
-        >
-          <div class="flex items-center gap-3">
-            <!-- Radio Selector -->
-            <RadioButton
-              v-model="selectedProfileId"
-              :inputId="`prof_${prof.id}`"
-              :value="prof.id"
-            />
+        <div v-else class="grid grid-cols-2 gap-2">
+          <div
+            v-for="prof in companionStore.profiles"
+            :key="prof.id"
+            class="p-2.5 rounded-xl border transition cursor-pointer flex items-center justify-between gap-2 select-none"
+            :class="selectedProfileId === prof.id
+              ? 'border-blue-500 bg-blue-50/70 dark:bg-blue-950/50 ring-1 ring-blue-500 shadow-xs'
+              : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50/80 dark:hover:bg-slate-800/60'"
+            @click="selectedProfileId = prof.id"
+            @dblclick="selectAndLaunch(prof.id)"
+            title="Нажмите для выбора, дважды кликните или нажмите Enter для запуска"
+          >
+            <div class="flex items-center gap-2 min-w-0">
+              <!-- Radio Selector -->
+              <RadioButton
+                v-model="selectedProfileId"
+                :inputId="`prof_${prof.id}`"
+                :value="prof.id"
+                class="shrink-0"
+              />
 
-            <div class="flex flex-col">
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-slate-900 dark:text-slate-100 text-sm">{{ prof.name }}</span>
-                <!-- Sandbox Badge -->
-                <Tag
-                  v-if="prof.is_sandbox"
-                  :value="`Песочница: ${prof.sandbox_params || 'Default'}`"
-                  severity="help"
-                  class="!text-[10px] !px-1.5 !py-0.2"
-                />
-                <!-- Direct Badge -->
-                <Tag
-                  v-else
-                  value="Обычный запуск"
-                  severity="info"
-                  class="!text-[10px] !px-1.5 !py-0.2"
-                />
-                <!-- Default Tag -->
-                <span
-                  v-if="companionStore.preferredProfileId === prof.id"
-                  class="text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 px-1.5 py-0.2 rounded"
-                >
-                  Мой выбор
-                </span>
+              <div class="flex flex-col min-w-0">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="font-bold text-slate-900 dark:text-slate-100 text-xs truncate">
+                    {{ prof.name }}
+                  </span>
+                  <!-- Default Tag -->
+                  <span
+                    v-if="companionStore.preferredProfileId === prof.id"
+                    class="text-[9px] font-semibold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 px-1 py-0.2 rounded leading-none shrink-0"
+                  >
+                    Мой выбор
+                  </span>
+                </div>
+                <div class="flex items-center gap-1 mt-1">
+                  <!-- Sandbox Badge -->
+                  <Tag
+                    v-if="prof.is_sandbox"
+                    :value="prof.sandbox_params ? `Песочница: ${prof.sandbox_params}` : 'Песочница'"
+                    severity="help"
+                    class="!text-[9px] !px-1.5 !py-0"
+                  />
+                  <!-- Direct Badge -->
+                  <Tag
+                    v-else
+                    value="Обычный запуск"
+                    severity="info"
+                    class="!text-[9px] !px-1.5 !py-0"
+                  />
+                </div>
               </div>
-              <span class="text-[11px] text-slate-400 dark:text-slate-500 truncate max-w-sm font-mono mt-0.5">
-                {{ prof.exe_path || 'C:\\Program Files (x86)\\AnyDesk\\AnyDesk.exe' }}
-              </span>
             </div>
-          </div>
 
-          <i
-            class="pi pi-play text-slate-400 hover:text-blue-600 transition"
-            title="Выбрать и запустить"
-          ></i>
+            <i
+              class="pi pi-play text-slate-300 dark:text-slate-600 hover:text-blue-600 dark:hover:text-blue-400 text-xs shrink-0 transition"
+              title="Выбрать и запустить"
+              @click.stop="selectAndLaunch(prof.id)"
+            ></i>
+          </div>
         </div>
       </div>
 
       <!-- Remember as default checkbox -->
-      <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
+      <div class="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
         <Checkbox v-model="rememberAsDefault" :binary="true" inputId="remember_prof" />
-        <label for="remember_prof" class="text-xs text-slate-600 cursor-pointer select-none">
+        <label for="remember_prof" class="text-xs text-slate-600 dark:text-slate-300 cursor-pointer select-none">
           Запомнить этот профиль как мой выбор по умолчанию (для быстрого запуска в 1 клик)
         </label>
       </div>
@@ -191,7 +196,7 @@ const handleKeydown = (e) => {
   if (e.key === 'Enter') {
     e.preventDefault()
     confirmLaunch()
-  } else if (e.key === 'ArrowDown') {
+  } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
     e.preventDefault()
     const profiles = companionStore.profiles
     if (!profiles || !profiles.length) return
@@ -201,7 +206,7 @@ const handleKeydown = (e) => {
     } else {
       selectedProfileId.value = profiles[idx + 1].id
     }
-  } else if (e.key === 'ArrowUp') {
+  } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
     e.preventDefault()
     const profiles = companionStore.profiles
     if (!profiles || !profiles.length) return
