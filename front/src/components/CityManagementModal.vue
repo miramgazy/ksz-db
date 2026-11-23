@@ -7,7 +7,7 @@
   >
     <div class="flex flex-col gap-4 py-2">
       <!-- Add New City Form -->
-      <div class="flex items-center gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+      <div class="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl">
         <InputText
           v-model="newCityName"
           placeholder="Название нового города (например: Шымкент)"
@@ -25,18 +25,18 @@
 
       <!-- City List -->
       <div class="flex flex-col gap-1 max-h-72 overflow-y-auto pr-1">
-        <div v-if="loading" class="text-center py-6 text-slate-400">
+        <div v-if="loading" class="text-center py-6 text-slate-400 dark:text-slate-500">
           <i class="pi pi-spin pi-spinner text-2xl"></i>
         </div>
 
-        <div v-else-if="!cities.length" class="text-center py-6 text-slate-400 text-sm">
+        <div v-else-if="!cities.length" class="text-center py-6 text-slate-400 dark:text-slate-500 text-sm">
           Список городов пуст. Добавьте первый город выше.
         </div>
 
         <div
           v-for="city in cities"
           :key="city.id"
-          class="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition"
+          class="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition"
         >
           <!-- Editing Mode -->
           <div v-if="editingId === city.id" class="flex items-center gap-2 w-full">
@@ -48,8 +48,8 @@
           <!-- Normal Display Mode -->
           <div v-else class="flex items-center justify-between w-full">
             <div class="flex items-center gap-2">
-              <i class="pi pi-map-marker text-blue-500 text-xs"></i>
-              <span class="text-sm font-semibold text-slate-800">{{ city.name }}</span>
+              <i class="pi pi-map-marker text-blue-500 dark:text-blue-400 text-xs"></i>
+              <span class="text-sm font-semibold text-slate-800 dark:text-slate-100">{{ city.name }}</span>
             </div>
 
             <div class="flex items-center gap-1">

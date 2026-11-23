@@ -8,7 +8,7 @@
     <div class="flex flex-col gap-4 py-2">
       <!-- Description -->
       <div>
-        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">
+        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">
           Описание рабочего места / ПК <span class="text-rose-500">*</span>
         </label>
         <InputText
@@ -21,7 +21,7 @@
       <!-- AnyDesk ID with OCR trigger -->
       <div>
         <div class="flex justify-between items-center mb-1">
-          <label class="block text-xs font-semibold text-slate-600 uppercase">
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase">
             AnyDesk ID <span class="text-rose-500">*</span>
           </label>
           <Button
@@ -29,7 +29,7 @@
             icon="pi pi-camera"
             text
             size="small"
-            class="!p-0 !text-xs text-blue-600 hover:text-blue-800"
+            class="!p-0 !text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800"
             @click="showOcr = true"
           />
         </div>
@@ -43,7 +43,7 @@
       <!-- AnyDesk Password with generator trigger -->
       <div>
         <div class="flex justify-between items-center mb-1">
-          <label class="block text-xs font-semibold text-slate-600 uppercase">
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase">
             Пароль неконтролируемого доступа
           </label>
           <Button
@@ -51,7 +51,7 @@
             icon="pi pi-key"
             text
             size="small"
-            class="!p-0 !text-xs text-blue-600 hover:text-blue-800"
+            class="!p-0 !text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800"
             @click="showPassGen = true"
           />
         </div>

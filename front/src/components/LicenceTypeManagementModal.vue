@@ -7,7 +7,7 @@
   >
     <div class="flex flex-col gap-4 py-2">
       <!-- Add New Licence Type Form -->
-      <div class="flex items-center gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+      <div class="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl">
         <InputText
           v-model="newTypeName"
           placeholder="Название типа лицензии (например: CloudPro)"
@@ -25,18 +25,18 @@
 
       <!-- Types List -->
       <div class="flex flex-col gap-1 max-h-72 overflow-y-auto pr-1">
-        <div v-if="loading" class="text-center py-6 text-slate-400">
+        <div v-if="loading" class="text-center py-6 text-slate-400 dark:text-slate-500">
           <i class="pi pi-spin pi-spinner text-2xl"></i>
         </div>
 
-        <div v-else-if="!types.length" class="text-center py-6 text-slate-400 text-sm">
+        <div v-else-if="!types.length" class="text-center py-6 text-slate-400 dark:text-slate-500 text-sm">
           Список типов лицензий пуст. Добавьте первый тип выше.
         </div>
 
         <div
           v-for="item in types"
           :key="item.id"
-          class="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition"
+          class="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition"
         >
           <!-- Editing Mode -->
           <div v-if="editingId === item.id" class="flex items-center gap-2 w-full">
@@ -48,8 +48,8 @@
           <!-- Normal Display Mode -->
           <div v-else class="flex items-center justify-between w-full">
             <div class="flex items-center gap-2">
-              <i class="pi pi-key text-blue-500 text-xs"></i>
-              <span class="text-sm font-semibold text-slate-800">{{ item.name }}</span>
+              <i class="pi pi-key text-blue-500 dark:text-blue-400 text-xs"></i>
+              <span class="text-sm font-semibold text-slate-800 dark:text-slate-100">{{ item.name }}</span>
             </div>
 
             <div class="flex items-center gap-1">

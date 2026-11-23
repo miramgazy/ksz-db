@@ -14,6 +14,10 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+html.dark {
+  color-scheme: dark;
+}
+
 .dark body,
 html.dark body {
   background-color: #030712;
@@ -89,26 +93,58 @@ html.dark body {
 }
 
 /* Dark mode inputs, selects & popups */
+.dark input,
+.dark textarea,
+.dark select,
 .dark .p-inputtext,
-.dark .p-select {
+.dark .p-textarea,
+.dark .p-select,
+.dark .p-inputnumber input,
+.dark .p-password input,
+.dark .p-autocomplete input,
+.dark .p-datepicker input,
+.dark input[type="text"],
+.dark input[type="password"],
+.dark input[type="email"],
+.dark input[type="number"],
+.dark input[type="date"],
+.dark input[type="search"] {
   background-color: #111827 !important;
   color: #f9fafb !important;
   border-color: #374151 !important;
 }
 
+.dark input:hover,
+.dark textarea:hover,
+.dark select:hover,
 .dark .p-inputtext:hover,
+.dark .p-textarea:hover,
 .dark .p-select:hover {
   border-color: #4b5563 !important;
 }
 
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus,
 .dark .p-inputtext:focus,
+.dark .p-textarea:focus,
 .dark .p-select:focus,
 .dark .p-select.p-focus {
+  background-color: #111827 !important;
+  color: #ffffff !important;
   border-color: #3b82f6 !important;
+  outline: none !important;
 }
 
+.dark input::placeholder,
+.dark textarea::placeholder,
 .dark .p-inputtext::placeholder {
   color: #9ca3af !important;
+}
+
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
 }
 
 .dark .p-select-label {
@@ -149,6 +185,23 @@ html.dark body {
   color: #f9fafb !important;
 }
 
+.dark .p-dialog-title,
+.dark .p-drawer-title {
+  color: #f9fafb !important;
+  font-weight: 700 !important;
+}
+
+.dark .p-dialog-close-button,
+.dark .p-drawer-close-button {
+  color: #9ca3af !important;
+}
+
+.dark .p-dialog-close-button:hover,
+.dark .p-drawer-close-button:hover {
+  color: #ffffff !important;
+  background-color: #1f2937 !important;
+}
+
 .dark .p-drawer {
   background-color: #0b0f19 !important;
   color: #f9fafb !important;
@@ -160,4 +213,89 @@ html.dark body {
 .dark .p-drawer-footer {
   background-color: #0b0f19 !important;
   color: #f9fafb !important;
+}
+
+/* Modal form card containers with bg-white or bg-slate-50 inside dialogs and drawers */
+.dark .p-dialog .bg-white,
+.dark .p-drawer .bg-white,
+.dark .p-dialog .bg-slate-50,
+.dark .p-drawer .bg-slate-50,
+.dark .p-dialog .bg-slate-100,
+.dark .p-drawer .bg-slate-100 {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+/* Colored accent cards inside modals */
+.dark .p-dialog [class*="bg-blue-50"],
+.dark .p-drawer [class*="bg-blue-50"],
+.dark .p-dialog [class*="bg-indigo-50"],
+.dark .p-drawer [class*="bg-indigo-50"] {
+  background-color: rgba(30, 58, 138, 0.3) !important;
+  border-color: #1e40af !important;
+  color: #e0e7ff !important;
+}
+
+.dark .p-dialog [class*="bg-purple-50"],
+.dark .p-drawer [class*="bg-purple-50"] {
+  background-color: rgba(88, 28, 135, 0.3) !important;
+  border-color: #6b21a8 !important;
+  color: #f3e8ff !important;
+}
+
+.dark .p-dialog [class*="bg-emerald-50"],
+.dark .p-drawer [class*="bg-emerald-50"] {
+  background-color: rgba(6, 78, 59, 0.3) !important;
+  border-color: #065f46 !important;
+  color: #d1fae5 !important;
+}
+
+.dark .p-dialog [class*="bg-amber-50"],
+.dark .p-drawer [class*="bg-amber-50"] {
+  background-color: rgba(120, 53, 15, 0.3) !important;
+  border-color: #92400e !important;
+  color: #fef3c7 !important;
+}
+
+.dark .p-dialog .border-slate-100,
+.dark .p-drawer .border-slate-100,
+.dark .p-dialog .border-slate-200,
+.dark .p-drawer .border-slate-200,
+.dark .p-dialog .border-slate-300,
+.dark .p-drawer .border-slate-300 {
+  border-color: #334155 !important;
+}
+
+.dark .p-dialog label,
+.dark .p-drawer label {
+  color: #e2e8f0 !important;
+}
+
+.dark .p-dialog .text-slate-900,
+.dark .p-drawer .text-slate-900,
+.dark .p-dialog .text-slate-800,
+.dark .p-drawer .text-slate-800,
+.dark .p-dialog .text-slate-700,
+.dark .p-drawer .text-slate-700,
+.dark .p-dialog .text-blue-900,
+.dark .p-drawer .text-blue-900,
+.dark .p-dialog .text-blue-950,
+.dark .p-drawer .text-blue-950,
+.dark .p-dialog .text-indigo-900,
+.dark .p-drawer .text-indigo-900,
+.dark .p-dialog .text-indigo-950,
+.dark .p-drawer .text-indigo-950,
+.dark .p-dialog .text-purple-900,
+.dark .p-drawer .text-purple-900,
+.dark .p-dialog .text-emerald-950,
+.dark .p-drawer .text-emerald-950 {
+  color: #f8fafc !important;
+}
+
+.dark .p-dialog .text-slate-600,
+.dark .p-drawer .text-slate-600,
+.dark .p-dialog .text-slate-500,
+.dark .p-drawer .text-slate-500 {
+  color: #94a3b8 !important;
 }

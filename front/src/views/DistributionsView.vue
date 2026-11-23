@@ -142,7 +142,7 @@
     >
       <div class="flex flex-col gap-4 py-2">
         <div>
-          <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Версия iiko *</label>
+          <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">Версия iiko *</label>
           <InputText
             v-model="form.iiko_version"
             placeholder="Например: 8.4.7 или 9.5.8"
@@ -151,7 +151,7 @@
         </div>
 
         <div>
-          <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Тип дистрибутива</label>
+          <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">Тип дистрибутива</label>
           <Select
             v-model="form.type"
             :options="typeOptions"
@@ -162,7 +162,7 @@
         </div>
 
         <div>
-          <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Ссылка на Яндекс.Диск *</label>
+          <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1">Ссылка на Яндекс.Диск *</label>
           <InputText
             v-model="form.link_ya"
             placeholder="https://disk.yandex.kz/d/..."

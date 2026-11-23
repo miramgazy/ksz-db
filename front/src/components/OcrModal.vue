@@ -13,7 +13,7 @@
         @drop.prevent="handleDrop"
         @click="triggerFileInput"
         class="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center min-h-[160px]"
-        :class="isDragging ? 'border-blue-500 bg-blue-50' : 'border-slate-300 hover:border-blue-400 bg-slate-50'"
+        :class="isDragging ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40' : 'border-slate-300 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 bg-slate-50 dark:bg-slate-800/50'"
       >
         <input
           ref="fileInput"
@@ -23,10 +23,10 @@
           @change="handleFileSelect"
         />
 
-        <div v-if="!imagePreview" class="flex flex-col items-center gap-2 text-slate-500">
-          <i class="pi pi-images text-4xl text-slate-400"></i>
-          <p class="font-medium text-slate-700">Нажмите для выбора или перетащите скриншот сюда</p>
-          <p class="text-xs text-slate-400">Либо сделайте скриншот (Win+Shift+S) и нажмите <kbd class="px-1.5 py-0.5 bg-slate-200 rounded font-mono text-slate-700">Ctrl + V</kbd></p>
+        <div v-if="!imagePreview" class="flex flex-col items-center gap-2 text-slate-500 dark:text-slate-400">
+          <i class="pi pi-images text-4xl text-slate-400 dark:text-slate-500"></i>
+          <p class="font-medium text-slate-700 dark:text-slate-200">Нажмите для выбора или перетащите скриншот сюда</p>
+          <p class="text-xs text-slate-400 dark:text-slate-500">Либо сделайте скриншот (Win+Shift+S) и нажмите <kbd class="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 rounded font-mono text-slate-700 dark:text-slate-200">Ctrl + V</kbd></p>
         </div>
 
         <div v-else class="flex flex-col items-center gap-2">
@@ -42,7 +42,7 @@
       </div>
 
       <!-- OCR Progress -->
-      <div v-if="isProcessing" class="flex flex-col gap-1 items-center justify-center p-3 bg-blue-50 rounded-lg text-blue-700 text-sm">
+      <div v-if="isProcessing" class="flex flex-col gap-1 items-center justify-center p-3 bg-blue-50 dark:bg-blue-950/40 rounded-lg text-blue-700 dark:text-blue-300 text-sm">
         <div class="flex items-center gap-2">
           <i class="pi pi-spin pi-spinner text-lg"></i>
           <span>Распознавание текста (Tesseract.js)... {{ progress }}%</span>
@@ -51,10 +51,10 @@
       </div>
 
       <!-- Extracted Result -->
-      <div v-if="recognizedId" class="p-3 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-between">
+      <div v-if="recognizedId" class="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-lg flex items-center justify-between">
         <div>
-          <div class="text-xs text-emerald-600 font-semibold uppercase">Найден AnyDesk ID:</div>
-          <div class="font-mono text-xl font-bold text-emerald-800 tracking-wider">{{ recognizedId }}</div>
+          <div class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold uppercase">Найден AnyDesk ID:</div>
+          <div class="font-mono text-xl font-bold text-emerald-800 dark:text-emerald-300 tracking-wider">{{ recognizedId }}</div>
         </div>
         <Button
           label="Использовать этот ID"
@@ -64,9 +64,9 @@
         />
       </div>
 
-      <div v-else-if="rawText && !isProcessing" class="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+      <div v-else-if="rawText && !isProcessing" class="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg text-xs text-amber-800 dark:text-amber-300">
         <div class="font-semibold mb-1">Текст распознан, но 9–10 значный AnyDesk ID не найден автоматически:</div>
-        <div class="font-mono bg-white p-2 rounded max-h-24 overflow-y-auto whitespace-pre-wrap">{{ rawText }}</div>
+        <div class="font-mono bg-white dark:bg-slate-900 dark:text-slate-200 p-2 rounded max-h-24 overflow-y-auto whitespace-pre-wrap">{{ rawText }}</div>
       </div>
     </div>
 

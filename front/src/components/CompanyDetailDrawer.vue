@@ -412,8 +412,8 @@
         </div>
 
         <!-- Parent Chain selector if RMS -->
-        <div v-if="editForm.node_type === 'RMS'" class="col-span-1 md:col-span-2 p-3 bg-blue-50/60 border border-blue-200 rounded-xl">
-          <label class="block text-xs font-bold text-blue-900 uppercase mb-1">
+        <div v-if="editForm.node_type === 'RMS'" class="col-span-1 md:col-span-2 p-3 bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 rounded-xl">
+          <label class="block text-xs font-bold text-blue-900 dark:text-blue-300 uppercase mb-1">
             Привязать к сети (Chain)
           </label>
           <Select
@@ -424,7 +424,7 @@
             placeholder="Выберите головную организацию (или оставьте пустым для одиночного заведения)"
             showClear
             filter
-            class="w-full text-xs bg-white"
+            class="w-full text-xs"
           >
             <template #option="{ option }">
               <div class="flex justify-between items-center w-full">
@@ -600,15 +600,15 @@
             </label>
           </div>
           <div v-if="editForm.is_its" class="flex items-center gap-3 pl-6">
-            <label class="text-xs text-slate-600 font-semibold uppercase">Срок действия ИТС:</label>
+            <label class="text-xs text-slate-600 dark:text-slate-400 font-semibold uppercase">Срок действия ИТС:</label>
             <input
               type="date"
               v-model="editForm.its_expires_at"
-              class="px-2.5 py-1 text-xs border border-slate-300 rounded-md font-mono"
+              class="px-2.5 py-1 text-xs border border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white rounded-md font-mono"
             />
             <button
               type="button"
-              class="text-[11px] text-blue-600 hover:underline cursor-pointer"
+              class="text-[11px] text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
               @click="editForm.its_expires_at = '2026-12-31'"
             >
               31.12.2026
@@ -618,11 +618,11 @@
       </div>
 
       <!-- AnyDesk Stations Section -->
-      <div v-if="company?.id && !isEditing" class="pt-4 border-t border-slate-200">
+      <div v-if="company?.id && !isEditing" class="pt-4 border-t border-slate-200 dark:border-slate-700">
         <div class="flex justify-between items-center mb-3">
           <div class="flex items-center gap-2">
-            <i class="pi pi-desktop text-blue-600"></i>
-            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700">
+            <i class="pi pi-desktop text-blue-600 dark:text-blue-400"></i>
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">
               Рабочие места AnyDesk ({{ company.anydesk_stations?.length || 0 }})
             </h3>
           </div>
@@ -637,7 +637,7 @@
           />
         </div>
 
-        <div v-if="!company.anydesk_stations?.length" class="text-center py-6 bg-slate-50 rounded-lg text-slate-400 text-sm">
+        <div v-if="!company.anydesk_stations?.length" class="text-center py-6 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-slate-400 dark:text-slate-500 text-sm">
           К этому заведению еще не привязано ни одного подключения AnyDesk.
         </div>
 
@@ -645,7 +645,7 @@
           <div
             v-for="st in company.anydesk_stations"
             :key="st.id"
-            class="p-3 bg-white border border-slate-200 rounded-lg flex items-center justify-between hover:border-blue-300 transition"
+            class="p-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg flex items-center justify-between hover:border-blue-300 dark:hover:border-blue-600 transition"
           >
             <div class="flex flex-col">
               <span class="font-semibold text-slate-800 text-sm">{{ st.description || 'Рабочее место' }}</span>
@@ -741,21 +741,21 @@
           <div
             v-for="srv in companyServicesList"
             :key="srv.id"
-            class="p-3 bg-white border border-slate-200 rounded-xl hover:border-slate-300 transition flex flex-col gap-2 shadow-2xs"
+            class="p-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-slate-300 dark:hover:border-slate-600 transition flex flex-col gap-2 shadow-2xs"
           >
             <div class="flex items-center justify-between gap-2 flex-wrap">
               <div class="flex items-center gap-2">
                 <span
                   class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                  :class="srv.is_its || srv.service_code === 'ITS' ? 'bg-emerald-100 text-emerald-800' : (srv.service_code === 'NOIP' ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-700')"
+                  :class="srv.is_its || srv.service_code === 'ITS' ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300' : (srv.service_code === 'NOIP' ? 'bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300')"
                 >
                   <i :class="['text-xs', getServiceIcon(srv)]"></i>
                 </span>
                 <div>
-                  <div class="font-bold text-slate-900 text-sm">
+                  <div class="font-bold text-slate-900 dark:text-white text-sm">
                     {{ srv.service_name || 'Услуга' }}
                   </div>
-                  <div class="text-[11px] text-slate-500">
+                  <div class="text-[11px] text-slate-500 dark:text-slate-400">
                     {{ getPeriodLabel(srv.period_type) }} • {{ srv.pricing_type === 'PER_RMS' ? `По точкам RMS (${srv.quantity || 1} шт.)` : (srv.pricing_type === 'PER_FRONT' ? `По кассам Front (${srv.quantity || 1} шт.)` : 'Фиксированный тариф') }}
                   </div>
                 </div>
@@ -770,9 +770,9 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2 border-t border-slate-100 text-xs">
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-2 border-t border-slate-100 dark:border-slate-700 text-xs">
               <div>
-                <span class="text-slate-400 block text-[10px] uppercase font-semibold">Срок действия:</span>
+                <span class="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-semibold">Срок действия:</span>
                 <span
                   class="inline-flex items-center gap-1 font-mono font-medium px-2 py-0.5 rounded border mt-0.5 text-xs"
                   :class="getExpirationBadgeClass(srv.days_remaining)"
@@ -783,29 +783,29 @@
               </div>
 
               <div v-if="authStore.canEdit">
-                <span class="text-slate-400 block text-[10px] uppercase font-semibold">Стоимость:</span>
-                <span class="font-mono font-bold text-slate-900 block mt-0.5">
+                <span class="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-semibold">Стоимость:</span>
+                <span class="font-mono font-bold text-slate-900 dark:text-white block mt-0.5">
                   {{ formatCurrency(srv.total_cost) }}
                 </span>
               </div>
 
               <div v-if="srv.comment" class="col-span-2 sm:col-span-1">
-                <span class="text-slate-400 block text-[10px] uppercase font-semibold">Примечание:</span>
-                <span class="text-slate-600 truncate block mt-0.5" :title="srv.comment">{{ srv.comment }}</span>
+                <span class="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-semibold">Примечание:</span>
+                <span class="text-slate-600 dark:text-slate-300 truncate block mt-0.5" :title="srv.comment">{{ srv.comment }}</span>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Fallback if only helpdesk_its is on company without company_services record -->
-        <div v-else-if="company?.helpdesk_its === 'Да'" class="p-4 bg-emerald-50/70 border border-emerald-200 rounded-xl flex items-center justify-between">
+        <div v-else-if="company?.helpdesk_its === 'Да'" class="p-4 bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+            <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 flex items-center justify-center shrink-0">
               <i class="pi pi-shield text-sm"></i>
             </div>
             <div>
-              <div class="font-bold text-emerald-950 text-sm">ИТС (Базовое сопровождение)</div>
-              <div class="text-xs text-emerald-800 mt-0.5">
+              <div class="font-bold text-emerald-950 dark:text-emerald-200 text-sm">ИТС (Базовое сопровождение)</div>
+              <div class="text-xs text-emerald-800 dark:text-emerald-300 mt-0.5">
                 Срок действия: до <span class="font-mono font-bold">{{ formatDate(company.its_expires_at) }}</span>
                 <span v-if="company.its_days_remaining !== null" class="ml-1 font-semibold">({{ formatDaysRemaining(company.its_days_remaining) }})</span>
               </div>
@@ -814,17 +814,17 @@
           <Tag value="Активна" severity="success" class="!text-[10px]" />
         </div>
 
-        <div v-else class="text-center py-8 text-slate-400 flex flex-col items-center gap-2">
-          <i class="pi pi-box text-3xl text-slate-300"></i>
+        <div v-else class="text-center py-8 text-slate-400 dark:text-slate-500 flex flex-col items-center gap-2">
+          <i class="pi pi-box text-3xl text-slate-300 dark:text-slate-600"></i>
           <span>К данному заведению пока не подключено дополнительных услуг.</span>
         </div>
       </div>
 
       <template #footer>
-        <div class="flex items-center justify-between w-full pt-2 border-t border-slate-100">
+        <div class="flex items-center justify-between w-full pt-2 border-t border-slate-100 dark:border-slate-800">
           <button
             type="button"
-            class="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 hover:underline font-semibold cursor-pointer"
+            class="inline-flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline font-semibold cursor-pointer"
             @click="goToServices"
           >
             <i class="pi pi-cog text-xs"></i>

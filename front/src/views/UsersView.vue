@@ -200,35 +200,35 @@
       :style="{ width: '440px' }"
     >
       <div v-if="selectedUser" class="flex flex-col gap-4 py-2">
-        <p class="text-sm text-slate-600">
+        <p class="text-sm text-slate-600 dark:text-slate-300">
           Вы подтверждаете доступ для сотрудника:
-          <strong class="text-slate-900 block mt-1">{{ selectedUser.full_name }} (@{{ selectedUser.username }})</strong>
+          <strong class="text-slate-900 dark:text-white block mt-1">{{ selectedUser.full_name }} (@{{ selectedUser.username }})</strong>
         </p>
 
         <div>
-          <label class="block text-xs font-semibold uppercase text-slate-600 mb-1.5">Назначить роль в системе</label>
+          <label class="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-300 mb-1.5">Назначить роль в системе</label>
           <div class="flex flex-col gap-2">
-            <label class="flex items-center gap-2 p-2 rounded-lg border cursor-pointer" :class="approveRole === 'MANAGER' ? 'border-blue-500 bg-blue-50' : 'border-slate-200'">
+            <label class="flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition" :class="approveRole === 'MANAGER' ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40' : 'border-slate-200 dark:border-slate-700'">
               <input type="radio" value="MANAGER" v-model="approveRole" />
               <div>
-                <span class="text-sm font-semibold text-slate-800">Менеджер</span>
-                <p class="text-xs text-slate-500">Может создавать, редактировать клиентов и AnyDesk</p>
+                <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">Менеджер</span>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Может создавать, редактировать клиентов и AnyDesk</p>
               </div>
             </label>
 
-            <label class="flex items-center gap-2 p-2 rounded-lg border cursor-pointer" :class="approveRole === 'VIEWER' ? 'border-blue-500 bg-blue-50' : 'border-slate-200'">
+            <label class="flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition" :class="approveRole === 'VIEWER' ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40' : 'border-slate-200 dark:border-slate-700'">
               <input type="radio" value="VIEWER" v-model="approveRole" />
               <div>
-                <span class="text-sm font-semibold text-slate-800">Наблюдатель (Только чтение)</span>
-                <p class="text-xs text-slate-500">Просмотр, запуск и копирование данных без права изменения</p>
+                <span class="text-sm font-semibold text-slate-800 dark:text-slate-200">Наблюдатель (Только чтение)</span>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Просмотр, запуск и копирование данных без права изменения</p>
               </div>
             </label>
 
-            <label class="flex items-center gap-2 p-2 rounded-lg border cursor-pointer" :class="approveRole === 'SUPERADMIN' ? 'border-purple-500 bg-purple-50' : 'border-slate-200'">
+            <label class="flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition" :class="approveRole === 'SUPERADMIN' ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/40' : 'border-slate-200 dark:border-slate-700'">
               <input type="radio" value="SUPERADMIN" v-model="approveRole" />
               <div>
-                <span class="text-sm font-semibold text-purple-700">Суперадминистратор</span>
-                <p class="text-xs text-slate-500">Полный доступ к системе и управлению пользователями</p>
+                <span class="text-sm font-semibold text-purple-700 dark:text-purple-300">Суперадминистратор</span>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Полный доступ к системе и управлению пользователями</p>
               </div>
             </label>
           </div>

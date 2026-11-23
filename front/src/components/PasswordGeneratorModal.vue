@@ -7,12 +7,12 @@
   >
     <div class="flex flex-col gap-4 py-2">
       <!-- Generated Password Box -->
-      <div class="relative flex items-center bg-slate-100 p-3 rounded-lg border border-slate-300">
+      <div class="relative flex items-center bg-slate-100 dark:bg-slate-900 p-3 rounded-lg border border-slate-300 dark:border-slate-700">
         <input
           type="text"
           readonly
           :value="password"
-          class="w-full bg-transparent font-mono text-lg font-semibold text-slate-800 outline-none pr-10"
+          class="w-full bg-transparent font-mono text-lg font-semibold text-slate-800 dark:text-slate-100 outline-none pr-10"
         />
         <Button
           icon="pi pi-copy"
@@ -26,15 +26,15 @@
 
       <!-- Length Slider -->
       <div>
-        <div class="flex justify-between items-center mb-1 text-sm font-medium text-slate-700">
+        <div class="flex justify-between items-center mb-1 text-sm font-medium text-slate-700 dark:text-slate-300">
           <span>Длина пароля:</span>
-          <span class="font-mono text-blue-600 font-bold">{{ length }}</span>
+          <span class="font-mono text-blue-600 dark:text-blue-400 font-bold">{{ length }}</span>
         </div>
         <Slider v-model="length" :min="6" :max="32" class="w-full" @change="generate" />
       </div>
 
       <!-- Character Options -->
-      <div class="grid grid-cols-2 gap-2 text-sm text-slate-700">
+      <div class="grid grid-cols-2 gap-2 text-sm text-slate-700 dark:text-slate-300">
         <label class="flex items-center gap-2 cursor-pointer">
           <Checkbox v-model="useUpper" :binary="true" @change="generate" />
           <span>Заглавные (A-Z)</span>

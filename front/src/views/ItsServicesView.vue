@@ -486,17 +486,17 @@
       :style="{ width: '420px' }"
     >
       <div v-if="selectedRenewService" class="flex flex-col gap-4 py-1 text-sm">
-        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
-          <div class="text-xs text-slate-500 font-medium">Компания:</div>
-          <div class="font-bold text-slate-900">{{ selectedRenewService.company_place_name }}</div>
-          <div class="text-xs text-slate-500 mt-1 font-medium">Услуга:</div>
-          <div class="font-semibold text-emerald-800">{{ selectedRenewService.service_name }}</div>
-          <div class="text-xs text-slate-500 mt-1 font-medium">Текущий срок окончания:</div>
-          <div class="font-mono font-bold text-slate-800">{{ formatDate(selectedRenewService.expires_at) }}</div>
+        <div class="p-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg">
+          <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Компания:</div>
+          <div class="font-bold text-slate-900 dark:text-white">{{ selectedRenewService.company_place_name }}</div>
+          <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">Услуга:</div>
+          <div class="font-semibold text-emerald-800 dark:text-emerald-400">{{ selectedRenewService.service_name }}</div>
+          <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">Текущий срок окончания:</div>
+          <div class="font-mono font-bold text-slate-800 dark:text-slate-200">{{ formatDate(selectedRenewService.expires_at) }}</div>
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase mb-2">Выберите срок продления:</label>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-2">Выберите срок продления:</label>
           <div class="grid grid-cols-2 gap-2">
             <Button
               label="+ 1 месяц"
@@ -549,13 +549,13 @@
           </div>
         </div>
 
-        <div class="border-t border-slate-200 pt-3">
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Или укажите точную дату окончания:</label>
+        <div class="border-t border-slate-200 dark:border-slate-700 pt-3">
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Или укажите точную дату окончания:</label>
           <div class="flex gap-2">
             <input
               type="date"
               v-model="customRenewDate"
-              class="flex-1 px-3 py-1.5 border border-slate-300 rounded-lg text-sm font-mono"
+              class="flex-1 px-3 py-1.5 border border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white rounded-lg text-sm font-mono"
             />
             <Button
               label="Применить"
@@ -584,13 +584,13 @@
         <!-- 1. Company Assignment Block -->
         <div>
           <div class="flex justify-between items-center mb-1">
-            <label class="block text-xs font-bold text-slate-700 uppercase">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase">
               Заведение / Сеть *
             </label>
             <button
               v-if="selectedCompany && !isChangingCompany"
               type="button"
-              class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold cursor-pointer flex items-center gap-1"
+              class="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-semibold cursor-pointer flex items-center gap-1"
               @click="isChangingCompany = true"
             >
               <i class="pi pi-sync text-[10px]"></i>
@@ -601,14 +601,14 @@
           <!-- Display Selected Company Card -->
           <div
             v-if="selectedCompany && !isChangingCompany"
-            class="p-3 bg-gradient-to-r from-slate-50 to-indigo-50/40 border border-slate-200 rounded-xl flex items-center justify-between"
+            class="p-3 bg-gradient-to-r from-slate-50 to-indigo-50/40 dark:from-slate-800 dark:to-indigo-950/40 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center justify-between"
           >
             <div class="flex items-center gap-2.5">
-              <div class="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm shrink-0">
+              <div class="w-9 h-9 rounded-lg bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold text-sm shrink-0">
                 <i class="pi pi-building"></i>
               </div>
               <div>
-                <div class="font-bold text-slate-900 text-sm flex items-center gap-1.5 flex-wrap">
+                <div class="font-bold text-slate-900 dark:text-white text-sm flex items-center gap-1.5 flex-wrap">
                   <span>{{ selectedCompany.place_name }}</span>
                   <Tag
                     :value="selectedCompany.node_type === 'CHAIN' ? `Сеть (${selectedCompany.branches_count || 0} фил.)` : (selectedCompany.parent_chain_name ? `Филиал: ${selectedCompany.parent_chain_name}` : 'Точка RMS')"
@@ -616,7 +616,7 @@
                     class="!text-[9px]"
                   />
                 </div>
-                <div class="text-[11px] text-slate-500 font-mono mt-0.5">
+                <div class="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
                   <span v-if="selectedCompany.city">{{ selectedCompany.city }} • </span>
                   <span>{{ selectedCompany.node_type === 'CHAIN' ? `${selectedCompany.branches_count || 1} RMS` : '1 RMS' }}</span>
                   <span v-if="selectedCompany.stations_count"> • {{ selectedCompany.stations_count }} касс (Front)</span>
@@ -647,7 +647,7 @@
             <div v-if="selectedCompany && isChangingCompany" class="flex justify-end">
               <button
                 type="button"
-                class="text-[11px] text-slate-500 hover:text-slate-800 underline cursor-pointer"
+                class="text-[11px] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 underline cursor-pointer"
                 @click="isChangingCompany = false"
               >
                 Отмена (оставить {{ selectedCompany.place_name }})
@@ -657,17 +657,17 @@
             <!-- Live Search Results Dropdown -->
             <div
               v-if="companySearchResults.length > 0"
-              class="max-h-48 overflow-y-auto border border-indigo-200 rounded-lg bg-white shadow-xl flex flex-col divide-y divide-slate-100 z-50"
+              class="max-h-48 overflow-y-auto border border-indigo-200 dark:border-indigo-900 rounded-lg bg-white dark:bg-slate-900 shadow-xl flex flex-col divide-y divide-slate-100 dark:divide-slate-800 z-50"
             >
               <div
                 v-for="comp in companySearchResults"
                 :key="comp.id"
-                class="p-2.5 hover:bg-indigo-50/80 cursor-pointer transition flex items-center justify-between text-xs"
+                class="p-2.5 hover:bg-indigo-50/80 dark:hover:bg-indigo-950/60 cursor-pointer transition flex items-center justify-between text-xs"
                 @click="chooseCompany(comp)"
               >
                 <div>
-                  <span class="font-bold text-slate-900">{{ comp.place_name }}</span>
-                  <span v-if="comp.city" class="text-slate-500 ml-1.5 font-mono text-[11px]">({{ comp.city }})</span>
+                  <span class="font-bold text-slate-900 dark:text-white">{{ comp.place_name }}</span>
+                  <span v-if="comp.city" class="text-slate-500 dark:text-slate-400 ml-1.5 font-mono text-[11px]">({{ comp.city }})</span>
                 </div>
                 <div class="flex items-center gap-1.5">
                   <Tag
@@ -675,20 +675,20 @@
                     :severity="comp.node_type === 'CHAIN' ? 'warn' : 'secondary'"
                     class="!text-[9px]"
                   />
-                  <span class="text-slate-400 font-mono text-[11px]">{{ comp.stations_count || 0 }} касс</span>
+                  <span class="text-slate-400 dark:text-slate-500 font-mono text-[11px]">{{ comp.stations_count || 0 }} касс</span>
                 </div>
               </div>
             </div>
 
             <div
               v-else-if="companySearchInput.trim().length >= 3 && !isSearchingCompany && hasSearchedCompanies"
-              class="text-[11px] text-slate-400 italic px-1 py-1"
+              class="text-[11px] text-slate-400 dark:text-slate-500 italic px-1 py-1"
             >
               Заведений по запросу «{{ companySearchInput }}» не найдено
             </div>
             <div
               v-else-if="companySearchInput.trim().length > 0 && companySearchInput.trim().length < 3"
-              class="text-[11px] text-amber-600 px-1 py-0.5 font-medium"
+              class="text-[11px] text-amber-600 dark:text-amber-400 px-1 py-0.5 font-medium"
             >
               Введите ещё минимум {{ 3 - companySearchInput.trim().length }} символ(а) для поиска
             </div>
@@ -696,9 +696,9 @@
         </div>
 
         <!-- 2. Service Catalog Selector + Custom Name -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100 dark:border-slate-700">
           <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Вид услуги (Каталог) *</label>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Вид услуги (Каталог) *</label>
             <Select
               v-model="serviceForm.service"
               :options="serviceTypesList"
@@ -710,7 +710,7 @@
             />
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">
+            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase mb-1">
               Название тарифа / услуги
             </label>
             <InputText
@@ -722,14 +722,14 @@
         </div>
 
         <!-- 3. Individual Properties for this company -->
-        <div class="pt-2 border-t border-slate-100 flex flex-col gap-3">
-          <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+        <div class="pt-2 border-t border-slate-100 dark:border-slate-700 flex flex-col gap-3">
+          <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
             Индивидуальные свойства услуги для заведения
           </div>
 
         <!-- Period Type -->
         <div>
-          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Период подписки</label>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Период подписки</label>
           <Select
             v-model="serviceForm.period_type"
             :options="periodOptions"
@@ -741,7 +741,7 @@
 
         <!-- Pricing Type Selector (Manual vs Per RMS vs Per Front) -->
         <div>
-          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Способ расчёта стоимости</label>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Способ расчёта стоимости</label>
           <Select
             v-model="serviceForm.pricing_type"
             :options="pricingTypeOptions"
@@ -753,19 +753,19 @@
         </div>
 
         <!-- Price Input Fields for PER_RMS or PER_FRONT -->
-        <div v-if="serviceForm.pricing_type === 'PER_RMS' || serviceForm.pricing_type === 'PER_FRONT'" class="p-3.5 bg-indigo-50/70 border border-indigo-200 rounded-xl flex flex-col gap-3">
+        <div v-if="serviceForm.pricing_type === 'PER_RMS' || serviceForm.pricing_type === 'PER_FRONT'" class="p-3.5 bg-indigo-50/70 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-900/80 rounded-xl flex flex-col gap-3">
           <div class="flex justify-between items-center text-xs">
-            <span class="text-indigo-900 font-semibold">
+            <span class="text-indigo-900 dark:text-indigo-300 font-semibold">
               {{ serviceForm.pricing_type === 'PER_RMS' ? 'Активных точек (RMS) в базе данных:' : 'Касс (Front) в базе данных:' }}
             </span>
             <div class="flex items-center gap-1.5">
-              <span class="font-bold font-mono text-indigo-950">
+              <span class="font-bold font-mono text-indigo-950 dark:text-indigo-200">
                 {{ serviceForm.pricing_type === 'PER_RMS' ? getDatabaseRmsCount(serviceForm.company) : getDatabaseFrontCount(serviceForm.company) }}
                 {{ serviceForm.pricing_type === 'PER_RMS' ? 'точ.' : 'касс' }}
               </span>
               <button
                 type="button"
-                class="text-[10px] text-indigo-600 hover:text-indigo-800 underline font-medium cursor-pointer"
+                class="text-[10px] text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 underline font-medium cursor-pointer"
                 @click="serviceForm.quantity = (serviceForm.pricing_type === 'PER_RMS' ? getDatabaseRmsCount(serviceForm.company) : getDatabaseFrontCount(serviceForm.company)); recalculateCost()"
               >
                 Подставить
@@ -775,7 +775,7 @@
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-semibold text-indigo-900 mb-1">
+              <label class="block text-xs font-semibold text-indigo-900 dark:text-indigo-300 mb-1">
                 {{ serviceForm.pricing_type === 'PER_RMS' ? 'Количество точек RMS *' : 'Количество касс Front *' }}
               </label>
               <InputText
@@ -788,7 +788,7 @@
               />
             </div>
             <div>
-              <label class="block text-xs font-semibold text-indigo-900 mb-1">
+              <label class="block text-xs font-semibold text-indigo-900 dark:text-indigo-300 mb-1">
                 {{ serviceForm.pricing_type === 'PER_RMS' ? 'Ставка за 1 RMS в месяц (₸) *' : 'Ставка за 1 Front в месяц (₸) *' }}
               </label>
               <InputText
@@ -801,19 +801,19 @@
             </div>
           </div>
 
-          <div class="flex justify-between items-center text-xs pt-2 border-t border-indigo-200/80">
-            <span class="text-indigo-900 font-bold">Итоговая сумма:</span>
+          <div class="flex justify-between items-center text-xs pt-2 border-t border-indigo-200/80 dark:border-indigo-800">
+            <span class="text-indigo-900 dark:text-indigo-300 font-bold">Итоговая сумма:</span>
             <div class="flex items-baseline gap-2">
-              <span class="text-[11px] text-slate-500 font-mono">
+              <span class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                 ({{ formatCurrency(serviceForm.cost_per_rms) }} × {{ serviceForm.quantity || 1 }} {{ serviceForm.pricing_type === 'PER_RMS' ? 'точ.' : 'касс' }}) =
               </span>
-              <span class="font-mono font-extrabold text-base text-indigo-950">{{ formatCurrency(serviceForm.total_cost) }}</span>
+              <span class="font-mono font-extrabold text-base text-indigo-950 dark:text-indigo-100">{{ formatCurrency(serviceForm.total_cost) }}</span>
             </div>
           </div>
         </div>
 
         <div v-else>
-          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Фиксированная стоимость (₸) *</label>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Фиксированная стоимость (₸) *</label>
           <InputText
             v-model.number="serviceForm.total_cost"
             type="number"
@@ -825,39 +825,39 @@
         <!-- Dates: Start Date and Expiration Date -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Дата начала</label>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Дата начала</label>
             <input
               type="date"
               v-model="serviceForm.start_date"
-              class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono"
+              class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white rounded-lg text-sm font-mono"
             />
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Срок действия (до) *</label>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Срок действия (до) *</label>
             <input
               type="date"
               v-model="serviceForm.expires_at"
-              class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono"
+              class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white rounded-lg text-sm font-mono"
               required
             />
             <div class="flex items-center gap-1.5 mt-1.5">
               <button
                 type="button"
-                class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-medium transition cursor-pointer"
+                class="text-[11px] bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-2 py-0.5 rounded font-medium transition cursor-pointer"
                 @click="setFormDate(1)"
               >
                 +1 мес
               </button>
               <button
                 type="button"
-                class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-medium transition cursor-pointer"
+                class="text-[11px] bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-2 py-0.5 rounded font-medium transition cursor-pointer"
                 @click="setFormDate(12)"
               >
                 +1 год
               </button>
               <button
                 type="button"
-                class="text-[11px] bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-2 py-0.5 rounded font-bold transition cursor-pointer"
+                class="text-[11px] bg-emerald-100 dark:bg-emerald-950/80 hover:bg-emerald-200 dark:hover:bg-emerald-900 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded font-bold transition cursor-pointer"
                 @click="serviceForm.expires_at = '2026-12-31'"
               >
                 31.12.2026
@@ -868,7 +868,7 @@
 
         <!-- Comment / Contract -->
         <div>
-          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Номер договора / Примечание</label>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Номер договора / Примечание</label>
           <InputText
             v-model="serviceForm.comment"
             placeholder="Договор №123 от 01.01.2026..."
@@ -877,9 +877,9 @@
         </div>
 
         <!-- Status -->
-        <div class="flex items-center gap-2 pt-1 border-t border-slate-100">
+        <div class="flex items-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-700">
           <Checkbox v-model="serviceForm.status" :binary="true" inputId="srv_status_cb" />
-          <label for="srv_status_cb" class="text-xs font-semibold text-slate-800 cursor-pointer">
+          <label for="srv_status_cb" class="text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer">
             Услуга активна (подписка действует)
           </label>
         </div>
@@ -921,20 +921,20 @@
         </div>
 
         <!-- Inline Form for creating a new service type -->
-        <div v-if="showNewTypeForm" class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex flex-col gap-2.5">
-          <div class="text-xs font-bold text-slate-800 uppercase">Новый вид услуги:</div>
+        <div v-if="showNewTypeForm" class="p-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl flex flex-col gap-2.5">
+          <div class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase">Новый вид услуги:</div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div>
-              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Название услуги *</label>
+              <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-0.5">Название услуги *</label>
               <InputText v-model="newTypeForm.name" placeholder="Например: Облачный бэкап" class="w-full text-xs" />
             </div>
             <div>
-              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Системный код (латиница)</label>
+              <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-0.5">Системный код (латиница)</label>
               <InputText v-model="newTypeForm.code" placeholder="BACKUP" class="w-full text-xs font-mono" />
             </div>
           </div>
           <div>
-            <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Описание</label>
+            <label class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-0.5">Описание</label>
             <InputText v-model="newTypeForm.description" placeholder="Краткое описание" class="w-full text-xs" />
           </div>
           <div class="flex justify-end gap-2 pt-1">
@@ -948,16 +948,16 @@
           <div
             v-for="item in serviceTypesList"
             :key="item.id"
-            class="p-3 bg-white border border-slate-200 rounded-lg flex items-center justify-between"
+            class="p-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg flex items-center justify-between"
           >
             <div>
-              <div class="font-bold text-slate-900 flex items-center gap-2">
+              <div class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <span>{{ item.name }}</span>
                 <Tag v-if="item.is_its" value="Базовый ИТС" severity="success" class="!text-[9px]" />
-                <span v-if="item.code" class="text-[10px] text-slate-400 font-mono">[{{ item.code }}]</span>
+                <span v-if="item.code" class="text-[10px] text-slate-400 dark:text-slate-500 font-mono">[{{ item.code }}]</span>
               </div>
-              <div v-if="item.description" class="text-xs text-slate-500 mt-0.5">{{ item.description }}</div>
-              <div class="text-[11px] text-slate-400 mt-0.5 font-mono">
+              <div v-if="item.description" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{{ item.description }}</div>
+              <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 font-mono">
                 Подключений: {{ item.subscriptions_count || 0 }}
               </div>
             </div>
