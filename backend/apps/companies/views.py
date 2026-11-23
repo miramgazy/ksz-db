@@ -6,7 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from apps.common.permissions import ReadOnlyForViewer
 from .models import Company, AnydeskStation, IikoDistribution, City, BusinessType, LicenceType, AnydeskVersion, ServiceType, CompanyService
-from .utils import version_sort_key
+from .utils import version_sort_key, clean_iiko_version
 from .serializers import (
     CompanyListSerializer,
     CompanyDetailSerializer,

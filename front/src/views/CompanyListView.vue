@@ -857,7 +857,7 @@ const loadFilterOptions = async () => {
     const res = await companiesApi.getFilterOptions()
     filterOptions.value = res.data
   } catch (e) {
-    // Ignore
+    console.error('Ошибка загрузки опций фильтрации:', e)
   }
 }
 
