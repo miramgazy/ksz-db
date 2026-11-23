@@ -124,6 +124,10 @@ class Company(models.Model):
         return decrypt_password(self.system_admin_password_enc)
 
     def save(self, *args, **kwargs):
+        if not self.status:
+            self.helpdesk_its = 'Нет'
+            self.its_expires_at = None
+            self.its_cost = 0
         if self.iiko_version:
             self.iiko_version = clean_iiko_version(self.iiko_version)
         super().save(*args, **kwargs)
@@ -313,16 +317,22 @@ class CompanyService(models.Model):
 
         # Synchronize Company.helpdesk_its and its_expires_at if this is an ITS service
         if self.service and self.service.is_its:
-            if self.status:
-                Company.objects.filter(id=self.company_id).update(
+            if self.status and self.company.status:
+                Company.objects.filter(id=self.company_id, status=True).update(
                     helpdesk_its='Да',
                     its_expires_at=self.expires_at,
                     its_cost=self.total_cost
                 )
                 if self.company.node_type == Company.NodeType.CHAIN:
-                    self.company.branches.update(
+                    # ONLY active branches receive ITS! Inactive branches must not get ITS.
+                    self.company.branches.filter(status=True).update(
                         helpdesk_its='Да',
                         its_expires_at=self.expires_at
+                    )
+                    self.company.branches.filter(status=False).update(
+                        helpdesk_its='Нет',
+                        its_expires_at=None,
+                        its_cost=0
                     )
             else:
                 has_active = CompanyService.objects.filter(company_id=self.company_id, service__is_its=True, status=True).exclude(pk=self.pk).exists()
@@ -330,8 +340,14 @@ class CompanyService(models.Model):
                     Company.objects.filter(id=self.company_id).update(
                         helpdesk_its='Нет',
                         its_expires_at=None,
-                        its_cost=None
+                        its_cost=0
                     )
+                    if self.company.node_type == Company.NodeType.CHAIN:
+                        self.company.branches.update(
+                            helpdesk_its='Нет',
+                            its_expires_at=None,
+                            its_cost=0
+                        )
 
             if old_company_id:
                 has_active_old = CompanyService.objects.filter(company_id=old_company_id, service__is_its=True, status=True).exists()
@@ -339,8 +355,15 @@ class CompanyService(models.Model):
                     Company.objects.filter(id=old_company_id).update(
                         helpdesk_its='Нет',
                         its_expires_at=None,
-                        its_cost=None
+                        its_cost=0
                     )
+                    old_comp = Company.objects.filter(id=old_company_id).first()
+                    if old_comp and old_comp.node_type == Company.NodeType.CHAIN:
+                        old_comp.branches.update(
+                            helpdesk_its='Нет',
+                            its_expires_at=None,
+                            its_cost=0
+                        )
 
     def delete(self, *args, **kwargs):
         cid = self.company_id
@@ -352,6 +375,13 @@ class CompanyService(models.Model):
                 Company.objects.filter(id=cid).update(
                     helpdesk_its='Нет',
                     its_expires_at=None,
-                    its_cost=None
+                    its_cost=0
                 )
+                comp = Company.objects.filter(id=cid).first()
+                if comp and comp.node_type == Company.NodeType.CHAIN:
+                    comp.branches.update(
+                        helpdesk_its='Нет',
+                        its_expires_at=None,
+                        its_cost=0
+                    )
 

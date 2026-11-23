@@ -120,13 +120,13 @@ class CompanyViewSet(viewsets.ModelViewSet):
 
         its = self.request.query_params.get('its')
         if its == 'yes':
-            qs = qs.filter(helpdesk_its='Да')
+            qs = qs.filter(helpdesk_its='Да', status=True)
         elif its == 'no':
-            qs = qs.exclude(helpdesk_its='Да')
+            qs = qs.filter(Q(helpdesk_its='Нет') | Q(status=False) | Q(helpdesk_its__isnull=True) | Q(helpdesk_its=''))
         elif its in ['over_month', 'week_month', 'week', 'day', 'expired']:
             from datetime import date, timedelta
             today = date.today()
-            qs = qs.filter(helpdesk_its='Да')
+            qs = qs.filter(helpdesk_its='Да', status=True)
             if its == 'over_month':
                 qs = qs.filter(its_expires_at__gt=today + timedelta(days=30))
             elif its == 'week_month':
@@ -230,23 +230,23 @@ class CompanyViewSet(viewsets.ModelViewSet):
 
         # Counts by software_type, status and its (both total establishments and unique companies/chains)
         def count_its_companies(qs):
-            return qs.filter(helpdesk_its='Да').annotate(gid=Coalesce('parent_chain_id', 'id')).values('gid').distinct().count()
+            return qs.filter(helpdesk_its='Да', status=True).annotate(gid=Coalesce('parent_chain_id', 'id')).values('gid').distinct().count()
 
         total_count = Company.objects.count()
         active_count = Company.objects.filter(status=True).count()
-        its_count = Company.objects.filter(helpdesk_its='Да').count()
+        its_count = Company.objects.filter(helpdesk_its='Да', status=True).count()
         its_companies_count = count_its_companies(Company.objects.all())
 
         iiko_qs = Company.objects.filter(software_type=Company.SoftwareType.IIKO)
         iiko_count = iiko_qs.count()
         iiko_active_count = iiko_qs.filter(status=True).count()
-        iiko_its_count = iiko_qs.filter(helpdesk_its='Да').count()
+        iiko_its_count = iiko_qs.filter(helpdesk_its='Да', status=True).count()
         iiko_its_companies_count = count_its_companies(iiko_qs)
 
         rosta_qs = Company.objects.filter(software_type=Company.SoftwareType.ROSTA)
         rosta_count = rosta_qs.count()
         rosta_active_count = rosta_qs.filter(status=True).count()
-        rosta_its_count = rosta_qs.filter(helpdesk_its='Да').count()
+        rosta_its_count = rosta_qs.filter(helpdesk_its='Да', status=True).count()
         rosta_its_companies_count = count_its_companies(rosta_qs)
 
         return Response({
@@ -402,7 +402,8 @@ class CompanyServiceViewSet(viewsets.ModelViewSet):
     ordering = ('expires_at',)
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        # Services are rendered ONLY to active establishments
+        qs = super().get_queryset().filter(company__status=True)
 
         exp_status = self.request.query_params.get('exp_status')
         from datetime import date, timedelta
@@ -477,14 +478,14 @@ class CompanyServiceViewSet(viewsets.ModelViewSet):
         from django.db.models import Sum
         today = date.today()
 
-        all_subs = CompanyService.objects.filter(status=True)
+        all_subs = CompanyService.objects.filter(status=True, company__status=True)
         its_subs = all_subs.filter(service__is_its=True)
 
         over_month = its_subs.filter(expires_at__gt=today + timedelta(days=30)).count()
         week_month = its_subs.filter(expires_at__gte=today + timedelta(days=8), expires_at__lte=today + timedelta(days=30)).count()
         week = its_subs.filter(expires_at__gte=today + timedelta(days=1), expires_at__lte=today + timedelta(days=7)).count()
         day = its_subs.filter(expires_at=today).count()
-        expired = CompanyService.objects.filter(service__is_its=True, expires_at__lt=today).count()
+        expired = CompanyService.objects.filter(service__is_its=True, company__status=True, expires_at__lt=today).count()
 
         total_points = 0
         its_companies_count = its_subs.values('company').distinct().count()

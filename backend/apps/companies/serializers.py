@@ -36,11 +36,14 @@ class AnydeskStationSerializer(serializers.ModelSerializer):
 
 
 class ChainOptionSerializer(serializers.ModelSerializer):
-    branches_count = serializers.IntegerField(source='branches.count', read_only=True)
+    branches_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Company
         fields = ('id', 'place_name', 'city', 'branches_count')
+
+    def get_branches_count(self, obj):
+        return obj.branches.filter(status=True).count()
 
 
 class ServiceTypeSerializer(serializers.ModelSerializer):
@@ -55,13 +58,18 @@ class CompanyServiceSerializer(serializers.ModelSerializer):
     company_place_name = serializers.CharField(source='company.place_name', read_only=True)
     company_city = serializers.CharField(source='company.city', read_only=True)
     company_node_type = serializers.CharField(source='company.node_type', read_only=True)
-    company_branches_count = serializers.IntegerField(source='company.branches.count', read_only=True)
+    company_branches_count = serializers.SerializerMethodField()
     company_stations_count = serializers.IntegerField(source='company.anydesk_stations.count', read_only=True)
     company_parent_chain_name = serializers.CharField(source='company.parent_chain.place_name', read_only=True, default=None)
     service_code = serializers.CharField(source='service.code', read_only=True)
     is_its = serializers.BooleanField(source='service.is_its', read_only=True)
     days_remaining = serializers.SerializerMethodField()
     start_date = serializers.DateField(required=False, allow_null=True)
+
+    def get_company_branches_count(self, obj):
+        if obj.company:
+            return obj.company.branches.filter(status=True).count()
+        return 0
 
     class Meta:
         model = CompanyService
@@ -106,12 +114,15 @@ class CompanyServiceSerializer(serializers.ModelSerializer):
 
 class CompanyListSerializer(serializers.ModelSerializer):
     stations_count = serializers.IntegerField(source='anydesk_stations.count', read_only=True)
-    branches_count = serializers.IntegerField(source='branches.count', read_only=True)
+    branches_count = serializers.SerializerMethodField()
     parent_chain_name = serializers.CharField(source='parent_chain.place_name', read_only=True, default=None)
     system_admin_password = serializers.SerializerMethodField()
     distribution_link = serializers.SerializerMethodField()
     its_days_remaining = serializers.SerializerMethodField()
     updated_by_name = serializers.SerializerMethodField()
+
+    def get_branches_count(self, obj):
+        return obj.branches.filter(status=True).count()
 
     class Meta:
         model = Company
@@ -127,6 +138,12 @@ class CompanyListSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
+        # Services are provided only to active establishments
+        if not instance.status:
+            ret['helpdesk_its'] = 'Нет'
+            ret['its_expires_at'] = None
+            ret['its_cost'] = None
+            ret['its_days_remaining'] = None
         request = self.context.get('request')
         if request and hasattr(request, 'user') and request.user.is_authenticated:
             role = getattr(request.user, 'role', '')
@@ -156,12 +173,15 @@ class CompanyListSerializer(serializers.ModelSerializer):
 class CompanyDetailSerializer(serializers.ModelSerializer):
     anydesk_stations = AnydeskStationSerializer(many=True, read_only=True)
     company_services = CompanyServiceSerializer(many=True, read_only=True)
-    branches_count = serializers.IntegerField(source='branches.count', read_only=True)
+    branches_count = serializers.SerializerMethodField()
     parent_chain_name = serializers.CharField(source='parent_chain.place_name', read_only=True, default=None)
     system_admin_password = serializers.CharField(required=False, allow_blank=True, write_only=False)
     distribution_link = serializers.SerializerMethodField()
     its_days_remaining = serializers.SerializerMethodField()
     updated_by_name = serializers.SerializerMethodField()
+
+    def get_branches_count(self, obj):
+        return obj.branches.filter(status=True).count()
 
     class Meta:
         model = Company
@@ -178,6 +198,12 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
+        # Services are provided only to active establishments
+        if not instance.status:
+            ret['helpdesk_its'] = 'Нет'
+            ret['its_expires_at'] = None
+            ret['its_cost'] = None
+            ret['its_days_remaining'] = None
         ret['system_admin_password'] = instance.get_password()
         request = self.context.get('request')
         if request and hasattr(request, 'user') and request.user.is_authenticated:

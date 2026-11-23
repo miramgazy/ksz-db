@@ -363,11 +363,11 @@
                   <!-- Place name with ITS color gradation highlighting & shield/clock/alert badge -->
                   <span
                     class="font-bold transition cursor-pointer inline-flex items-center gap-1.5"
-                    :class="data.helpdesk_its === 'Да' ? getExpirationTextClass(data.its_days_remaining ?? getDaysRemaining(data.its_expires_at), true) : 'text-slate-900 hover:text-blue-600'"
+                    :class="data.status && data.helpdesk_its === 'Да' ? getExpirationTextClass(data.its_days_remaining ?? getDaysRemaining(data.its_expires_at), true) : 'text-slate-900 hover:text-blue-600'"
                   >
                     <span>{{ data.place_name }}</span>
                     <span
-                      v-if="data.helpdesk_its === 'Да'"
+                      v-if="data.status && data.helpdesk_its === 'Да'"
                       class="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0 shadow-2xs border transition"
                       :class="getExpirationBadgeClass(data.its_days_remaining ?? getDaysRemaining(data.its_expires_at))"
                       :title="getItsTooltip(data)"
@@ -935,7 +935,7 @@ const toggleChainFilter = (chainId, chainName) => {
 }
 
 const rowClass = (data) => {
-  if (data.helpdesk_its === 'Да') {
+  if (data.status && data.helpdesk_its === 'Да') {
     return 'bg-emerald-50/30 hover:!bg-emerald-50/70 border-l-4 border-l-emerald-600 transition-colors'
   }
   return ''

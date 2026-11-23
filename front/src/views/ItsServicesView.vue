@@ -732,7 +732,7 @@
         <div v-if="serviceForm.pricing_type === 'PER_RMS' || serviceForm.pricing_type === 'PER_FRONT'" class="p-3.5 bg-indigo-50/70 border border-indigo-200 rounded-xl flex flex-col gap-3">
           <div class="flex justify-between items-center text-xs">
             <span class="text-indigo-900 font-semibold">
-              {{ serviceForm.pricing_type === 'PER_RMS' ? 'Точек (RMS) в базе данных:' : 'Касс (Front) в базе данных:' }}
+              {{ serviceForm.pricing_type === 'PER_RMS' ? 'Активных точек (RMS) в базе данных:' : 'Касс (Front) в базе данных:' }}
             </span>
             <div class="flex items-center gap-1.5">
               <span class="font-bold font-mono text-indigo-950">
@@ -1073,7 +1073,7 @@ const onCompanySearchInput = () => {
     isSearchingCompany.value = true
     hasSearchedCompanies.value = true
     try {
-      const res = await companiesApi.getCompanies({ search: q, page_size: 30 })
+      const res = await companiesApi.getCompanies({ search: q, status: 'true', page_size: 30 })
       companySearchResults.value = res.data.results || res.data
     } catch (err) {
       companySearchResults.value = []
@@ -1092,9 +1092,9 @@ const chooseCompany = (comp) => {
   hasSearchedCompanies.value = false
 
   if (serviceForm.value.pricing_type === 'PER_RMS') {
-    serviceForm.value.quantity = comp.node_type === 'CHAIN' ? Math.max(comp.branches_count || 0, 1) : 1
+    serviceForm.value.quantity = comp.node_type === 'CHAIN' ? Math.max(comp.branches_count ?? comp.company_branches_count ?? 0, 1) : 1
   } else if (serviceForm.value.pricing_type === 'PER_FRONT') {
-    serviceForm.value.quantity = Math.max(comp.stations_count || comp.anydesk_stations_count || 1, 1)
+    serviceForm.value.quantity = Math.max(comp.stations_count ?? comp.company_stations_count ?? comp.anydesk_stations_count ?? 1, 1)
   }
   recalculateCost()
 }
@@ -1138,7 +1138,7 @@ const serviceTypeFilterOptions = computed(() => {
 const getDatabaseRmsCount = (companyId) => {
   if (selectedCompany.value && (selectedCompany.value.id === companyId || !companyId)) {
     if (selectedCompany.value.node_type === 'CHAIN') {
-      return Math.max(selectedCompany.value.branches_count || 0, 1)
+      return Math.max(selectedCompany.value.branches_count ?? selectedCompany.value.company_branches_count ?? 0, 1)
     }
     return 1
   }
