@@ -54,6 +54,29 @@ class UserViewSet(viewsets.ModelViewSet):
     filterset_fields = ('registration_status', 'role', 'is_active')
     search_fields = ('username', 'email', 'full_name', 'phone')
 
+    def perform_update(self, serializer):
+        user = self.get_object()
+        if user == self.request.user:
+            new_role = serializer.validated_data.get('role')
+            if new_role and new_role != User.Roles.SUPERADMIN:
+                from rest_framework.exceptions import ValidationError
+                raise ValidationError({"role": "Вы не можете понизить роль собственного аккаунта."})
+        serializer.save()
+
+    def destroy(self, request, *args, **kwargs):
+        user = self.get_object()
+        if user == request.user:
+            return Response(
+                {"detail": "Вы не можете удалить собственный аккаунт."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if user.username == 'admin':
+            return Response(
+                {"detail": "Системного администратора 'admin' удалить нельзя."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return super().destroy(request, *args, **kwargs)
+
     @action(detail=True, methods=['post'])
     def approve(self, request, pk=None):
         user = self.get_object()

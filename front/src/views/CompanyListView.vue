@@ -151,13 +151,17 @@
               <span class="text-xs text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">Быстрый AnyDesk:</span>
               <div class="flex items-center gap-1">
                 <div class="relative flex items-center">
-                  <IconField iconPosition="left">
-                    <InputIcon class="pi pi-desktop text-red-500 text-xs" />
+                  <IconField iconPosition="right">
                     <InputText
                       v-model="quickAnydeskId"
-                      placeholder="AnyDesk ID (Enter)..."
-                      class="w-44 text-xs font-mono !pl-7 !pr-6"
+                      placeholder="AnyDesk ID"
+                      class="w-38 text-xs font-mono !pr-6"
                       @keydown.enter.stop.prevent="launchQuickAnydesk"
+                    />
+                    <InputIcon
+                      v-if="!quickAnydeskId"
+                      class="pi pi-arrow-down-left text-slate-400 dark:text-slate-500 text-[10px]"
+                      title="Нажмите Enter для запуска"
                     />
                   </IconField>
                   <button
