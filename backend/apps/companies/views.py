@@ -98,7 +98,7 @@ class CompanyViewSet(viewsets.ModelViewSet):
     )
     ordering_fields = (
         'place_name', 'city', 'status', 'updated_at', 'id', 'created_at',
-        'software_type', 'node_type', 'sort_number', 'helpdesk_its', 'iiko_version'
+        'software_type', 'node_type', 'sort_number', 'helpdesk_its', 'iiko_version', 'licence_type'
     )
 
     def get_queryset(self):

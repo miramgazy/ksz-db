@@ -282,14 +282,14 @@
             />
           </div>
 
-          <!-- Sort Filter -->
+          <!-- Licence Type Filter (replaces Sort filter) -->
           <div>
             <Select
-              v-model="selectedOrdering"
-              :options="orderingOptions"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Сортировка"
+              v-model="selectedLicenceType"
+              :options="filterOptions.licence_types"
+              placeholder="Тип лицензии"
+              showClear
+              filter
               class="w-full text-xs"
               @change="onFilterChange"
             />
@@ -473,15 +473,24 @@
             </template>
           </Column>
 
-          <!-- License & Version / Distribution -->
-          <Column field="iiko_version" header="Лицензия / Версия" :sortable="true" style="min-width: 180px; white-space: nowrap">
+          <!-- License Type -->
+          <Column field="licence_type" header="Лицензия" :sortable="true" style="min-width: 120px; white-space: nowrap">
             <template #body="{ data }">
-              <div class="flex items-center gap-1.5 text-xs whitespace-nowrap">
-                <span v-if="data.software_type !== 'ROSTA'" class="font-medium text-slate-700 dark:text-slate-200">
-                  {{ data.licence_type || '—' }} • {{ data.iiko_version || '—' }}
+              <span class="text-xs font-medium text-slate-700 dark:text-slate-200 whitespace-nowrap">
+                {{ data.licence_type || (data.software_type === 'ROSTA' ? 'Rosta' : '—') }}
+              </span>
+            </template>
+          </Column>
+
+          <!-- Version / Distribution -->
+          <Column field="iiko_version" header="Версия" :sortable="true" style="min-width: 110px; white-space: nowrap">
+            <template #body="{ data }">
+              <div class="flex items-center gap-1 text-xs whitespace-nowrap">
+                <span v-if="data.software_type !== 'ROSTA'" class="font-medium font-mono text-slate-700 dark:text-slate-200">
+                  {{ data.iiko_version || '—' }}
                 </span>
                 <span v-else class="text-emerald-600 dark:text-emerald-400 font-semibold">
-                  {{ data.licence_type || 'Rosta' }}
+                  Rosta
                 </span>
 
                 <!-- Copy Distribution Link Button (for iiko with distribution_link) -->
@@ -490,10 +499,10 @@
                   type="button"
                   @click.stop="copyDistributionLink(data)"
                   :title="data.distribution_link ? `Скопировать ссылку на дистрибутив (${data.iiko_version})` : `Ссылка на дистрибутив (${data.iiko_version}) не найдена`"
-                  class="inline-flex items-center justify-center w-6 h-6 rounded-md transition shrink-0 cursor-pointer"
+                  class="inline-flex items-center justify-center w-5 h-5 rounded transition shrink-0 cursor-pointer ml-0.5"
                   :class="data.distribution_link ? 'text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-slate-800' : 'text-slate-300 dark:text-slate-600 opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800'"
                 >
-                  <i class="pi pi-copy text-xs"></i>
+                  <i class="pi pi-copy text-[11px]"></i>
                 </button>
               </div>
             </template>
@@ -749,16 +758,8 @@ const selectedChain = ref(null)
 const selectedCity = ref(null)
 const selectedStatus = ref(null)
 const selectedBusinessType = ref(null)
+const selectedLicenceType = ref(null)
 const selectedOrdering = ref('chain_smart')
-const orderingOptions = [
-  { label: 'По сетям (новые сначала)', value: 'chain_smart' },
-  { label: 'По версии iiko (новые сначала)', value: '-iiko_version' },
-  { label: 'По версии iiko (старые сначала)', value: 'iiko_version' },
-  { label: 'Сначала новые (по дате)', value: '-created_at' },
-  { label: 'По названию (А-Я)', value: 'place_name' },
-  { label: 'По названию (Я-А)', value: '-place_name' },
-  { label: 'По городу (А-Я)', value: 'city' },
-]
 
 const filterOptions = ref({
   cities: [],
@@ -823,6 +824,7 @@ const hasActiveFiltersOrSort = computed(() => {
     selectedCity.value ||
     (selectedStatus.value !== null && selectedStatus.value !== undefined && selectedStatus.value !== '') ||
     selectedIts.value ||
+    selectedLicenceType.value ||
     selectedBusinessType.value ||
     (selectedOrdering.value && selectedOrdering.value !== 'chain_smart')
   )
@@ -974,6 +976,7 @@ const resetAllFiltersAndSorting = () => {
   selectedCity.value = null
   selectedStatus.value = null
   selectedIts.value = null
+  selectedLicenceType.value = null
   selectedBusinessType.value = null
   selectedOrdering.value = 'chain_smart'
   currentPage.value = 1
@@ -1061,6 +1064,7 @@ const loadCompanies = async () => {
       params.status = selectedStatus.value
     }
     if (selectedIts.value) params.its = selectedIts.value
+    if (selectedLicenceType.value) params.licence_type = selectedLicenceType.value
     if (selectedBusinessType.value) params.business_type = selectedBusinessType.value
     if (selectedOrdering.value) params.ordering = selectedOrdering.value
 
