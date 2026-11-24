@@ -114,6 +114,7 @@ class CompanyServiceSerializer(serializers.ModelSerializer):
 
 class CompanyListSerializer(serializers.ModelSerializer):
     stations_count = serializers.IntegerField(source='anydesk_stations.count', read_only=True)
+    anydesk_stations = AnydeskStationSerializer(many=True, read_only=True)
     branches_count = serializers.SerializerMethodField()
     parent_chain_name = serializers.CharField(source='parent_chain.place_name', read_only=True, default=None)
     system_admin_password = serializers.SerializerMethodField()
@@ -133,7 +134,7 @@ class CompanyListSerializer(serializers.ModelSerializer):
             'business_type', 'licence_type', 'iiko_version',
             'server_name', 'port_number', 'city', 'status',
             'iiko_rosta', 'sort_number', 'no_ip', 'helpdesk_its', 'its_expires_at', 'its_days_remaining', 'its_cost', 'iiko_web_address',
-            'stations_count', 'distribution_link', 'created_at', 'updated_at', 'updated_by_name'
+            'stations_count', 'anydesk_stations', 'distribution_link', 'created_at', 'updated_at', 'updated_by_name'
         )
 
     def to_representation(self, instance):

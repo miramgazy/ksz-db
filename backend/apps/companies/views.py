@@ -278,6 +278,14 @@ class CompanyViewSet(viewsets.ModelViewSet):
         user = self.request.user if self.request.user.is_authenticated else None
         serializer.save(updated_by=user)
 
+    def destroy(self, request, *args, **kwargs):
+        if request.user.role != 'SUPERADMIN':
+            return Response(
+                {"detail": "Удаление заведений разрешено только суперадминистратору."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().destroy(request, *args, **kwargs)
+
     @action(detail=True, methods=['get'])
     def clearbat_params(self, request, pk=None):
         """

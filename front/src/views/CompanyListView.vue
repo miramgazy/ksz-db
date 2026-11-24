@@ -429,6 +429,48 @@
             </template>
           </Column>
 
+          <!-- Row Action Buttons (positioned right after venue name) -->
+          <Column header="Действия" style="min-width: 95px; width: 95px; text-align: center">
+            <template #body="{ data }">
+              <div class="flex items-center justify-center gap-0.5" @click.stop>
+                <!-- Launch BackOffice (only for iiko) -->
+                <Button
+                  v-if="data.software_type !== 'ROSTA'"
+                  icon="pi pi-play"
+                  text
+                  rounded
+                  size="small"
+                  severity="primary"
+                  title="Запустить BackOffice через ClearBat"
+                  @click="quickLaunchBackoffice(data)"
+                />
+
+                <!-- Quick AnyDesk Stations Selection Modal -->
+                <Button
+                  icon="pi pi-desktop"
+                  text
+                  rounded
+                  size="small"
+                  severity="danger"
+                  class="!text-red-500 hover:!bg-red-50 dark:hover:!bg-red-950/40"
+                  :title="`AnyDesk подключения (${data.anydesk_stations?.length || data.stations_count || 0})`"
+                  @click="openCompanyAnydeskList(data)"
+                />
+
+                <!-- Open Details Drawer -->
+                <Button
+                  icon="pi pi-chevron-right"
+                  text
+                  rounded
+                  size="small"
+                  severity="secondary"
+                  title="Открыть свойства заведения"
+                  @click="openDetails(data.id)"
+                />
+              </div>
+            </template>
+          </Column>
+
           <!-- CRM ID (iiko only) -->
           <Column v-if="selectedSoftwareType !== 'ROSTA'" field="crm_id" header="CRM ID" style="min-width: 105px; white-space: nowrap">
             <template #body="{ data }">
@@ -516,48 +558,6 @@
                 :severity="data.status ? 'success' : 'danger'"
                 class="!text-[11px] !px-2 !py-0.5 font-medium"
               />
-            </template>
-          </Column>
-
-          <!-- Row Action Buttons -->
-          <Column header="Действия" style="min-width: 120px; text-align: right">
-            <template #body="{ data }">
-              <div class="flex items-center justify-end gap-1" @click.stop>
-                <!-- Launch BackOffice (only for iiko) -->
-                <Button
-                  v-if="data.software_type !== 'ROSTA'"
-                  icon="pi pi-play"
-                  text
-                  rounded
-                  size="small"
-                  severity="primary"
-                  title="Запустить BackOffice через ClearBat"
-                  @click="quickLaunchBackoffice(data)"
-                />
-
-                <!-- Open Details Drawer -->
-                <Button
-                  icon="pi pi-chevron-right"
-                  text
-                  rounded
-                  size="small"
-                  severity="secondary"
-                  title="Подробно"
-                  @click="openDetails(data.id)"
-                />
-
-                <!-- Delete (only if canEdit) -->
-                <Button
-                  v-if="authStore.canEdit"
-                  icon="pi pi-trash"
-                  text
-                  rounded
-                  size="small"
-                  severity="danger"
-                  title="Удалить заведение"
-                  @click="deleteCompany(data)"
-                />
-              </div>
             </template>
           </Column>
         </DataTable>
@@ -663,6 +663,98 @@
       v-model="showQuickAnydeskModal"
       :station="quickAnydeskStation"
     />
+
+    <!-- Company AnyDesk Stations Selection Modal (from table desktop icon) -->
+    <Dialog
+      v-model:visible="showCompanyAnydeskModal"
+      modal
+      :header="`AnyDesk подключения: ${selectedCompanyForAnydesk?.place_name || ''}`"
+      :style="{ width: '520px', maxWidth: '95vw' }"
+      :dismissableMask="true"
+    >
+      <div class="py-2">
+        <div v-if="loadingCompanyStations" class="text-center py-8 text-slate-400 dark:text-slate-500">
+          <i class="pi pi-spin pi-spinner text-2xl"></i>
+        </div>
+
+        <div
+          v-else-if="!companyStationsList.length"
+          class="text-center py-8 text-slate-400 dark:text-slate-500 text-sm"
+        >
+          <div class="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-2 text-slate-400">
+            <i class="pi pi-desktop text-xl"></i>
+          </div>
+          <p>К этому заведению еще не привязано ни одного подключения AnyDesk.</p>
+          <Button
+            label="Открыть карточку заведения"
+            icon="pi pi-external-link"
+            size="small"
+            text
+            class="mt-2 text-xs"
+            @click="showCompanyAnydeskModal = false; openDetails(selectedCompanyForAnydesk?.id)"
+          />
+        </div>
+
+        <div v-else class="flex flex-col gap-2 max-h-80 overflow-y-auto pr-1">
+          <div
+            v-for="st in companyStationsList"
+            :key="st.id"
+            class="p-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center justify-between hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-xs transition"
+          >
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-9 h-9 rounded-lg bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
+                <i class="pi pi-desktop text-sm"></i>
+              </div>
+              <div class="flex flex-col min-w-0">
+                <span class="font-bold text-slate-900 dark:text-slate-100 text-sm truncate">
+                  {{ st.description || 'Рабочее место' }}
+                </span>
+                <div class="flex items-center gap-2 mt-0.5 flex-wrap">
+                  <QuickCopyBtn :text="st.anydesk_id" label="AnyDesk ID" />
+                  <span
+                    v-if="st.any_pass"
+                    class="text-[10px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-800 flex items-center gap-1"
+                    title="Пароль скопируется в буфер при запуске"
+                  >
+                    <i class="pi pi-check text-[9px]"></i> Пароль
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <Button
+              icon="pi pi-play"
+              label="Запустить"
+              severity="success"
+              size="small"
+              class="shrink-0 font-semibold !text-xs !px-3"
+              @click="launchStationFromModal(st)"
+            />
+          </div>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="flex justify-between items-center w-full">
+          <Button
+            label="Закрыть"
+            severity="secondary"
+            text
+            size="small"
+            @click="showCompanyAnydeskModal = false"
+          />
+          <span class="text-xs text-slate-400 dark:text-slate-500">
+            Всего подключений: {{ companyStationsList.length }}
+          </span>
+        </div>
+      </template>
+    </Dialog>
+
+    <!-- Version Select / Launch Profile Modal for Stations -->
+    <AnydeskVersionSelectModal
+      v-model="showVersionSelectModal"
+      :station="selectedStationForLaunch"
+    />
   </div>
 </template>
 
@@ -670,6 +762,7 @@
 import { ref, computed, onMounted } from 'vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import IconField from 'primevue/iconfield'
@@ -853,6 +946,41 @@ const itsFilterOptions = [
 
 const showDrawer = ref(false)
 const selectedCompanyId = ref(null)
+
+const showCompanyAnydeskModal = ref(false)
+const selectedCompanyForAnydesk = ref(null)
+const companyStationsList = ref([])
+const loadingCompanyStations = ref(false)
+const showVersionSelectModal = ref(false)
+const selectedStationForLaunch = ref(null)
+
+const openCompanyAnydeskList = async (comp) => {
+  selectedCompanyForAnydesk.value = comp
+  showCompanyAnydeskModal.value = true
+  if (comp.anydesk_stations && comp.anydesk_stations.length) {
+    companyStationsList.value = comp.anydesk_stations
+  } else {
+    loadingCompanyStations.value = true
+    try {
+      const res = await companiesApi.getCompany(comp.id)
+      companyStationsList.value = res.data.anydesk_stations || []
+      comp.anydesk_stations = res.data.anydesk_stations || []
+    } catch (e) {
+      companyStationsList.value = []
+    } finally {
+      loadingCompanyStations.value = false
+    }
+  }
+}
+
+const launchStationFromModal = (st) => {
+  selectedStationForLaunch.value = {
+    ...st,
+    description: st.description || selectedCompanyForAnydesk.value?.place_name || 'Рабочее место',
+  }
+  showCompanyAnydeskModal.value = false
+  showVersionSelectModal.value = true
+}
 
 const quickAnydeskId = ref('')
 const showQuickAnydeskModal = ref(false)

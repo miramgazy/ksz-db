@@ -880,6 +880,21 @@
         </div>
       </template>
     </Dialog>
+
+    <!-- Superadmin Delete Venue Footer in Drawer -->
+    <template #footer v-if="company?.id && !isEditing && authStore.isSuperAdmin">
+      <div class="flex items-center justify-end w-full py-1">
+        <Button
+          label="Удалить заведение"
+          icon="pi pi-trash"
+          severity="danger"
+          outlined
+          size="small"
+          class="!text-xs font-semibold hover:!bg-red-50 dark:hover:!bg-red-950/40"
+          @click="confirmDeleteCompany"
+        />
+      </div>
+    </template>
   </Drawer>
 </template>
 
@@ -923,7 +938,7 @@ const props = defineProps({
   modelValue: Boolean,
   companyId: [Number, String],
 })
-const emit = defineEmits(['update:modelValue', 'updated'])
+const emit = defineEmits(['update:modelValue', 'updated', 'deleted'])
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -1358,6 +1373,39 @@ const deleteStation = (st) => {
         refreshCompany()
       } catch (err) {
         toast.add({ severity: 'error', summary: 'Ошибка', detail: err.message, life: 3000 })
+      }
+    },
+  })
+}
+
+const confirmDeleteCompany = () => {
+  if (!company.value?.id) return
+  confirm.require({
+    message: `Вы действительно хотите безвозвратно удалить заведение «${company.value.place_name}»? Все связанные подключения AnyDesk и подключенные услуги также будут удалены.`,
+    header: 'Удаление заведения',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Удалить заведение',
+    rejectLabel: 'Отмена',
+    acceptClass: 'p-button-danger',
+    accept: async () => {
+      try {
+        await companiesApi.deleteCompany(company.value.id)
+        toast.add({
+          severity: 'success',
+          summary: 'Заведение удалено',
+          detail: `Заведение «${company.value.place_name}» успешно удалено`,
+          life: 3000,
+        })
+        visible.value = false
+        emit('deleted', company.value.id)
+        emit('updated')
+      } catch (err) {
+        toast.add({
+          severity: 'error',
+          summary: 'Ошибка удаления',
+          detail: err.response?.data?.detail || err.message || 'Не удалось удалить заведение',
+          life: 4000,
+        })
       }
     },
   })
