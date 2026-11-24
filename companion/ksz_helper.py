@@ -410,7 +410,7 @@ class KSZClientAgent:
 
     def _watch_license_log(self, log_file: Path, initial_pos: int, company_id, task_id: str, server: str):
         print(f"[*] Начато наблюдение за логом CLEAR_bat ({log_file.name}) для сервера: {server}...")
-        max_attempts = 15  # 15 * 1.5 сек ~ 22.5 сек
+        max_attempts = 22  # 22 * 1.5 сек ~ 33 сек
         for attempt in range(max_attempts):
             time.sleep(1.5)
 
@@ -465,7 +465,7 @@ class KSZClientAgent:
             except Exception as e:
                 print(f"[!] Ошибка чтения лог-файла: {e}")
 
-        print(f"[!] Мониторинг лога CLEAR_bat для {server} завершен по таймауту (22 сек).")
+        print(f"[!] Мониторинг лога CLEAR_bat для {server} завершен по таймауту (33 сек).")
 
     def _send_license_result_to_server(self, company_id, task_id: str, log_text: str, is_success: bool, error_msg: str = None):
         if not company_id:

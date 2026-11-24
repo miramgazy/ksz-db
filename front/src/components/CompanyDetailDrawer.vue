@@ -1300,11 +1300,11 @@ const handleLaunchLicense = async () => {
 
   if (companionStore.isOnline) {
     updatingLicense.value = true
-    updatingStatusText.value = 'Запуск CLEAR_bat и ожидание записи в лог...'
+    updatingStatusText.value = 'Запуск ClearBat и подключение к серверу iiko...'
     toast.add({
       severity: 'info',
       summary: 'Обновление лицензии',
-      detail: 'Запрос отправлен в CLEAR_bat. Ожидание данных (до 21 сек)...',
+      detail: 'Запрос отправлен в ClearBat. Ожидание ответа сервера iiko...',
       life: 4000,
     })
 
@@ -1322,17 +1322,18 @@ const handleLaunchLicense = async () => {
       const taskId = res?.task_id
 
       if (taskId) {
-        // Запускаем асинхронный опрос (3 попытки с шагом 7 секунд = 21 сек)
+        // Запускаем асинхронный опрос (интервал 4 сек, до 8 попыток = до 32 сек)
         const pollRes = await companionStore.pollLicenseTaskStatus(taskId, c.id, {
-          maxAttempts: 3,
-          intervalMs: 7000,
+          maxAttempts: 8,
+          intervalMs: 4000,
           onAttempt: (attempt, max) => {
-            if (attempt === 1) {
-              updatingStatusText.value = `Считывание и парсинг логов CLEAR_bat... (попытка ${attempt} из ${max})`
-            } else if (attempt === 2) {
-              updatingStatusText.value = `Ожидание ответа сервера лицензирования... (попытка ${attempt} из ${max})`
+            const elapsedSec = (attempt - 1) * 4
+            if (elapsedSec < 6) {
+              updatingStatusText.value = `Запуск ClearBat и подключение к серверу iiko... (${attempt}/${max})`
+            } else if (elapsedSec < 18) {
+              updatingStatusText.value = `Ожидание формирования лицензий сервером iiko... (${attempt}/${max})`
             } else {
-              updatingStatusText.value = `Завершение синхронизации данных... (попытка ${attempt} из ${max})`
+              updatingStatusText.value = `Завершение синхронизации сведений о лицензии... (${attempt}/${max})`
             }
           }
         })
