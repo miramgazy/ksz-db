@@ -113,9 +113,10 @@
             v-if="company.software_type !== 'ROSTA'"
             label="Текущие лицензии"
             :icon="company.last_license_error ? 'pi pi-exclamation-triangle' : 'pi pi-id-card'"
-            :severity="company.last_license_error ? 'danger' : 'warn'"
-            :outlined="!company.last_license_error"
+            :severity="licenseButtonSeverity"
+            outlined
             size="small"
+            :title="getLicenseTooltip(company)"
             @click="licenseDialogVisible = true"
           />
 
@@ -954,6 +955,8 @@ import {
   getExpirationIcon,
   getExpirationDrawerBg,
   formatDaysRemaining,
+  getLicenseSeverity,
+  getLicenseTooltip,
 } from '../utils/expiration'
 
 const props = defineProps({
@@ -971,6 +974,10 @@ const router = useRouter()
 const updatingLicense = ref(false)
 const updatingStatusText = ref('')
 const licenseDialogVisible = ref(false)
+
+const licenseButtonSeverity = computed(() => {
+  return getLicenseSeverity(company.value)
+})
 
 const licenseButtonLabel = computed(() => {
   const c = company.value

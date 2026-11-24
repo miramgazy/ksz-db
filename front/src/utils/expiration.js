@@ -122,3 +122,71 @@ export const getExpirationDrawerBg = (days) => {
   }
   return '!bg-rose-50/60 !border-rose-300 dark:!bg-rose-950/40 dark:!border-rose-800'
 }
+
+/**
+ * Статус лицензии заведения:
+ * 'active'  - еще не просрочен (зеленый)
+ * 'expired' - срок прошел (оранжевый)
+ * 'none'    - отсутствует запись (серый)
+ */
+export const getLicenseStatus = (company) => {
+  if (!company) return 'none'
+  const lic = company.license_data
+  if (!lic || typeof lic !== 'object') return 'none'
+
+  const exp = lic.expiration
+  if (!exp) {
+    if (Array.isArray(lic.modules) && lic.modules.length > 0) {
+      return 'active' // бессрочная при наличии модулей
+    }
+    return 'none'
+  }
+
+  const target = new Date(exp)
+  if (isNaN(target.getTime())) {
+    if (Array.isArray(lic.modules) && lic.modules.length > 0) {
+      return 'active'
+    }
+    return 'none'
+  }
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  target.setHours(0, 0, 0, 0)
+
+  return target >= today ? 'active' : 'expired'
+}
+
+export const getLicenseIconClass = (company) => {
+  const st = getLicenseStatus(company)
+  if (st === 'active') {
+    return '!text-emerald-500 hover:!bg-emerald-50 dark:!text-emerald-400 dark:hover:!bg-emerald-950/40'
+  }
+  if (st === 'expired') {
+    return '!text-amber-500 hover:!bg-amber-50 dark:!text-amber-400 dark:hover:!bg-amber-950/40'
+  }
+  return '!text-slate-400 hover:!bg-slate-100 dark:!text-slate-500 dark:hover:!bg-slate-800'
+}
+
+export const getLicenseSeverity = (company) => {
+  if (company?.last_license_error) return 'danger'
+  const st = getLicenseStatus(company)
+  if (st === 'active') return 'success'
+  if (st === 'expired') return 'warn'
+  return 'secondary'
+}
+
+export const getLicenseTooltip = (company) => {
+  if (company?.last_license_error) {
+    return `Текущие лицензии: ошибка (${company.last_license_error})`
+  }
+  const st = getLicenseStatus(company)
+  const exp = company?.license_data?.expiration
+  if (st === 'active') {
+    return exp ? `Текущие лицензии: активна (до ${exp})` : 'Текущие лицензии: активна (бессрочная)'
+  }
+  if (st === 'expired') {
+    return `Текущие лицензии: срок истек (${exp || 'просрочена'})`
+  }
+  return 'Текущие лицензии: нет данных (нажмите для просмотра)'
+}

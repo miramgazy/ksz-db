@@ -457,15 +457,16 @@
                   @click="openCompanyAnydeskList(data)"
                 />
 
-                <!-- Open Details Drawer -->
+                <!-- Current Licenses Modal -->
                 <Button
-                  icon="pi pi-chevron-right"
+                  v-if="data.software_type !== 'ROSTA'"
+                  icon="pi pi-id-card"
                   text
                   rounded
                   size="small"
-                  severity="secondary"
-                  title="Открыть свойства заведения"
-                  @click="openDetails(data.id)"
+                  :class="getLicenseIconClass(data)"
+                  :title="getLicenseTooltip(data)"
+                  @click="openCompanyLicense(data)"
                 />
               </div>
             </template>
@@ -658,6 +659,16 @@
       @updated="handleUpdated"
     />
 
+    <!-- Company License Dialog (opened from table actions icon) -->
+    <CompanyLicenseDialog
+      v-model="showLicenseDialog"
+      :company="selectedCompanyForLicense"
+      :updating="updatingLicense"
+      :status-text="updatingStatusText"
+      @refresh="handleLaunchLicenseFromTable"
+      @reload="handleLicenseReloadFromTable"
+    />
+
     <!-- Quick Anydesk Launch Modal -->
     <AnydeskVersionSelectModal
       v-model="showQuickAnydeskModal"
@@ -779,6 +790,7 @@ import Navbar from '../components/Navbar.vue'
 import QuickCopyBtn from '../components/QuickCopyBtn.vue'
 import CompanyDetailDrawer from '../components/CompanyDetailDrawer.vue'
 import AnydeskVersionSelectModal from '../components/AnydeskVersionSelectModal.vue'
+import CompanyLicenseDialog from '../components/CompanyLicenseDialog.vue'
 import { anydeskApi } from '../api/anydesk'
 import {
   getDaysRemaining,
@@ -788,6 +800,9 @@ import {
   getItsTooltip,
   formatDaysRemaining,
   formatDate,
+  getLicenseIconClass,
+  getLicenseTooltip,
+  getLicenseStatus,
 } from '../utils/expiration'
 
 const toast = useToast()
@@ -953,6 +968,157 @@ const companyStationsList = ref([])
 const loadingCompanyStations = ref(false)
 const showVersionSelectModal = ref(false)
 const selectedStationForLaunch = ref(null)
+
+const showLicenseDialog = ref(false)
+const selectedCompanyForLicense = ref(null)
+const updatingLicense = ref(false)
+const updatingStatusText = ref('')
+
+const openCompanyLicense = async (comp) => {
+  selectedCompanyForLicense.value = comp
+  showLicenseDialog.value = true
+  if (comp.id) {
+    try {
+      const res = await companiesApi.getCompany(comp.id)
+      if (res.data) {
+        selectedCompanyForLicense.value = res.data
+        const idx = companies.value.findIndex(item => item.id === comp.id)
+        if (idx !== -1) {
+          companies.value[idx] = res.data
+        }
+      }
+    } catch (e) {}
+  }
+}
+
+const handleLicenseReloadFromTable = (freshCompany) => {
+  if (freshCompany) {
+    selectedCompanyForLicense.value = freshCompany
+    const idx = companies.value.findIndex(item => item.id === freshCompany.id)
+    if (idx !== -1) {
+      companies.value[idx] = freshCompany
+    }
+  }
+}
+
+const handleLaunchLicenseFromTable = async () => {
+  const c = selectedCompanyForLicense.value
+  if (!c) return
+
+  let licenseUrl = ''
+  let plainPass = c.system_admin_password || ''
+  try {
+    const p = await companiesApi.getClearbatParams(c.id)
+    licenseUrl = p.data.license_url
+    if (p.data && p.data.password) plainPass = p.data.password
+  } catch (e) {}
+
+  if (companionStore.isOnline) {
+    updatingLicense.value = true
+    updatingStatusText.value = 'Запуск ClearBat и подключение к серверу iiko...'
+    toast.add({
+      severity: 'info',
+      summary: 'Обновление лицензии',
+      detail: 'Запрос отправлен в ClearBat. Ожидание ответа сервера iiko...',
+      life: 4000,
+    })
+
+    try {
+      const res = await companionStore.launchLicense({
+        company_id: c.id,
+        server: c.server_name,
+        port: c.port_number || '443',
+        login: c.system_admin_name || 'iikoadm',
+        password: plainPass,
+        place_name: c.place_name,
+        licenseUrl,
+      })
+
+      const taskId = res?.task_id
+
+      if (taskId) {
+        const pollRes = await companionStore.pollLicenseTaskStatus(taskId, c.id, {
+          maxAttempts: 8,
+          intervalMs: 4000,
+          onAttempt: (attempt, max) => {
+            const elapsedSec = (attempt - 1) * 4
+            if (elapsedSec < 6) {
+              updatingStatusText.value = `Запуск ClearBat и подключение к серверу iiko... (${attempt}/${max})`
+            } else if (elapsedSec < 18) {
+              updatingStatusText.value = `Ожидание формирования лицензий сервером iiko... (${attempt}/${max})`
+            } else {
+              updatingStatusText.value = `Завершение синхронизации сведений о лицензии... (${attempt}/${max})`
+            }
+          }
+        })
+
+        if (pollRes.success) {
+          try {
+            const compRes = await companiesApi.get(c.id)
+            if (compRes.data) {
+              selectedCompanyForLicense.value = compRes.data
+              const idx = companies.value.findIndex(item => item.id === c.id)
+              if (idx !== -1) {
+                companies.value[idx] = compRes.data
+              }
+            }
+          } catch (e) {}
+
+          const modCount = pollRes.data?.modules_count || selectedCompanyForLicense.value?.license_data?.modules?.length || 0
+          toast.add({
+            severity: 'success',
+            summary: 'Лицензия обновлена',
+            detail: `Данные лицензии успешно сохранены в базе! Активных модулей: ${modCount}`,
+            life: 5000,
+          })
+        } else if (pollRes.error && !pollRes.timeout) {
+          try {
+            const compRes = await companiesApi.get(c.id)
+            if (compRes.data) {
+              selectedCompanyForLicense.value = compRes.data
+              const idx = companies.value.findIndex(item => item.id === c.id)
+              if (idx !== -1) {
+                companies.value[idx] = compRes.data
+              }
+            }
+          } catch (e) {}
+
+          toast.add({
+            severity: 'error',
+            summary: 'Ошибка сервера iiko',
+            detail: pollRes.error,
+            life: 6000,
+          })
+        } else if (pollRes.timeout) {
+          toast.add({
+            severity: 'warn',
+            summary: 'Таймаут ожидания',
+            detail: 'Не удалось получить ответ от сервера iiko за 30 секунд. Проверьте запущен ли ClearBat и Companion Helper.',
+            life: 6000,
+          })
+        }
+      }
+    } catch (err) {
+      toast.add({
+        severity: 'error',
+        summary: 'Ошибка отправки',
+        detail: err.message || 'Не удалось отправить команду обновления',
+        life: 4000,
+      })
+    } finally {
+      updatingLicense.value = false
+      updatingStatusText.value = ''
+    }
+  } else if (licenseUrl) {
+    window.location.href = licenseUrl
+    toast.add({
+      severity: 'info',
+      summary: 'Обновление лицензии',
+      detail: 'Запрос на обновление отправлен через протокол clearbat://',
+      life: 3000,
+    })
+  }
+}
 
 const openCompanyAnydeskList = async (comp) => {
   selectedCompanyForAnydesk.value = comp
