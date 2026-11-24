@@ -12,6 +12,7 @@ KSZ Companion Helper GUI v2.0.0 (System Tray & Window Edition)
 
 import os
 import sys
+import re
 import json
 import time
 import socket
@@ -44,6 +45,23 @@ CONFIG_FILE = "ksz_helper.ini"
 DEFAULT_API_URL = "http://192.168.1.253:17676/api/v1"
 
 
+def get_default_clearbat_logs_dir():
+    """Определяет стандартное расположение папки логов CLEAR_bat."""
+    appdata = os.environ.get('APPDATA', '')
+    candidates = [
+        Path(appdata) / 'CLEAR_bat' / 'Logs' if appdata else None,
+        Path(os.environ.get('LOCALAPPDATA', '')) / 'CLEAR_bat' / 'Logs' if os.environ.get('LOCALAPPDATA') else None,
+        Path('C:/Users') / os.environ.get('USERNAME', '') / 'AppData' / 'Roaming' / 'CLEAR_bat' / 'Logs',
+        Path('C:/CLEAR_bat/Logs'),
+    ]
+    for c in candidates:
+        if c and c.exists():
+            return str(c)
+    if appdata:
+        return str(Path(appdata) / 'CLEAR_bat' / 'Logs')
+    return r"C:\Users\miram\AppData\Roaming\CLEAR_bat\Logs"
+
+
 def get_default_clearbat_db():
     candidates = [
         Path(os.environ.get('APPDATA', '')) / 'ClearBat' / 'ClearBat.db',
@@ -66,6 +84,9 @@ def load_config():
     config = configparser.ConfigParser()
     if os.path.exists(CONFIG_FILE):
         config.read(CONFIG_FILE, encoding='utf-8')
+        if 'SETTINGS' in config and 'clearbat_logs_path' not in config['SETTINGS']:
+            config['SETTINGS']['clearbat_logs_path'] = get_default_clearbat_logs_dir()
+            save_config(config)
     else:
         config['SERVER'] = {
             'api_url': DEFAULT_API_URL,
@@ -75,6 +96,7 @@ def load_config():
         }
         config['SETTINGS'] = {
             'clearbat_db_path': get_default_clearbat_db(),
+            'clearbat_logs_path': get_default_clearbat_logs_dir(),
             'sandman_path': r'C:\Program Files\Sandboxie-Plus\SandMan.exe',
             'default_anydesk_exe': r'C:\Program Files (x86)\AnyDesk\AnyDesk.exe',
             'autostart': 'False',
@@ -320,6 +342,15 @@ class AgentApp:
         self.entry_clearbat.pack(side="left", fill="x", expand=True, padx=(0, 6))
         ttk.Button(row3, text="Обзор...", width=9, command=self.browse_clearbat).pack(side="right")
 
+        # ClearBat Logs Path
+        row3_logs = ttk.Frame(settings_card)
+        row3_logs.pack(fill="x", pady=4)
+        ttk.Label(row3_logs, text="Логи ClearBat:", width=16).pack(side="left")
+        self.entry_clearbat_logs = ttk.Entry(row3_logs)
+        self.entry_clearbat_logs.insert(0, self.config['SETTINGS'].get('clearbat_logs_path', get_default_clearbat_logs_dir()))
+        self.entry_clearbat_logs.pack(side="left", fill="x", expand=True, padx=(0, 6))
+        ttk.Button(row3_logs, text="Обзор...", width=9, command=self.browse_clearbat_logs).pack(side="right")
+
         # Checkboxes (Autostart & Minimize on launch)
         row4 = ttk.Frame(settings_card)
         row4.pack(fill="x", pady=(6, 0))
@@ -367,6 +398,16 @@ class AgentApp:
             self.entry_clearbat.insert(0, filename)
             self.save_settings()
 
+    def browse_clearbat_logs(self):
+        folder = filedialog.askdirectory(
+            title="Выберите папку логов CLEAR_bat",
+            initialdir=self.entry_clearbat_logs.get() or os.environ.get('APPDATA', '')
+        )
+        if folder:
+            self.entry_clearbat_logs.delete(0, tk.END)
+            self.entry_clearbat_logs.insert(0, folder)
+            self.save_settings()
+
     def on_autostart_change(self):
         enable = self.var_autostart.get()
         set_windows_autostart(enable)
@@ -378,6 +419,7 @@ class AgentApp:
         self.config['SERVER']['username'] = self.entry_username.get().strip()
         self.config['SERVER']['password'] = self.entry_password.get().strip()
         self.config['SETTINGS']['clearbat_db_path'] = self.entry_clearbat.get().strip()
+        self.config['SETTINGS']['clearbat_logs_path'] = self.entry_clearbat_logs.get().strip()
         self.config['SETTINGS']['autostart'] = str(self.var_autostart.get())
         self.config['SETTINGS']['start_minimized'] = str(self.var_minimized.get())
         save_config(self.config)
@@ -608,6 +650,9 @@ class AgentApp:
     def execute_task(self, task: dict):
         action = task.get('action')
         payload = task.get('payload', {})
+        task_id = task.get('task_id')
+        if task_id and 'task_id' not in payload:
+            payload['task_id'] = task_id
         self.log(f">>> Получена команда: '{action}'")
 
         if action == 'launch_anydesk':
@@ -710,15 +755,133 @@ class AgentApp:
         port = str(payload.get('port', '443')).strip()
         login = payload.get('login', 'iikoadm').strip()
         password = payload.get('password', '').strip()
+        company_id = payload.get('company_id')
+        task_id = payload.get('task_id')
 
+        # 1. Запоминаем текущий размер сегодняшнего лог-файла
+        settings = self.config['SETTINGS'] if 'SETTINGS' in self.config else {}
+        logs_dir_str = settings.get('clearbat_logs_path') or get_default_clearbat_logs_dir()
+        logs_dir = Path(logs_dir_str)
+        today_filename = f"full_{datetime.now().strftime('%d%m%y')}.log"
+        today_file = logs_dir / today_filename
+
+        initial_pos = today_file.stat().st_size if today_file.exists() else 0
+
+        # 2. Запускаем протокол ClearBat
         full_url = f"clearbat:/type=license?url={server}:{port}?login={login}?password={password}"
         launch_protocol_url(full_url)
 
+        # 3. Запускаем фоновый мониторинг файла лога
+        threading.Thread(
+            target=self._watch_license_log,
+            args=(today_file, initial_pos, company_id, task_id, server),
+            daemon=True
+        ).start()
+
         return {
             "success": True,
-            "message": f"Обновление лицензии ({server}) запущено через ClearBat.",
+            "message": f"Обновление лицензии ({server}) запущено через ClearBat. Агент отслеживает лог.",
             "url": full_url
         }
+
+    def _watch_license_log(self, log_file: Path, initial_pos: int, company_id, task_id: str, server: str):
+        self.log(f"[*] Начато наблюдение за логом CLEAR_bat ({log_file.name}) для: {server}...")
+        max_attempts = 15  # 15 * 1.5 сек ~ 22.5 сек
+        for attempt in range(max_attempts):
+            time.sleep(1.5)
+
+            current_file = log_file
+            if not current_file.exists():
+                logs_dir = current_file.parent
+                if logs_dir.exists():
+                    log_files = sorted(logs_dir.glob("full_*.log"), key=lambda p: p.stat().st_mtime, reverse=True)
+                    if log_files:
+                        current_file = log_files[0]
+
+            if not current_file.exists():
+                continue
+
+            try:
+                curr_size = current_file.stat().st_size
+                if curr_size <= initial_pos:
+                    continue
+
+                with open(current_file, "r", encoding="utf-8", errors="ignore") as f:
+                    f.seek(initial_pos)
+                    new_text = f.read()
+
+                if not new_text or not new_text.strip():
+                    continue
+
+                has_success = "[LicenseArgs] Успешный ответ от сервера лицензирования." in new_text or "Licenses info:" in new_text
+                has_error = False
+                error_msg = None
+
+                if "ERROR!" in new_text or "[ERROR]" in new_text or "Невозможно разрешить удаленное имя" in new_text or "401" in new_text or "Время ожидания" in new_text:
+                    has_error = True
+                    for l in new_text.splitlines():
+                        if "ERROR!" in l or "Невозможно разрешить удаленное имя" in l or "[ERROR]" in l:
+                            clean_l = l.split("в System.")[0].strip()
+                            clean_l = re.sub(r"\[.*?\]", "", clean_l).strip()
+                            error_msg = clean_l
+                            break
+                    if not error_msg:
+                        error_msg = f"Сервер {server} недоступен или вернул ошибку"
+
+                if has_success and "[LicenseArgs] Успешный ответ от сервера лицензирования." in new_text:
+                    self.log(f"[OK] Успешный ответ лицензирования для {server} зафиксирован в логе!")
+                    self._send_license_result_to_server(company_id, task_id, new_text, is_success=True)
+                    return
+
+                if has_error:
+                    self.log(f"[!] Ошибка сервера лицензирования для {server}: {error_msg}")
+                    self._send_license_result_to_server(company_id, task_id, new_text, is_success=False, error_msg=error_msg)
+                    return
+
+            except Exception as e:
+                self.log(f"[!] Ошибка чтения лог-файла: {e}")
+
+        self.log(f"[!] Мониторинг лога CLEAR_bat для {server} завершен по таймауту (22 сек).")
+
+    def _send_license_result_to_server(self, company_id, task_id: str, log_text: str, is_success: bool, error_msg: str = None):
+        api_url = self.entry_url.get().strip().rstrip('/')
+        if not company_id:
+            if task_id:
+                res = {"success": is_success, "message": "Лог получен" if is_success else error_msg}
+                if error_msg:
+                    res["error"] = error_msg
+                self.send_task_result(api_url, task_id, res)
+            return
+
+        url = f"{api_url}/companies/{company_id}/license-data/"
+        payload = {
+            "task_id": task_id,
+            "log_text": log_text,
+            "success": is_success,
+        }
+        if error_msg:
+            payload["error"] = error_msg
+
+        body = json.dumps(payload).encode('utf-8')
+        req = urllib.request.Request(
+            url,
+            data=body,
+            headers={
+                "Content-Type": "application/json; charset=utf-8",
+                "Authorization": f"Bearer {self.access_token}",
+                "Connection": "close"
+            }
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                self.log(f"[OK] Данные лицензии заведения #{company_id} успешно доставлены на сервер!")
+                return True
+        except urllib.error.HTTPError as e:
+            err_body = e.read().decode('utf-8', errors='ignore')
+            self.log(f"[!] Ошибка отправки на сервер ({e.code}): {err_body}")
+        except Exception as e:
+            self.log(f"[!] Ошибка соединения с сервером при отправке лицензии: {e}")
+        return False
 
     def handle_insert_clearbat(self, payload: dict):
         name = payload.get('name', '').strip()

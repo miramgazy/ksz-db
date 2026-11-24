@@ -21,4 +21,7 @@ export const companionApi = {
   launchAnydesk(params) {
     return client.post('/companion/launch-anydesk/', params)
   },
+  getTaskStatus(taskId) {
+    return client.get(`/companion/task-status/${taskId}/`)
+  },
 }

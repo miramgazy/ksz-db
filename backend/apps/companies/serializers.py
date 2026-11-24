@@ -134,6 +134,7 @@ class CompanyListSerializer(serializers.ModelSerializer):
             'business_type', 'licence_type', 'iiko_version',
             'server_name', 'port_number', 'city', 'status',
             'iiko_rosta', 'sort_number', 'no_ip', 'helpdesk_its', 'its_expires_at', 'its_days_remaining', 'its_cost', 'iiko_web_address',
+            'license_data', 'license_updated_at', 'last_license_error',
             'stations_count', 'anydesk_stations', 'distribution_link', 'created_at', 'updated_at', 'updated_by_name'
         )
 
@@ -193,7 +194,7 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
             'business_type', 'licence_type', 'iiko_version',
             'server_name', 'port_number', 'image_link', 'no_ip',
             'iiko_rosta', 'sort_number', 'helpdesk_its', 'its_expires_at', 'its_days_remaining', 'its_cost', 'city',
-            'status', 'iiko_web_address', 'anydesk_stations', 'company_services',
+            'status', 'iiko_web_address', 'license_data', 'license_updated_at', 'last_license_error', 'anydesk_stations', 'company_services',
             'distribution_link', 'created_at', 'updated_at', 'updated_by_name'
         )
 

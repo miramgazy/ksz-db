@@ -104,7 +104,19 @@
             icon="pi pi-sync"
             severity="secondary"
             size="small"
+            :loading="updatingLicense"
             @click="handleLaunchLicense"
+          />
+
+          <!-- View license -->
+          <Button
+            v-if="company.software_type !== 'ROSTA'"
+            :label="licenseButtonLabel"
+            :icon="company.last_license_error ? 'pi pi-exclamation-triangle' : 'pi pi-id-card'"
+            :severity="company.last_license_error ? 'danger' : 'warn'"
+            :outlined="!company.last_license_error"
+            size="small"
+            @click="licenseDialogVisible = true"
           />
 
           <!-- iikoWeb link -->
@@ -895,6 +907,13 @@
         />
       </div>
     </template>
+    <!-- Company License Dialog -->
+    <CompanyLicenseDialog
+      v-model="licenseDialogVisible"
+      :company="company"
+      :updating="updatingLicense"
+      @refresh="handleLaunchLicense"
+    />
   </Drawer>
 </template>
 
@@ -925,6 +944,7 @@ import CityManagementModal from './CityManagementModal.vue'
 import BusinessTypeManagementModal from './BusinessTypeManagementModal.vue'
 import LicenceTypeManagementModal from './LicenceTypeManagementModal.vue'
 import AnydeskVersionSelectModal from './AnydeskVersionSelectModal.vue'
+import CompanyLicenseDialog from './CompanyLicenseDialog.vue'
 import {
   getDaysRemaining,
   getExpirationBadgeClass,
@@ -945,6 +965,26 @@ const confirm = useConfirm()
 const authStore = useAuthStore()
 const companionStore = useCompanionStore()
 const router = useRouter()
+
+const updatingLicense = ref(false)
+const licenseDialogVisible = ref(false)
+
+const licenseButtonLabel = computed(() => {
+  const c = company.value
+  if (c?.last_license_error) {
+    return 'Лицензия (Ошибка)'
+  }
+  const exp = c?.license_data?.expiration
+  if (exp) {
+    try {
+      const parts = exp.split('-')
+      if (parts.length === 3) {
+        return `Лицензия (${parts[2]}.${parts[1]})`
+      }
+    } catch (e) {}
+  }
+  return 'Лицензия'
+})
 
 const visible = ref(props.modelValue)
 watch(() => props.modelValue, async (val) => {
@@ -1257,23 +1297,94 @@ const handleLaunchLicense = async () => {
   } catch (e) {}
 
   if (companionStore.isOnline) {
-    companionStore.launchLicense({
-      server: c.server_name,
-      port: c.port_number || '443',
-      login: c.system_admin_name || 'iikoadm',
-      password: plainPass,
-      licenseUrl,
+    updatingLicense.value = true
+    toast.add({
+      severity: 'info',
+      summary: 'Обновление лицензии',
+      detail: 'Запрос отправлен в CLEAR_bat. Ожидание данных (до 21 сек)...',
+      life: 4000,
     })
+
+    try {
+      const res = await companionStore.launchLicense({
+        company_id: c.id,
+        server: c.server_name,
+        port: c.port_number || '443',
+        login: c.system_admin_name || 'iikoadm',
+        password: plainPass,
+        place_name: c.place_name,
+        licenseUrl,
+      })
+
+      const taskId = res?.task_id
+
+      if (taskId) {
+        // Запускаем асинхронный опрос (3 попытки с шагом 7 секунд = 21 сек)
+        const pollRes = await companionStore.pollLicenseTaskStatus(taskId, c.id, {
+          maxAttempts: 3,
+          intervalMs: 7000,
+        })
+
+        if (pollRes.success) {
+          // Успех! Перезапрашиваем данные заведения
+          try {
+            const compRes = await companiesApi.get(c.id)
+            if (compRes.data) {
+              company.value = compRes.data
+            }
+          } catch (e) {}
+
+          const modCount = pollRes.data?.modules_count || company.value?.license_data?.modules?.length || 0
+          toast.add({
+            severity: 'success',
+            summary: 'Лицензия обновлена',
+            detail: `Данные лицензии успешно сохранены в базе! Активных модулей: ${modCount}`,
+            life: 5000,
+          })
+          emit('updated', company.value)
+        } else if (pollRes.error && !pollRes.timeout) {
+          // Ошибка сервера (досрочно)
+          try {
+            const compRes = await companiesApi.get(c.id)
+            if (compRes.data) {
+              company.value = compRes.data
+            }
+          } catch (e) {}
+
+          toast.add({
+            severity: 'error',
+            summary: 'Ошибка сервера iiko',
+            detail: pollRes.error,
+            life: 6000,
+          })
+        } else if (pollRes.timeout) {
+          toast.add({
+            severity: 'warn',
+            summary: 'Таймаут ожидания',
+            detail: 'Не удалось получить ответ от агента за 21 секунду. Проверьте запущен ли CLEAR_bat и Companion Helper.',
+            life: 6000,
+          })
+        }
+      }
+    } catch (err) {
+      toast.add({
+        severity: 'error',
+        summary: 'Ошибка отправки',
+        detail: err.message || 'Не удалось отправить команду обновления',
+        life: 4000,
+      })
+    } finally {
+      updatingLicense.value = false
+    }
   } else if (licenseUrl) {
     window.location.href = licenseUrl
+    toast.add({
+      severity: 'info',
+      summary: 'Обновление лицензии',
+      detail: 'Запрос на обновление отправлен через протокол clearbat://',
+      life: 3000,
+    })
   }
-
-  toast.add({
-    severity: 'info',
-    summary: 'Обновление лицензии',
-    detail: 'Запрос на обновление отправлен...',
-    life: 2500,
-  })
 }
 
 const openIikoWeb = () => {

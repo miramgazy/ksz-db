@@ -1,4 +1,5 @@
 import base64
+from django.utils import timezone
 from django.db.models import F, Value, IntegerField, Case, When
 from django.db.models.functions import Coalesce
 from rest_framework import viewsets, permissions, status, pagination
@@ -320,6 +321,128 @@ class CompanyViewSet(viewsets.ModelViewSet):
             'clearbat_url': full_url,
             'license_url': license_url,
         })
+
+    @action(detail=True, methods=['get', 'post'], url_path='license-data')
+    def license_data(self, request, pk=None):
+        company = self.get_object()
+
+        if request.method == 'GET':
+            return Response({
+                'id': company.id,
+                'place_name': company.place_name,
+                'license_data': company.license_data or {},
+                'license_updated_at': company.license_updated_at,
+                'last_license_error': company.last_license_error or '',
+            })
+
+        # POST
+        data = request.data
+        task_id = data.get('task_id')
+        log_text = data.get('log_text', '')
+
+        # Direct error passed from agent
+        if not data.get('success', True) or data.get('error'):
+            err_msg = data.get('error', 'Неизвестная ошибка получения лицензии')
+            company.last_license_error = err_msg
+            company.save(update_fields=['last_license_error'])
+            if task_id:
+                try:
+                    from apps.companion.services import set_task_status
+                    set_task_status(task_id, {
+                        'status': 'error',
+                        'error': err_msg,
+                        'company_id': company.id
+                    })
+                except Exception:
+                    pass
+            return Response({
+                'success': False,
+                'error': err_msg,
+                'last_license_error': company.last_license_error
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Parse log_text if provided, or use provided license_data dict
+        parsed = None
+        if log_text:
+            from .license_parser import parse_clearbat_license_log
+            parsed = parse_clearbat_license_log(log_text)
+        elif isinstance(data.get('license_data'), dict):
+            parsed = data.get('license_data')
+            if 'success' not in parsed:
+                parsed['success'] = True
+
+        if not parsed:
+            return Response({
+                'success': False,
+                'error': 'Не переданы данные лицензии или текст лога'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        if not parsed.get('success'):
+            err_msg = parsed.get('error', 'Ошибка разбора лога лицензий')
+            company.last_license_error = err_msg
+            company.save(update_fields=['last_license_error'])
+            if task_id:
+                try:
+                    from apps.companion.services import set_task_status
+                    set_task_status(task_id, {
+                        'status': 'error',
+                        'error': err_msg,
+                        'company_id': company.id
+                    })
+                except Exception:
+                    pass
+            return Response({
+                'success': False,
+                'error': err_msg,
+                'last_license_error': company.last_license_error
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Success - save license_data
+        company.license_data = parsed
+        company.license_updated_at = timezone.now()
+        company.last_license_error = ''
+
+        update_fields = ['license_data', 'license_updated_at', 'last_license_error']
+
+        # Auto-fill missing company attributes from parsed license
+        if not company.crm_id and parsed.get('crm_id'):
+            company.crm_id = str(parsed['crm_id']).strip()
+            update_fields.append('crm_id')
+
+        if not company.uid and parsed.get('uid'):
+            company.uid = str(parsed['uid']).strip()
+            update_fields.append('uid')
+
+        if not company.iiko_version and parsed.get('iiko_version'):
+            company.iiko_version = str(parsed['iiko_version']).strip()
+            update_fields.append('iiko_version')
+
+        company.save(update_fields=update_fields)
+
+        if task_id:
+            try:
+                from apps.companion.services import set_task_status
+                set_task_status(task_id, {
+                    'status': 'completed',
+                    'company_id': company.id,
+                    'modules_count': parsed.get('modules_count', 0),
+                    'expiration': parsed.get('expiration')
+                })
+            except Exception:
+                pass
+
+        return Response({
+            'success': True,
+            'message': 'Данные лицензии успешно сохранены',
+            'license_data': company.license_data,
+            'license_updated_at': company.license_updated_at,
+            'company': {
+                'id': company.id,
+                'crm_id': company.crm_id,
+                'uid': company.uid,
+                'iiko_version': company.iiko_version,
+            }
+        }, status=status.HTTP_200_OK)
 
 
 class AnydeskStationViewSet(viewsets.ModelViewSet):

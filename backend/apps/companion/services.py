@@ -69,9 +69,34 @@ def submit_agent_result(task_id: str, result: dict):
         r = get_redis_client()
         result_key = f"companion:result:{task_id}"
         r.rpush(result_key, json.dumps(result))
-        r.expire(result_key, 30)
+        r.expire(result_key, 60)
+        set_task_status(task_id, result, ttl=120)
     except Exception as e:
         logger.warning(f"Failed to submit agent result: {e}")
+
+def set_task_status(task_id: str, status_data: dict, ttl: int = 120):
+    """Saves asynchronous task status in Redis for polling by frontend."""
+    try:
+        r = get_redis_client()
+        key = f"companion:task_status:{task_id}"
+        r.set(key, json.dumps(status_data), ex=ttl)
+    except Exception as e:
+        logger.warning(f"Failed to set task status: {e}")
+
+def get_task_status(task_id: str) -> dict:
+    """Retrieves asynchronous task status from Redis."""
+    try:
+        r = get_redis_client()
+        key = f"companion:task_status:{task_id}"
+        raw = r.get(key)
+        if raw:
+            try:
+                return json.loads(raw)
+            except Exception:
+                return {"status": "unknown"}
+    except Exception as e:
+        logger.warning(f"Failed to get task status: {e}")
+    return {"status": "pending"}
 
 def send_task_async(user_id: int, action: str, payload: dict):
     """
@@ -98,6 +123,7 @@ def send_task_async(user_id: int, action: str, payload: dict):
 
         queue_key = f"companion:queue:{user_id}"
         r.rpush(queue_key, json.dumps(task_data))
+        set_task_status(task_id, {"status": "pending", "action": action, "company_id": payload.get('company_id')}, ttl=120)
 
         return {
             "success": True,

@@ -5,6 +5,7 @@ from .views import (
     CompanionLaunchLicenseView,
     CompanionInsertClearbatView,
     CompanionLaunchAnydeskView,
+    CompanionTaskStatusView,
     CompanionAgentPollView,
     CompanionAgentResultView,
 )
@@ -16,6 +17,7 @@ urlpatterns = [
     path('launch-license/', CompanionLaunchLicenseView.as_view(), name='companion_launch_license'),
     path('insert-clearbat/', CompanionInsertClearbatView.as_view(), name='companion_insert_clearbat'),
     path('launch-anydesk/', CompanionLaunchAnydeskView.as_view(), name='companion_launch_anydesk'),
+    path('task-status/<str:task_id>/', CompanionTaskStatusView.as_view(), name='companion_task_status'),
 
     # Local agent (ksz_helper.py) endpoints
     path('agent/poll/', CompanionAgentPollView.as_view(), name='companion_agent_poll'),

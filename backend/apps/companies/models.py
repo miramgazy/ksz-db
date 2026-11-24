@@ -97,6 +97,9 @@ class Company(models.Model):
     city = models.CharField(max_length=100, blank=True, db_index=True, verbose_name='Город')
     status = models.BooleanField(default=True, db_index=True, verbose_name='Активен')
     iiko_web_address = models.TextField(blank=True, verbose_name='Адрес iikoWeb')
+    license_data = models.JSONField(default=dict, blank=True, verbose_name='Информация о лицензиях')
+    license_updated_at = models.DateTimeField(null=True, blank=True, verbose_name='Дата обновления лицензии')
+    last_license_error = models.TextField(blank=True, verbose_name='Последняя ошибка обновления лицензии')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
     updated_by = models.ForeignKey(

@@ -59,9 +59,37 @@ class CompanionLaunchLicenseView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        res = send_task_async(request.user.id, "launch_license", request.data)
+        data = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
+        company_id = data.get('company_id')
+        if company_id:
+            try:
+                from apps.companies.models import Company
+                comp = Company.objects.get(id=company_id)
+                if not data.get('server'):
+                    data['server'] = comp.server_name or ''
+                if not data.get('port'):
+                    data['port'] = comp.port_number or '443'
+                if not data.get('login'):
+                    data['login'] = comp.system_admin_name or 'iikoadm'
+                if not data.get('password'):
+                    data['password'] = comp.get_password() or ''
+                if not data.get('place_name'):
+                    data['place_name'] = comp.place_name
+            except Exception:
+                pass
+
+        res = send_task_async(request.user.id, "launch_license", data)
         http_status = status.HTTP_200_OK if res.get("success") else status.HTTP_400_BAD_REQUEST
         return Response(res, status=http_status)
+
+
+class CompanionTaskStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, task_id):
+        from .services import get_task_status
+        status_data = get_task_status(task_id)
+        return Response(status_data)
 
 
 class CompanionInsertClearbatView(APIView):

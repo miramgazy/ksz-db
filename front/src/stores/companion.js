@@ -76,11 +76,23 @@ export const useCompanionStore = defineStore('companion', {
       return { success: false, message: 'Не удалось запустить BackOffice' }
     },
 
-    async launchLicense({ server, port, login, password, licenseUrl }) {
+    async launchLicense({ company_id, server, port, login, password, place_name, licenseUrl }) {
       if (this.isOnline) {
         try {
-          const res = await companionApi.launchLicense({ server, port, login, password })
-          return { success: true, via: 'helper', message: res.data.message }
+          const res = await companionApi.launchLicense({
+            company_id,
+            server,
+            port,
+            login,
+            password,
+            place_name
+          })
+          return {
+            success: true,
+            via: 'helper',
+            task_id: res.data?.task_id,
+            message: res.data?.message || 'Команда передана агенту.'
+          }
         } catch (e) {
           // Fallback to browser protocol if helper fails
         }
@@ -96,6 +108,38 @@ export const useCompanionStore = defineStore('companion', {
         }
       }
       return { success: false, message: 'Не удалось запустить обновление лицензии' }
+    },
+
+    async pollLicenseTaskStatus(taskId, companyId, { maxAttempts = 3, intervalMs = 7000 } = {}) {
+      if (!taskId) return { success: false, timeout: false, error: 'task_id отсутствует' }
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        await new Promise(r => setTimeout(r, intervalMs))
+
+        try {
+          const res = await companionApi.getTaskStatus(taskId)
+          const st = res.data?.status
+
+          if (st === 'completed') {
+            return { success: true, attempt, data: res.data }
+          }
+          if (st === 'error') {
+            return {
+              success: false,
+              attempt,
+              error: res.data?.error || 'Сервер iiko вернул ошибку при обновлении лицензии'
+            }
+          }
+        } catch (e) {
+          console.warn('[CompanionStore] Ошибка опроса статуса задачи:', e)
+        }
+      }
+
+      return {
+        success: false,
+        timeout: true,
+        error: 'Не удалось получить данные лицензии за 21 сек'
+      }
     },
 
     async insertClearbat(payload) {

@@ -25,4 +25,10 @@ export const companiesApi = {
   getClearbatParams(id) {
     return client.get(`/companies/${id}/clearbat_params/`)
   },
+  getLicenseData(id) {
+    return client.get(`/companies/${id}/license-data/`)
+  },
+  updateLicenseData(id, data) {
+    return client.post(`/companies/${id}/license-data/`, data)
+  },
 }
