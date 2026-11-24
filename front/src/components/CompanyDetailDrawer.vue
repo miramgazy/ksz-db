@@ -10,9 +10,13 @@
           <i class="pi pi-building"></i>
         </div>
         <div>
-          <div v-if="!company?.id">
-            <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100 leading-tight">Создание нового заведения</h2>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Заполните реквизиты для добавления в базу данных</p>
+          <div v-if="!company?.id || isCopyMode">
+            <h2 class="text-lg font-bold text-slate-900 dark:text-slate-100 leading-tight">
+              {{ isCopyMode ? `Создание копии: ${company?.place_name}` : 'Создание нового заведения' }}
+            </h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              {{ isCopyMode ? 'Проверьте реквизиты копии и нажмите «Создать запись» для добавления в базу' : 'Заполните реквизиты для добавления в базу данных' }}
+            </p>
           </div>
           <div v-else>
             <div class="flex flex-wrap items-center gap-2">
@@ -175,21 +179,39 @@
         :class="{ 'shadow-xs': isEditing }"
       >
         <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-2">
-          <span>{{ !company?.id ? 'Параметры нового заведения' : (isEditing ? 'Редактирование реквизитов' : 'Реквизиты заведения') }}</span>
-          <Tag v-if="isEditing" value="Режим правки" severity="warn" class="!text-[10px]" />
+          <span>{{ isCopyMode ? 'Создание копии заведения' : (!company?.id ? 'Параметры нового заведения' : (isEditing ? 'Редактирование реквизитов' : 'Реквизиты заведения')) }}</span>
+          <Tag v-if="isCopyMode" value="Копия" severity="info" class="!text-[10px]" />
+          <Tag v-else-if="isEditing" value="Режим правки" severity="warn" class="!text-[10px]" />
         </h3>
         <div v-if="authStore.canEdit">
-          <Button
-            v-if="!isEditing && company?.id"
-            label="Редактировать"
-            icon="pi pi-pencil"
-            size="small"
-            text
-            @click="startEdit"
-          />
+          <div v-if="!isEditing && company?.id" class="flex items-center gap-1.5">
+            <Button
+              label="Создать копию"
+              icon="pi pi-copy"
+              size="small"
+              severity="secondary"
+              text
+              title="Создать копию этого заведения с аналогичными свойствами"
+              @click="startCopy"
+            />
+            <Button
+              label="Редактировать"
+              icon="pi pi-pencil"
+              size="small"
+              text
+              @click="startEdit"
+            />
+          </div>
           <div v-else class="flex items-center gap-2">
             <Button label="Отмена" severity="secondary" size="small" text @click="cancelEdit" />
-            <Button label="Сохранить" icon="pi pi-check" size="small" severity="success" :loading="saving" @click="saveEdit" />
+            <Button
+              :label="isCopyMode ? 'Создать запись' : 'Сохранить'"
+              icon="pi pi-check"
+              size="small"
+              severity="success"
+              :loading="saving"
+              @click="saveEdit"
+            />
           </div>
         </div>
       </div>
@@ -429,7 +451,7 @@
       <!-- Edit Mode: Form Inputs -->
       <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
         <!-- Launch & Update Audit Banner in Edit Mode -->
-        <div v-if="company?.id" class="col-span-1 md:col-span-2 p-3 bg-blue-50/70 border border-blue-200 rounded-xl">
+        <div v-if="company?.id && !isCopyMode" class="col-span-1 md:col-span-2 p-3 bg-blue-50/70 border border-blue-200 rounded-xl">
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-blue-900">
             <div>
               <div class="font-bold flex items-center gap-1 text-[11px] uppercase tracking-wider text-blue-950">
@@ -449,6 +471,14 @@
               </div>
               <div class="mt-0.5 font-medium">{{ company.updated_by_name || 'Не указан' }}</div>
             </div>
+          </div>
+        </div>
+
+        <!-- Copy Mode Banner -->
+        <div v-else-if="isCopyMode" class="col-span-1 md:col-span-2 p-3 bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 rounded-xl text-amber-900 dark:text-amber-200 text-xs flex items-center gap-2.5">
+          <i class="pi pi-copy text-amber-600 dark:text-amber-400 text-base shrink-0"></i>
+          <div>
+            <span class="font-bold">Создание копии заведения:</span> скопированы основные параметры (система, сеть, тип, логин/пароль, город, юр. лицо). Поля сервера, UID, CRM ID и кабинета очищены. Новая запись попадёт в базу только после нажатия «Создать запись».
           </div>
         </div>
         <!-- Software System Selector: iiko vs Rosta -->
@@ -1049,6 +1079,7 @@ const visible = ref(props.modelValue)
 watch(() => props.modelValue, async (val) => {
   visible.value = val
   if (val) {
+    isCopyMode.value = false
     if (props.companyId) {
       await loadCompany(props.companyId)
     } else {
@@ -1087,6 +1118,9 @@ watch(() => props.modelValue, async (val) => {
       }
       isEditing.value = true
     }
+  } else {
+    isCopyMode.value = false
+    isEditing.value = false
   }
 })
 watch(visible, (val) => emit('update:modelValue', val))
@@ -1094,6 +1128,7 @@ watch(visible, (val) => emit('update:modelValue', val))
 const loading = ref(false)
 const company = ref(null)
 const isEditing = ref(false)
+const isCopyMode = ref(false)
 const saving = ref(false)
 const showPassword = ref(false)
 const showPassGen = ref(false)
@@ -1199,6 +1234,7 @@ const loadAllOptions = async () => {
 const loadCompany = async (id) => {
   loading.value = true
   isEditing.value = false
+  isCopyMode.value = false
   try {
     const res = await companiesApi.getCompany(id)
     company.value = res.data
@@ -1216,8 +1252,59 @@ const refreshCompany = () => {
   }
 }
 
+const startCopy = async () => {
+  await loadAllOptions()
+  const orig = company.value || {}
+  editForm.value = {
+    // Название с добавлением (copy)
+    place_name: orig.place_name ? `${orig.place_name} (copy)` : '(copy)',
+
+    // Скопированные поля по ТЗ:
+    // 1. Система автоматизации
+    software_type: orig.software_type || 'IIKO',
+    // 2. Привязка к сетям если оно есть
+    parent_chain: orig.parent_chain || null,
+    // 3. Тип узла
+    node_type: orig.node_type || 'RMS',
+    // 4. Логин и пароль
+    system_admin_name: orig.system_admin_name || 'iikoadm',
+    system_admin_password: orig.system_admin_password || '',
+    // 5. Тип лицензии
+    licence_type: orig.licence_type || '',
+    // 6. Порт
+    port_number: orig.port_number || '443',
+    // 7. Город
+    city: orig.city || '',
+    // 8. Юр лицо
+    company_name: orig.company_name || '',
+    // 9. Тип заведения (бизнеса)
+    business_type: orig.business_type || '',
+
+    // Другие базовые свойства
+    iiko_rosta: orig.iiko_rosta || '',
+    no_ip: orig.no_ip || '',
+    iiko_version: orig.iiko_version || '',
+    sort_number: orig.sort_number || 0,
+    status: orig.status !== undefined ? orig.status : true,
+
+    // ПОЛЯ, КОТОРЫЕ ОБЯЗАТЕЛЬНО ДОЛЖНЫ БЫТЬ ЧИСТЫМИ:
+    uid: '',
+    server_name: '',
+    crm_id: '',
+    cabinet_name: '',
+    iiko_web_address: '',
+
+    // ИТС настройки
+    is_its: orig.helpdesk_its === 'Да',
+    its_expires_at: orig.its_expires_at || '2026-12-31',
+  }
+  isCopyMode.value = true
+  isEditing.value = true
+}
+
 const startEdit = async () => {
   await loadAllOptions()
+  isCopyMode.value = false
   editForm.value = {
     ...company.value,
     cabinet_name: company.value.cabinet_name || '',
@@ -1231,7 +1318,10 @@ const startEdit = async () => {
 }
 
 const cancelEdit = () => {
-  if (!company.value?.id) {
+  if (isCopyMode.value) {
+    isCopyMode.value = false
+    isEditing.value = false
+  } else if (!company.value?.id) {
     visible.value = false
   } else {
     isEditing.value = false
@@ -1272,14 +1362,20 @@ const saveEdit = async () => {
       its_expires_at: editForm.value.is_its ? (editForm.value.its_expires_at || '2026-12-31') : null,
     }
     let res
-    if (company.value?.id) {
+    if (company.value?.id && !isCopyMode.value) {
       res = await companiesApi.updateCompany(company.value.id, payload)
       toast.add({ severity: 'success', summary: 'Успешно', detail: 'Данные заведения сохранены', life: 2500 })
     } else {
       res = await companiesApi.createCompany(payload)
-      toast.add({ severity: 'success', summary: 'Успешно', detail: 'Заведение успешно создано', life: 2500 })
+      toast.add({
+        severity: 'success',
+        summary: 'Успешно',
+        detail: isCopyMode.value ? `Копия заведения «${res.data?.place_name}» успешно создана` : 'Заведение успешно создано',
+        life: 3000
+      })
     }
     company.value = res.data
+    isCopyMode.value = false
     isEditing.value = false
     emit('updated')
   } catch (err) {
