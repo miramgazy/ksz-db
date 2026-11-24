@@ -34,4 +34,7 @@ export const companiesApi = {
   updateLicenseData(id, data) {
     return client.post(`/companies/${id}/license-data/`, data)
   },
+  syncVersion(id, data = {}) {
+    return client.post(`/companies/${id}/sync-version/`, data)
+  },
 }

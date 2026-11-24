@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from apps.common.permissions import ReadOnlyForViewer
 from .models import Company, AnydeskStation, IikoDistribution, City, BusinessType, LicenceType, AnydeskVersion, ServiceType, CompanyService
-from .utils import version_sort_key, clean_iiko_version, sync_iiko_version_with_distributions
+from .utils import version_sort_key, clean_iiko_version, sync_iiko_version_with_distributions, get_distribution_link
 from .serializers import (
     CompanyListSerializer,
     CompanyDetailSerializer,
@@ -472,6 +472,53 @@ class CompanyViewSet(viewsets.ModelViewSet):
                 'uid': company.uid,
                 'iiko_version': company.iiko_version,
             }
+        }, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='sync-version')
+    def sync_version(self, request, pk=None):
+        """
+        Синхронизирует версию iiko заведения с таблицей дистрибутивов IikoDistribution.
+        """
+        company = self.get_object()
+        raw_version = request.data.get('iiko_version')
+        if not raw_version:
+            if company.license_data and isinstance(company.license_data, dict):
+                raw_version = company.license_data.get('iiko_version')
+            if not raw_version:
+                raw_version = company.iiko_version
+
+        if not raw_version:
+            return Response({
+                'success': False,
+                'error': 'Версия iiko не указана в данных заведения или лицензии'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        synced_ver, is_new_version = sync_iiko_version_with_distributions(
+            str(raw_version).strip(), company.node_type
+        )
+
+        update_fields = []
+        if company.iiko_version != synced_ver:
+            company.iiko_version = synced_ver
+            update_fields.append('iiko_version')
+
+        if update_fields:
+            company.save(update_fields=update_fields)
+
+        dist_link = get_distribution_link(company.iiko_version, company.node_type)
+        serializer = CompanyDetailSerializer(company)
+
+        return Response({
+            'success': True,
+            'iiko_version': company.iiko_version,
+            'is_new_version': is_new_version,
+            'distribution_link': dist_link,
+            'company': serializer.data,
+            'message': (
+                f"Версия iiko новая ({company.iiko_version}) — добавлена в справочник дистрибутивов, необходимо заполнить поле со ссылкой!"
+                if is_new_version else
+                f"Версия iiko ({company.iiko_version}) успешно синхронизирована с реестром дистрибутивов!"
+            )
         }, status=status.HTTP_200_OK)
 
 

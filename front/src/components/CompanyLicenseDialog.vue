@@ -116,12 +116,35 @@
 
         <!-- Card 2: Version & Edition -->
         <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 flex flex-col justify-between">
-          <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-            Версия и Редакция
-          </span>
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Версия и Редакция
+            </span>
+            <button
+              type="button"
+              class="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-slate-200/50 dark:hover:bg-slate-700 transition cursor-pointer"
+              :class="{ 'text-indigo-600': syncingVersion }"
+              :disabled="syncingVersion"
+              title="Синхронизировать версию с реестром дистрибутивов"
+              @click="handleSyncVersion"
+            >
+              <i class="pi pi-refresh text-xs" :class="{ 'pi-spin': syncingVersion }"></i>
+            </button>
+          </div>
           <div class="mt-1">
-            <div class="font-bold text-base text-slate-900 dark:text-white">
-              {{ licenseData?.iiko_version || activeCompany?.iiko_version || '—' }}
+            <div class="font-bold text-base text-slate-900 dark:text-white flex items-center gap-1.5">
+              <span>{{ currentVersionDisplay }}</span>
+              <!-- Copy Distribution Link Button with red/blue indicator -->
+              <button
+                v-if="currentVersionDisplay !== '—'"
+                type="button"
+                @click.stop="copyDistributionLinkFromModal"
+                :title="activeCompany?.distribution_link ? `Скопировать ссылку на дистрибутив (${currentVersionDisplay})` : `Для версии '${currentVersionDisplay}' нет ссылки на скачивание в реестре дистрибутивов`"
+                class="inline-flex items-center justify-center w-5 h-5 rounded transition shrink-0 cursor-pointer"
+                :class="activeCompany?.distribution_link ? 'text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-slate-700' : 'text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 hover:bg-red-100 dark:hover:bg-red-900/60'"
+              >
+                <i class="pi pi-copy text-[11px]"></i>
+              </button>
             </div>
             <div class="text-xs text-slate-500 dark:text-slate-400">
               {{ licenseData?.edition || 'IIKO_RMS' }}
@@ -970,6 +993,102 @@ const handleReloadFromDb = async () => {
     })
   } finally {
     reloadingDb.value = false
+  }
+}
+
+const syncingVersion = ref(false)
+
+const currentVersionDisplay = computed(() => {
+  return licenseData.value?.iiko_version || activeCompany.value?.iiko_version || '—'
+})
+
+const handleSyncVersion = async () => {
+  const compId = activeCompany.value?.id || props.company?.id
+  if (!compId) return
+
+  const ver = licenseData.value?.iiko_version || activeCompany.value?.iiko_version
+  if (!ver) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Нет данных о версии',
+      detail: 'В данных лицензии заведения отсутствует номер версии iiko для синхронизации',
+      life: 4000
+    })
+    return
+  }
+
+  syncingVersion.value = true
+  try {
+    const res = await companiesApi.syncVersion(compId, { iiko_version: ver })
+    if (res.data?.success && res.data?.company) {
+      localCompany.value = res.data.company
+      emit('reload', res.data.company)
+
+      if (res.data.is_new_version) {
+        toast.add({
+          severity: 'warn',
+          summary: 'Новая версия iiko!',
+          detail: res.data.message || `Версия iiko новая (${res.data.iiko_version}) — добавлена в справочник дистрибутивов, необходимо заполнить поле со ссылкой!`,
+          life: 8000
+        })
+      } else {
+        toast.add({
+          severity: 'success',
+          summary: 'Версия синхронизирована',
+          detail: res.data.message + (res.data.distribution_link ? ' • Ссылка на скачивание доступна' : ' • Ссылка на скачивание пока не заполнена'),
+          life: 5000
+        })
+      }
+    }
+  } catch (err) {
+    toast.add({
+      severity: 'error',
+      summary: 'Ошибка синхронизации',
+      detail: err.response?.data?.error || err.message || 'Не удалось синхронизировать версию с реестром дистрибутивов',
+      life: 4000
+    })
+  } finally {
+    syncingVersion.value = false
+  }
+}
+
+const copyDistributionLinkFromModal = async () => {
+  const link = activeCompany.value?.distribution_link
+  const ver = currentVersionDisplay.value
+  if (!link) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Нет ссылки для этой версии',
+      detail: `Для версии '${ver}' нет ссылки на скачивание в реестре дистрибутивов`,
+      life: 4000
+    })
+    return
+  }
+
+  const server = (activeCompany.value?.server_name || '').trim()
+  const copyText = server ? `${link}?=${server}` : link
+
+  try {
+    await navigator.clipboard.writeText(copyText)
+    toast.add({
+      severity: 'success',
+      summary: 'Ссылка скопирована',
+      detail: `Адрес ссылки: '${copyText}' на скачивание iiko Office скопирован в буфер обмена!`,
+      life: 4000
+    })
+  } catch (err) {
+    const textArea = document.createElement('textarea')
+    textArea.value = copyText
+    document.body.appendChild(textArea)
+    textArea.select()
+    document.execCommand('copy')
+    document.body.removeChild(textArea)
+    toast.add({
+      severity: 'success',
+      summary: 'Ссылка скопирована',
+      detail: `Адрес ссылки: '${copyText}' на скачивание iiko Office скопирован в буфер обмена!`,
+      life: 4000
+    })
   }
 }
 </script>
