@@ -427,14 +427,18 @@ class CompanyViewSet(viewsets.ModelViewSet):
             update_fields.append('status')
             auto_activated = True
 
-        # Auto-fill missing company attributes from parsed license
-        if not company.crm_id and parsed.get('crm_id'):
+        # Auto-fill missing or blank company attributes from parsed license
+        crm_val = (company.crm_id or '').strip()
+        if (not crm_val or crm_val in ('-', '—', '0')) and parsed.get('crm_id'):
             company.crm_id = str(parsed['crm_id']).strip()
-            update_fields.append('crm_id')
+            if 'crm_id' not in update_fields:
+                update_fields.append('crm_id')
 
-        if not company.uid and parsed.get('uid'):
+        uid_val = (company.uid or '').strip()
+        if (not uid_val or uid_val in ('-', '—', '0')) and parsed.get('uid'):
             company.uid = str(parsed['uid']).strip()
-            update_fields.append('uid')
+            if 'uid' not in update_fields:
+                update_fields.append('uid')
 
         # Synchronize and update iiko_version in company and IikoDistribution
         is_new_version = False
@@ -460,6 +464,8 @@ class CompanyViewSet(viewsets.ModelViewSet):
                     'auto_activated': auto_activated,
                     'is_new_version': is_new_version,
                     'iiko_version': company.iiko_version,
+                    'crm_id': company.crm_id,
+                    'uid': company.uid,
                 })
             except Exception:
                 pass
