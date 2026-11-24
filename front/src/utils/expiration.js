@@ -288,6 +288,9 @@ export const getLicenseStatus = (company) => {
 
 export const getLicenseIconClass = (company) => {
   const info = getEffectiveLicenseInfo(company)
+  if (info.status === 'error' || company?.last_license_error) {
+    return '!text-red-500 hover:!bg-red-50 dark:!text-red-400 dark:hover:!bg-red-950/40'
+  }
   if (info.status === 'active') {
     return '!text-emerald-500 hover:!bg-emerald-50 dark:!text-emerald-400 dark:hover:!bg-emerald-950/40'
   }
@@ -307,8 +310,8 @@ export const getLicenseSeverity = (company) => {
 
 export const getLicenseTooltip = (company) => {
   const info = getEffectiveLicenseInfo(company)
-  if (info.error) {
-    return `Текущие лицензии: ошибка (${info.error})`
+  if (info.error || company?.last_license_error) {
+    return `Текущие лицензии: ошибка обновления (${info.error || company.last_license_error})`
   }
   const sourcePart = info.source ? ` • ${info.source}` : ''
   if (info.status === 'active') {

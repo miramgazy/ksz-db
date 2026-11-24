@@ -458,16 +458,24 @@
                 />
 
                 <!-- Current Licenses Modal -->
-                <Button
-                  v-if="data.software_type !== 'ROSTA'"
-                  icon="pi pi-id-card"
-                  text
-                  rounded
-                  size="small"
-                  :class="getCompanyLicenseIconClass(data)"
-                  :title="getCompanyLicenseTooltip(data)"
-                  @click="openCompanyLicense(data)"
-                />
+                <div v-if="data.software_type !== 'ROSTA'" class="relative inline-flex items-center">
+                  <Button
+                    :icon="data.last_license_error ? 'pi pi-exclamation-triangle' : 'pi pi-id-card'"
+                    text
+                    rounded
+                    size="small"
+                    :class="getCompanyLicenseIconClass(data)"
+                    :title="getCompanyLicenseTooltip(data)"
+                    @click="openCompanyLicense(data)"
+                  />
+                  <span
+                    v-if="data.last_license_error"
+                    class="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-red-600 text-white flex items-center justify-center text-[9px] font-bold pointer-events-none shadow-xs"
+                    :title="`Ошибка обновления: ${data.last_license_error}`"
+                  >
+                    !
+                  </span>
+                </div>
               </div>
             </template>
           </Column>
