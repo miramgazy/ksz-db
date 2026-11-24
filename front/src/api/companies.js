@@ -4,6 +4,9 @@ export const companiesApi = {
   getCompanies(params = {}) {
     return client.get('/companies/', { params })
   },
+  get(id) {
+    return client.get(`/companies/${id}/`)
+  },
   getCompany(id) {
     return client.get(`/companies/${id}/`)
   },

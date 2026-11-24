@@ -914,6 +914,7 @@
       :updating="updatingLicense"
       :status-text="updatingStatusText"
       @refresh="handleLaunchLicense"
+      @reload="handleLicenseReloadFromDb"
     />
   </Drawer>
 </template>
@@ -1374,7 +1375,7 @@ const handleLaunchLicense = async () => {
           toast.add({
             severity: 'warn',
             summary: 'Таймаут ожидания',
-            detail: 'Не удалось получить ответ от агента за 21 секунду. Проверьте запущен ли CLEAR_bat и Companion Helper.',
+            detail: 'Не удалось получить ответ от сервера iiko за 30 секунд. Проверьте запущен ли ClearBat и Companion Helper.',
             life: 6000,
           })
         }
@@ -1398,6 +1399,13 @@ const handleLaunchLicense = async () => {
       detail: 'Запрос на обновление отправлен через протокол clearbat://',
       life: 3000,
     })
+  }
+}
+
+const handleLicenseReloadFromDb = (freshCompany) => {
+  if (freshCompany) {
+    company.value = freshCompany
+    emit('updated', freshCompany)
   }
 }
 

@@ -15,7 +15,7 @@
           <div>
             <div class="flex items-center gap-2">
               <h3 class="font-bold text-lg text-slate-800 dark:text-white m-0">
-                Текущие лицензии: {{ company?.place_name }}
+                Текущие лицензии: {{ activeCompany?.place_name }}
               </h3>
               <Tag
                 v-if="updating"
@@ -32,7 +32,7 @@
               />
             </div>
             <p class="text-xs text-slate-500 dark:text-slate-400 m-0">
-              {{ company?.city ? company.city + ' • ' : '' }}CRM ID: {{ crmIdDisplay }} • UID: {{ uidDisplay }}
+              {{ activeCompany?.city ? activeCompany.city + ' • ' : '' }}CRM ID: {{ crmIdDisplay }} • UID: {{ uidDisplay }}
             </p>
           </div>
         </div>
@@ -66,7 +66,7 @@
       </div>
       <!-- Error Alert (if last update failed) -->
       <div
-        v-if="company?.last_license_error"
+        v-if="activeCompany?.last_license_error"
         class="flex items-start gap-3 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-300 text-sm"
       >
         <i class="pi pi-exclamation-triangle text-lg mt-0.5 text-red-500 shrink-0"></i>
@@ -75,7 +75,7 @@
             Ошибка последнего обновления с сервера iiko:
           </div>
           <div class="text-xs break-words">
-            {{ company.last_license_error }}
+            {{ activeCompany.last_license_error }}
           </div>
         </div>
       </div>
@@ -104,7 +104,7 @@
           </span>
           <div class="mt-1">
             <div class="font-bold text-base text-slate-900 dark:text-white">
-              {{ licenseData?.iiko_version || company?.iiko_version || '—' }}
+              {{ licenseData?.iiko_version || activeCompany?.iiko_version || '—' }}
             </div>
             <div class="text-xs text-slate-500 dark:text-slate-400">
               {{ licenseData?.edition || 'IIKO_RMS' }}
@@ -229,6 +229,19 @@
             class="w-full text-sm"
           />
         </IconField>
+
+        <Button
+          icon="pi pi-refresh"
+          label="Обновить из базы"
+          severity="secondary"
+          outlined
+          size="small"
+          :loading="reloadingDb"
+          class="!text-xs shrink-0 !py-1.5"
+          title="Получить актуальные данные лицензии из базы данных"
+          @click="handleReloadFromDb"
+        />
+
         <div class="text-xs text-slate-500 dark:text-slate-400 shrink-0">
           Найдено: <strong class="text-slate-800 dark:text-slate-200">{{ filteredModules.length }}</strong> из {{ modulesList.length }}
         </div>
@@ -241,7 +254,7 @@
           :paginator="true"
           :rows="12"
           :rows-per-page-options="[12, 25, 50, 100]"
-          :loading="updating"
+          :loading="updating || reloadingDb"
           size="small"
           striped-rows
           responsive-layout="scroll"
@@ -428,7 +441,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
@@ -439,7 +452,9 @@ import Tag from 'primevue/tag'
 import ProgressBar from 'primevue/progressbar'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
+import { useToast } from 'primevue/usetoast'
 import { useCompanionStore } from '@/stores/companion'
+import { companiesApi } from '@/api/companies'
 
 const props = defineProps({
   modelValue: {
@@ -460,12 +475,23 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:modelValue', 'refresh'])
+const emit = defineEmits(['update:modelValue', 'refresh', 'reload'])
 
+const toast = useToast()
 const companionStore = useCompanionStore()
 const searchQuery = ref('')
 const showAddPinnedDialog = ref(false)
 const selectedModuleToPin = ref('')
+const reloadingDb = ref(false)
+const localCompany = ref(null)
+
+watch(() => props.company, (newVal) => {
+  localCompany.value = newVal
+}, { immediate: true })
+
+const activeCompany = computed(() => {
+  return localCompany.value || props.company || {}
+})
 
 const visible = computed({
   get: () => props.modelValue,
@@ -473,15 +499,15 @@ const visible = computed({
 })
 
 const licenseData = computed(() => {
-  return props.company?.license_data || {}
+  return activeCompany.value?.license_data || {}
 })
 
 const crmIdDisplay = computed(() => {
-  return licenseData.value?.crm_id || props.company?.crm_id || 'Не указан'
+  return licenseData.value?.crm_id || activeCompany.value?.crm_id || 'Не указан'
 })
 
 const uidDisplay = computed(() => {
-  return licenseData.value?.uid || props.company?.uid || 'Не указан'
+  return licenseData.value?.uid || activeCompany.value?.uid || 'Не указан'
 })
 
 const modulesList = computed(() => {
@@ -616,7 +642,7 @@ const expirationFormatted = computed(() => {
 })
 
 const lastUpdatedFormatted = computed(() => {
-  const dt = props.company?.license_updated_at || licenseData.value?.parsed_at
+  const dt = activeCompany.value?.license_updated_at || licenseData.value?.parsed_at
   if (!dt) return 'Не обновлялось'
   try {
     const d = new Date(dt)
@@ -686,5 +712,34 @@ const getModuleDateClass = (toDateStr) => {
 
 const handleRefreshLicense = () => {
   emit('refresh')
+}
+
+const handleReloadFromDb = async () => {
+  const compId = activeCompany.value?.id || props.company?.id
+  if (!compId) return
+
+  reloadingDb.value = true
+  try {
+    const res = await companiesApi.getCompany(compId)
+    if (res.data) {
+      localCompany.value = res.data
+      emit('reload', res.data)
+      toast.add({
+        severity: 'success',
+        summary: 'Обновлено из базы',
+        detail: 'Данные лицензии заведения успешно загружены из базы данных',
+        life: 3000
+      })
+    }
+  } catch (e) {
+    toast.add({
+      severity: 'error',
+      summary: 'Ошибка загрузки',
+      detail: 'Не удалось получить актуальные данные из базы',
+      life: 3000
+    })
+  } finally {
+    reloadingDb.value = false
+  }
 }
 </script>
