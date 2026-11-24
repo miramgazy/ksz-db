@@ -266,13 +266,14 @@
             </div>
           </div>
           <Button
-            v-if="company.distribution_link"
+            v-if="company.software_type !== 'ROSTA' && company.iiko_version"
             icon="pi pi-copy"
             label="Дистрибутив"
-            severity="secondary"
             text
             size="small"
-            class="!text-xs text-blue-600 dark:text-blue-400"
+            class="!text-xs"
+            :class="company.distribution_link ? 'text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-slate-800' : 'text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 hover:bg-red-100 dark:hover:bg-red-900/60'"
+            :title="company.distribution_link ? `Скопировать ссылку на дистрибутив (${company.iiko_version})` : `Для версии '${company.iiko_version}' нет ссылки на скачивание в реестре дистрибутивов`"
             @click="copyDistributionLink(company)"
           />
         </div>
@@ -1424,6 +1425,18 @@ const handleLaunchLicense = async () => {
             }
           } catch (e) {}
 
+          const isNewVer = pollRes.data?.is_new_version || false
+          const currentVer = pollRes.data?.iiko_version || company.value?.iiko_version || ''
+
+          if (isNewVer) {
+            toast.add({
+              severity: 'warn',
+              summary: 'Новая версия iiko!',
+              detail: `Версия iiko новая (${currentVer}) — добавлена в справочник дистрибутивов, необходимо заполнить поле со ссылкой!`,
+              life: 8000,
+            })
+          }
+
           const modCount = pollRes.data?.modules_count || company.value?.license_data?.modules?.length || 0
           const autoActivated = wasInactive && company.value?.status
           toast.add({
@@ -1649,9 +1662,9 @@ const copyDistributionLink = async (comp) => {
   if (!link) {
     toast.add({
       severity: 'warn',
-      summary: 'Дистрибутив не найден',
-      detail: `Для версии '${comp.iiko_version || '—'}' нет ссылки в реестре`,
-      life: 3000,
+      summary: 'Нет ссылки для этой версии',
+      detail: `Для версии '${comp.iiko_version || '—'}' нет ссылки на скачивание в реестре дистрибутивов`,
+      life: 4000,
     })
     return
   }

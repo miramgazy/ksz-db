@@ -536,14 +536,14 @@
                   Rosta
                 </span>
 
-                <!-- Copy Distribution Link Button (for iiko with distribution_link) -->
+                <!-- Copy Distribution Link Button (for iiko with or without distribution_link) -->
                 <button
                   v-if="data.software_type !== 'ROSTA' && data.iiko_version"
                   type="button"
                   @click.stop="copyDistributionLink(data)"
-                  :title="data.distribution_link ? `Скопировать ссылку на дистрибутив (${data.iiko_version})` : `Ссылка на дистрибутив (${data.iiko_version}) не найдена`"
+                  :title="data.distribution_link ? `Скопировать ссылку на дистрибутив (${data.iiko_version})` : `Для версии '${data.iiko_version}' нет ссылки на скачивание в реестре дистрибутивов`"
                   class="inline-flex items-center justify-center w-5 h-5 rounded transition shrink-0 cursor-pointer ml-0.5"
-                  :class="data.distribution_link ? 'text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-slate-800' : 'text-slate-300 dark:text-slate-600 opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800'"
+                  :class="data.distribution_link ? 'text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-slate-800' : 'text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 hover:bg-red-100 dark:hover:bg-red-900/60'"
                 >
                   <i class="pi pi-copy text-[11px]"></i>
                 </button>
@@ -1055,9 +1055,11 @@ const handleLaunchLicenseFromTable = async () => {
         if (pollRes.success) {
           const wasInactive = !c.status
           let autoActivated = false
+          let freshCompany = null
           try {
             const compRes = await companiesApi.getCompany(c.id)
             if (compRes.data) {
+              freshCompany = compRes.data
               selectedCompanyForLicense.value = compRes.data
               const idx = companies.value.findIndex(item => item.id === c.id)
               if (idx !== -1) {
@@ -1070,6 +1072,18 @@ const handleLaunchLicenseFromTable = async () => {
               }
             }
           } catch (e) {}
+
+          const isNewVer = pollRes.data?.is_new_version || false
+          const currentVer = pollRes.data?.iiko_version || freshCompany?.iiko_version || ''
+
+          if (isNewVer) {
+            toast.add({
+              severity: 'warn',
+              summary: 'Новая версия iiko!',
+              detail: `Версия iiko новая (${currentVer}) — добавлена в справочник дистрибутивов, необходимо заполнить поле со ссылкой!`,
+              life: 8000,
+            })
+          }
 
           const modCount = pollRes.data?.modules_count || selectedCompanyForLicense.value?.license_data?.modules?.length || 0
           toast.add({
@@ -1427,9 +1441,9 @@ const copyDistributionLink = async (company) => {
   if (!link) {
     toast.add({
       severity: 'warn',
-      summary: 'Дистрибутив не найден',
-      detail: `Для версии '${company.iiko_version || '—'}' нет ссылки в реестре дистрибутивов`,
-      life: 3000,
+      summary: 'Нет ссылки для этой версии',
+      detail: `Для версии '${company.iiko_version || '—'}' нет ссылки на скачивание в реестре дистрибутивов`,
+      life: 4000,
     })
     return
   }

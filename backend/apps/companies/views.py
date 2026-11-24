@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from apps.common.permissions import ReadOnlyForViewer
 from .models import Company, AnydeskStation, IikoDistribution, City, BusinessType, LicenceType, AnydeskVersion, ServiceType, CompanyService
-from .utils import version_sort_key, clean_iiko_version
+from .utils import version_sort_key, clean_iiko_version, sync_iiko_version_with_distributions
 from .serializers import (
     CompanyListSerializer,
     CompanyDetailSerializer,
@@ -428,9 +428,15 @@ class CompanyViewSet(viewsets.ModelViewSet):
             company.uid = str(parsed['uid']).strip()
             update_fields.append('uid')
 
-        if not company.iiko_version and parsed.get('iiko_version'):
-            company.iiko_version = str(parsed['iiko_version']).strip()
-            update_fields.append('iiko_version')
+        # Synchronize and update iiko_version in company and IikoDistribution
+        is_new_version = False
+        if parsed.get('iiko_version'):
+            raw_ver = str(parsed['iiko_version']).strip()
+            synced_ver, is_new_version = sync_iiko_version_with_distributions(raw_ver, company.node_type)
+            if company.iiko_version != synced_ver:
+                company.iiko_version = synced_ver
+                if 'iiko_version' not in update_fields:
+                    update_fields.append('iiko_version')
 
         company.save(update_fields=update_fields)
 
@@ -444,6 +450,8 @@ class CompanyViewSet(viewsets.ModelViewSet):
                     'expiration': parsed.get('expiration'),
                     'is_active': company.status,
                     'auto_activated': auto_activated,
+                    'is_new_version': is_new_version,
+                    'iiko_version': company.iiko_version,
                 })
             except Exception:
                 pass
@@ -453,6 +461,8 @@ class CompanyViewSet(viewsets.ModelViewSet):
             'message': 'Данные лицензии успешно сохранены' + (' (заведение автоматически активировано)' if auto_activated else ''),
             'is_active': company.status,
             'auto_activated': auto_activated,
+            'is_new_version': is_new_version,
+            'iiko_version': company.iiko_version,
             'license_data': company.license_data,
             'license_updated_at': company.license_updated_at,
             'company': {
