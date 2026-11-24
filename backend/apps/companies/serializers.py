@@ -137,6 +137,7 @@ class CompanyListSerializer(serializers.ModelSerializer):
             'license_data', 'license_updated_at', 'last_license_error',
             'stations_count', 'anydesk_stations', 'distribution_link', 'created_at', 'updated_at', 'updated_by_name'
         )
+        read_only_fields = ('its_cost', 'its_days_remaining')
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
@@ -181,6 +182,12 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
     distribution_link = serializers.SerializerMethodField()
     its_days_remaining = serializers.SerializerMethodField()
     updated_by_name = serializers.SerializerMethodField()
+    its_cost = serializers.DecimalField(max_digits=12, decimal_places=2, required=False, allow_null=True, read_only=True)
+
+    def to_internal_value(self, data):
+        data = data.copy() if hasattr(data, 'copy') else dict(data)
+        data.pop('its_cost', None)
+        return super().to_internal_value(data)
 
     def get_branches_count(self, obj):
         return obj.branches.filter(status=True).count()
@@ -197,6 +204,7 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
             'status', 'iiko_web_address', 'license_data', 'license_updated_at', 'last_license_error', 'anydesk_stations', 'company_services',
             'distribution_link', 'created_at', 'updated_at', 'updated_by_name'
         )
+        read_only_fields = ('its_cost', 'its_days_remaining')
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)

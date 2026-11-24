@@ -1221,8 +1221,28 @@ const saveEdit = async () => {
   }
   saving.value = true
   try {
+    const {
+      id,
+      branches_count,
+      anydesk_stations,
+      company_services,
+      distribution_link,
+      its_days_remaining,
+      updated_by_name,
+      created_at,
+      updated_at,
+      license_data,
+      license_updated_at,
+      last_license_error,
+      its_cost,
+      parent_chain_name,
+      stations_count,
+      is_its,
+      ...cleanData
+    } = editForm.value
+
     const payload = {
-      ...editForm.value,
+      ...cleanData,
       cabinet_name: editForm.value.cabinet_name || '',
       helpdesk_its: editForm.value.is_its ? 'Да' : 'Нет',
       its_expires_at: editForm.value.is_its ? (editForm.value.its_expires_at || '2026-12-31') : null,

@@ -131,6 +131,22 @@ class Company(models.Model):
             self.helpdesk_its = 'Нет'
             self.its_expires_at = None
             self.its_cost = 0
+        else:
+            if self.its_cost is None:
+                self.its_cost = 0
+            if self.pk:
+                # If activating an establishment that has active ITS subscriptions, restore ITS parameters
+                active_its = self.company_services.filter(status=True, service__is_its=True).order_by('-expires_at').first()
+                if active_its:
+                    self.helpdesk_its = 'Да'
+                    if not self.its_expires_at:
+                        self.its_expires_at = active_its.expires_at
+                    self.its_cost = active_its.total_cost
+                elif self.node_type == self.NodeType.BRANCH and self.parent_chain and self.parent_chain.helpdesk_its == 'Да':
+                    self.helpdesk_its = 'Да'
+                    if not self.its_expires_at:
+                        self.its_expires_at = self.parent_chain.its_expires_at
+
         if self.iiko_version:
             self.iiko_version = clean_iiko_version(self.iiko_version)
         super().save(*args, **kwargs)
