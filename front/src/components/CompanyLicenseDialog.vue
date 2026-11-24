@@ -81,7 +81,7 @@
       </div>
 
       <!-- Quick Summary Cards -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
         <!-- Card 1: Expiration -->
         <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 flex flex-col justify-between">
           <div class="flex items-center justify-between">
@@ -97,19 +97,21 @@
               <i class="pi pi-cog text-xs"></i>
             </button>
           </div>
-          <div class="mt-1">
-            <div class="font-bold text-base text-slate-900 dark:text-white">
-              {{ expirationFormatted }}
-            </div>
-            <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              <span>{{ daysRemainingText }}</span>
+          <div class="mt-1 flex flex-col gap-0.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="font-bold text-base text-slate-900 dark:text-white">
+                {{ expirationFormatted }}
+              </span>
               <span
                 v-if="effectiveLicenseInfo.source"
-                class="text-[10px] font-mono text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-1.5 py-0.5 rounded truncate max-w-[130px]"
+                class="text-[10px] font-mono font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200/60 dark:border-indigo-800/60 px-1.5 py-0.5 rounded truncate max-w-[190px]"
                 :title="`Расчет по модулю: ${effectiveLicenseInfo.source}`"
               >
                 {{ effectiveLicenseInfo.source }}
               </span>
+            </div>
+            <div class="text-xs text-slate-500 dark:text-slate-400">
+              {{ daysRemainingText }}
             </div>
           </div>
         </div>
@@ -131,7 +133,7 @@
               <i class="pi pi-refresh text-xs" :class="{ 'pi-spin': syncingVersion }"></i>
             </button>
           </div>
-          <div class="mt-1">
+          <div class="mt-1 flex flex-col gap-0.5">
             <div class="font-bold text-base text-slate-900 dark:text-white flex items-center gap-1.5">
               <span>{{ currentVersionDisplay }}</span>
               <!-- Copy Distribution Link Button with red/blue indicator -->
@@ -152,27 +154,14 @@
           </div>
         </div>
 
-        <!-- Card 3: Modules count -->
+        <!-- Card 3: Last sync -->
         <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 flex flex-col justify-between">
-          <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-            Всего модулей
-          </span>
-          <div class="mt-1">
-            <div class="font-bold text-base text-indigo-600 dark:text-indigo-400">
-              {{ modulesList.length }} модулей
-            </div>
-            <div class="text-xs text-slate-500 dark:text-slate-400">
-              {{ permanentCount }} бессрочных
-            </div>
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Синхронизация в базе
+            </span>
           </div>
-        </div>
-
-        <!-- Card 4: Last sync -->
-        <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 flex flex-col justify-between">
-          <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-            Синхронизация в базе
-          </span>
-          <div class="mt-1">
+          <div class="mt-1 flex flex-col gap-0.5">
             <div class="font-bold text-sm text-slate-900 dark:text-white">
               {{ lastUpdatedFormatted }}
             </div>
