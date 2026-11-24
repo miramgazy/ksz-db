@@ -998,6 +998,8 @@ const handleLicenseReloadFromTable = (freshCompany) => {
     if (idx !== -1) {
       companies.value[idx] = freshCompany
     }
+    loadCompanies()
+    loadFilterOptions()
   }
 }
 
@@ -1067,11 +1069,12 @@ const handleLaunchLicenseFromTable = async () => {
               }
               if (wasInactive && compRes.data.status) {
                 autoActivated = true
-                loadFilterOptions()
-                loadCompanies()
               }
             }
           } catch (e) {}
+
+          loadFilterOptions()
+          loadCompanies()
 
           const isNewVer = pollRes.data?.is_new_version || false
           const currentVer = pollRes.data?.iiko_version || freshCompany?.iiko_version || ''

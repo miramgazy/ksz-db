@@ -7,7 +7,15 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from apps.common.permissions import ReadOnlyForViewer
 from .models import Company, AnydeskStation, IikoDistribution, City, BusinessType, LicenceType, AnydeskVersion, ServiceType, CompanyService
-from .utils import version_sort_key, clean_iiko_version, sync_iiko_version_with_distributions, get_distribution_link
+from .utils import (
+    version_sort_key,
+    clean_iiko_version,
+    sync_iiko_version_with_distributions,
+    get_distribution_link,
+    cascade_update_company_versions,
+    extract_base_iiko_version,
+    invalidate_distribution_cache,
+)
 from .serializers import (
     CompanyListSerializer,
     CompanyDetailSerializer,
@@ -557,6 +565,17 @@ class IikoDistributionViewSet(viewsets.ModelViewSet):
         items.sort(key=lambda x: version_sort_key(x.iiko_version), reverse=True)
         serializer = self.get_serializer(items, many=True)
         return Response(serializer.data)
+
+    def perform_update(self, serializer):
+        old_ver = self.get_object().iiko_version
+        instance = serializer.save()
+        new_ver = instance.iiko_version
+        invalidate_distribution_cache()
+        if old_ver and new_ver and old_ver != new_ver:
+            Company.objects.filter(iiko_version=old_ver).update(iiko_version=new_ver)
+            base_old = extract_base_iiko_version(old_ver)
+            if base_old and base_old != new_ver:
+                cascade_update_company_versions(base_old, new_ver)
 
     @action(detail=False, methods=['get'])
     def versions(self, request):

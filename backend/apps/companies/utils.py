@@ -150,12 +150,31 @@ def get_distribution_link(iiko_version: str, node_type: str = '') -> str:
     return ''
 
 
+def cascade_update_company_versions(base_ver: str, new_ver: str) -> int:
+    """
+    Каскадно обновляет все заведения со старой базовой версией (например 9.6.8)
+    на новую полную версию (например 9.6.8035.0).
+    """
+    if not base_ver or not new_ver or base_ver == new_ver:
+        return 0
+
+    from .models import Company
+
+    updated_count = 0
+    updated_count += Company.objects.filter(iiko_version=base_ver).update(iiko_version=new_ver)
+    updated_count += Company.objects.filter(iiko_version__startswith=f"{base_ver}-").update(iiko_version=new_ver)
+    updated_count += Company.objects.filter(iiko_version__startswith=f"{base_ver} ").update(iiko_version=new_ver)
+    return updated_count
+
+
 def sync_iiko_version_with_distributions(raw_version: str, node_type: str = 'RMS') -> Tuple[str, bool]:
     """
     Синхронизирует версию из лицензии с таблицей дистрибутивов IikoDistribution:
     1. Ищет точное совпадение (например 9.6.8035.0).
+       Если найдено и есть заведения с базовой версией (например 9.6.8), каскадно обновляет их.
     2. Если точного нет, вычисляет базовую версию (например 9.6.8) и ищет в таблице.
-       Если найдена старая версия (9.6.8) - заменяет её на 9.6.8035.0, сохраняя ссылку!
+       Если найдена старая версия (9.6.8) - заменяет её на 9.6.8035.0, сохраняя ссылку,
+       и каскадно обновляет все заведения с этой базовой версией!
     3. Если версия вообще не найдена в базе - создаёт новые строки в IikoDistribution с пустой ссылкой.
     Возвращает (актуальная_версия, is_new_version)
     """
@@ -171,6 +190,8 @@ def sync_iiko_version_with_distributions(raw_version: str, node_type: str = 'RMS
     # 1. Точное совпадение в таблице дистрибутивов
     dists_exact = IikoDistribution.objects.filter(iiko_version=ver)
     if dists_exact.exists():
+        if base_ver and base_ver != ver:
+            cascade_update_company_versions(base_ver, ver)
         return (ver, False)
 
     # 2. Поиск по базовой версии (например 9.6.8) и замена на полную версию 9.6.8035.0
@@ -178,6 +199,7 @@ def sync_iiko_version_with_distributions(raw_version: str, node_type: str = 'RMS
         dists_base = IikoDistribution.objects.filter(iiko_version=base_ver)
         if dists_base.exists():
             dists_base.update(iiko_version=ver)
+            cascade_update_company_versions(base_ver, ver)
             invalidate_distribution_cache()
             return (ver, False)
 
@@ -186,6 +208,9 @@ def sync_iiko_version_with_distributions(raw_version: str, node_type: str = 'RMS
     other_type = 'Chain' if type_str == 'RMS' else 'RMS'
     if not IikoDistribution.objects.filter(iiko_version=ver, type=other_type).exists():
         IikoDistribution.objects.create(iiko_version=ver, type=other_type, link_ya='')
+
+    if base_ver and base_ver != ver:
+        cascade_update_company_versions(base_ver, ver)
 
     invalidate_distribution_cache()
     return (ver, True)
