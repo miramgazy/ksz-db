@@ -2,7 +2,7 @@
   <Dialog
     v-model:visible="visible"
     :modal="true"
-    :style="{ width: '920px', maxWidth: '96vw' }"
+    :style="{ width: '960px', maxWidth: '96vw' }"
     :closable="true"
     :dismissable-mask="true"
   >
@@ -15,7 +15,7 @@
           <div>
             <div class="flex items-center gap-2">
               <h3 class="font-bold text-lg text-slate-800 dark:text-white m-0">
-                Лицензии: {{ company?.place_name }}
+                Текущие лицензии: {{ company?.place_name }}
               </h3>
               <Tag
                 v-if="expirationStatus"
@@ -32,7 +32,7 @@
       </div>
     </template>
 
-    <div class="flex flex-col gap-4 py-1">
+    <div class="flex flex-col gap-3.5 py-1">
       <!-- Error Alert (if last update failed) -->
       <div
         v-if="company?.last_license_error"
@@ -50,7 +50,7 @@
       </div>
 
       <!-- Quick Summary Cards -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5">
         <!-- Card 1: Expiration -->
         <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 flex flex-col justify-between">
           <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -112,13 +112,82 @@
         </div>
       </div>
 
-      <!-- Search & Filters Bar -->
+      <!-- Блок: Часто просматриваемые лицензии (Pinned Modules Block) -->
+      <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80">
+        <div class="flex items-center justify-between mb-2.5">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-amber-500/10 dark:bg-amber-400/10 flex items-center justify-center text-amber-500 dark:text-amber-400">
+              <i class="pi pi-star-fill text-xs"></i>
+            </span>
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-100">
+              Часто просматриваемые лицензии
+            </span>
+            <span class="text-[11px] font-mono text-slate-400">({{ pinnedModulesList.length }})</span>
+          </div>
+
+          <Button
+            label="Добавить"
+            icon="pi pi-plus"
+            size="small"
+            severity="warning"
+            outlined
+            class="!py-1 !px-2.5 !text-xs !font-semibold"
+            @click="showAddPinnedDialog = true"
+          />
+        </div>
+
+        <!-- Grid of pinned cards -->
+        <div v-if="pinnedModulesList.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+          <div
+            v-for="item in pinnedModulesList"
+            :key="item.name"
+            class="flex items-center justify-between p-2.5 rounded-lg bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700/80 hover:border-amber-400 dark:hover:border-amber-500/80 transition shadow-sm"
+          >
+            <div class="min-w-0 pr-2 flex-1">
+              <div class="font-semibold text-xs text-slate-800 dark:text-slate-100 truncate" :title="item.name">
+                {{ item.name }}
+              </div>
+              <div class="flex items-center gap-2 mt-1">
+                <Tag
+                  v-if="item.found"
+                  :value="`Кол-во: ${item.count}`"
+                  severity="warn"
+                  class="text-[11px] font-bold !px-1.5 !py-0.5"
+                />
+                <span v-else class="text-[11px] text-slate-400 italic">
+                  Не активирован
+                </span>
+                <span v-if="item.found && item.to" class="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                  до {{ item.to }}
+                </span>
+                <span v-else-if="item.found && !item.to" class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                  Бессрочно
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="w-6 h-6 rounded flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 dark:text-slate-600 dark:hover:text-red-400 dark:hover:bg-red-950/40 transition shrink-0 cursor-pointer"
+              title="Убрать из часто просматриваемых"
+              @click="unpinModule(item.name)"
+            >
+              <i class="pi pi-times text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <div v-else class="text-xs text-slate-400 py-2 text-center">
+          Нет закрепленных лицензий. Нажмите «+ Добавить», чтобы выбрать модули для первоочередного просмотра (например, RMS Front Fast Food).
+        </div>
+      </div>
+
+      <!-- Search & Filters Bar for General List -->
       <div class="flex items-center justify-between gap-3 pt-1">
         <div class="relative flex-1">
           <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
           <InputText
             v-model="searchQuery"
-            placeholder="Поиск по названию лицензии/модуля или ID..."
+            placeholder="Поиск по названию лицензии/модуля или ID из общего списка..."
             class="w-full pl-9 text-sm"
           />
         </div>
@@ -127,7 +196,7 @@
         </div>
       </div>
 
-      <!-- Modules Table -->
+      <!-- General Modules Table -->
       <div class="border border-slate-200 dark:border-slate-700/80 rounded-xl overflow-hidden bg-white dark:bg-slate-800/50">
         <DataTable
           :value="filteredModules"
@@ -147,10 +216,27 @@
               </div>
               <div v-else>
                 Данные лицензии заведения отсутствуют в базе.<br>
-                Нажмите <strong>«Обновить лицензию сейчас»</strong> для получения сведений через ClearBat.
+                Нажмите <strong>«Обновить лицензию»</strong> для синхронизации сведений через ClearBat.
               </div>
             </div>
           </template>
+
+          <!-- Pin/Favorite Column -->
+          <Column style="width: 44px">
+            <template #body="{ data }">
+              <button
+                type="button"
+                class="w-6 h-6 rounded flex items-center justify-center transition cursor-pointer"
+                :title="pinnedNames.includes(data.name) ? 'Убрать из часто просматриваемых' : 'Закрепить в часто просматриваемые'"
+                @click="togglePinModule(data.name)"
+              >
+                <i
+                  class="pi text-xs transition"
+                  :class="pinnedNames.includes(data.name) ? 'pi-star-fill text-amber-500' : 'pi-star text-slate-300 dark:text-slate-600 hover:text-amber-500'"
+                ></i>
+              </button>
+            </template>
+          </Column>
 
           <Column field="name" header="Название модуля" sortable>
             <template #body="{ data }">
@@ -236,7 +322,7 @@
         </div>
         <div class="flex items-center gap-2">
           <Button
-            label="Обновить лицензию сейчас"
+            label="Обновить лицензию"
             icon="pi pi-sync"
             severity="warning"
             size="small"
@@ -255,6 +341,51 @@
       </div>
     </template>
   </Dialog>
+
+  <!-- Add Pinned Module Dialog -->
+  <Dialog
+    v-model:visible="showAddPinnedDialog"
+    header="Закрепить лицензию в быстрый просмотр"
+    :modal="true"
+    :style="{ width: '460px', maxWidth: '95vw' }"
+  >
+    <div class="flex flex-col gap-3 py-2">
+      <label class="text-xs font-semibold text-slate-600 dark:text-slate-300">
+        Выберите лицензию/модуль из общего списка:
+      </label>
+      <Select
+        v-model="selectedModuleToPin"
+        :options="availableModulesToPin"
+        option-label="name"
+        option-value="name"
+        placeholder="Поиск и выбор модуля..."
+        filter
+        class="w-full text-xs"
+      >
+        <template #option="{ option }">
+          <div class="flex items-center justify-between w-full py-0.5">
+            <span class="text-xs font-medium text-slate-800 dark:text-slate-100 truncate pr-2">
+              {{ option.name }}
+            </span>
+            <Tag :value="`Кол-во: ${option.count}`" severity="info" class="text-[10px] shrink-0" />
+          </div>
+        </template>
+      </Select>
+    </div>
+    <template #footer>
+      <div class="flex justify-end gap-2 pt-2">
+        <Button label="Отмена" severity="secondary" size="small" text @click="showAddPinnedDialog = false" />
+        <Button
+          label="Закрепить (+)"
+          icon="pi pi-check"
+          size="small"
+          severity="warning"
+          :disabled="!selectedModuleToPin"
+          @click="confirmAddPin"
+        />
+      </div>
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
@@ -262,6 +393,7 @@ import { ref, computed } from 'vue'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -286,6 +418,8 @@ const emit = defineEmits(['update:modelValue', 'refresh'])
 
 const companionStore = useCompanionStore()
 const searchQuery = ref('')
+const showAddPinnedDialog = ref(false)
+const selectedModuleToPin = ref('')
 
 const visible = computed({
   get: () => props.modelValue,
@@ -316,6 +450,99 @@ const permanentCount = computed(() => {
   return modulesList.value.filter(m => !m.to).length
 })
 
+// Pinned / Frequently viewed modules logic
+const defaultPinnedNames = [
+  'RMS (Front Fast Food)',
+  'RMS (TableService)',
+  'RMS (Office)',
+  'FullEdition (Server)',
+]
+
+const loadPinnedNames = () => {
+  try {
+    const raw = localStorage.getItem('ksz_pinned_licenses')
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed) && parsed.length) {
+        return parsed
+      }
+    }
+  } catch (e) {}
+  return [...defaultPinnedNames]
+}
+
+const pinnedNames = ref(loadPinnedNames())
+
+const savePinnedNames = () => {
+  try {
+    localStorage.setItem('ksz_pinned_licenses', JSON.stringify(pinnedNames.value))
+  } catch (e) {}
+}
+
+const pinnedModulesList = computed(() => {
+  const map = new Map()
+  for (const m of modulesList.value) {
+    if (m.name) {
+      map.set(m.name, m)
+    }
+  }
+
+  return pinnedNames.value.map(name => {
+    const foundModule = map.get(name)
+    if (foundModule) {
+      return {
+        name,
+        count: foundModule.count,
+        from: foundModule.from,
+        to: foundModule.to,
+        id: foundModule.id,
+        found: true
+      }
+    }
+    return {
+      name,
+      count: 0,
+      from: null,
+      to: null,
+      id: null,
+      found: false
+    }
+  })
+})
+
+const availableModulesToPin = computed(() => {
+  return modulesList.value.filter(m => !pinnedNames.value.includes(m.name))
+})
+
+const pinModule = (name) => {
+  if (name && !pinnedNames.value.includes(name)) {
+    pinnedNames.value.push(name)
+    savePinnedNames()
+  }
+}
+
+const unpinModule = (name) => {
+  pinnedNames.value = pinnedNames.value.filter(n => n !== name)
+  savePinnedNames()
+}
+
+const togglePinModule = (name) => {
+  if (pinnedNames.value.includes(name)) {
+    unpinModule(name)
+  } else {
+    pinModule(name)
+  }
+}
+
+const confirmAddPin = () => {
+  if (selectedModuleToPin.value) {
+    pinModule(selectedModuleToPin.value)
+    selectedModuleToPin.value = ''
+    showAddPinnedDialog.value = false
+  }
+}
+
+// General Search Filter
 const filteredModules = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
   if (!q) {

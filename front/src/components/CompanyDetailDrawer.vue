@@ -108,10 +108,10 @@
             @click="handleLaunchLicense"
           />
 
-          <!-- View license -->
+          <!-- View current licenses -->
           <Button
             v-if="company.software_type !== 'ROSTA'"
-            :label="licenseButtonLabel"
+            label="Текущие лицензии"
             :icon="company.last_license_error ? 'pi pi-exclamation-triangle' : 'pi pi-id-card'"
             :severity="company.last_license_error ? 'danger' : 'warn'"
             :outlined="!company.last_license_error"
