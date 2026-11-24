@@ -302,9 +302,15 @@
                     ↳ {{ data.company_parent_chain_name }}
                   </span>
 
-                  <span class="font-bold text-slate-900 dark:text-white">
+                  <button
+                    type="button"
+                    class="text-left font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition cursor-pointer"
+                    :disabled="!data.company"
+                    :title="data.company ? 'Открыть карточку заведения' : undefined"
+                    @click="openCompanyDetails(data.company)"
+                  >
                     {{ data.company_place_name }}
-                  </span>
+                  </button>
                 </div>
 
                 <span class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
@@ -488,7 +494,15 @@
       <div v-if="selectedRenewService" class="flex flex-col gap-4 py-1 text-sm">
         <div class="p-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg">
           <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Компания:</div>
-          <div class="font-bold text-slate-900 dark:text-white">{{ selectedRenewService.company_place_name }}</div>
+          <button
+            type="button"
+            class="text-left font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition cursor-pointer"
+            :disabled="!selectedRenewService.company"
+            :title="selectedRenewService.company ? 'Открыть карточку заведения' : undefined"
+            @click="openCompanyDetails(selectedRenewService.company)"
+          >
+            {{ selectedRenewService.company_place_name }}
+          </button>
           <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">Услуга:</div>
           <div class="font-semibold text-emerald-800 dark:text-emerald-400">{{ selectedRenewService.service_name }}</div>
           <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">Текущий срок окончания:</div>
@@ -980,6 +994,14 @@
         <Button label="Закрыть" severity="secondary" text @click="showCatalogModal = false" />
       </template>
     </Dialog>
+
+    <!-- Company Detail Drawer -->
+    <CompanyDetailDrawer
+      v-model="showCompanyDrawer"
+      :company-id="selectedCompanyId"
+      @updated="refreshData"
+      @deleted="refreshData"
+    />
   </div>
 </template>
 
@@ -1001,10 +1023,20 @@ import { useAuthStore } from '../stores/auth'
 import { servicesApi } from '../api/services'
 import { companiesApi } from '../api/companies'
 import Navbar from '../components/Navbar.vue'
+import CompanyDetailDrawer from '../components/CompanyDetailDrawer.vue'
 
 const toast = useToast()
 const confirm = useConfirm()
 const authStore = useAuthStore()
+
+const showCompanyDrawer = ref(false)
+const selectedCompanyId = ref(null)
+
+const openCompanyDetails = (companyId) => {
+  if (!companyId) return
+  selectedCompanyId.value = companyId
+  showCompanyDrawer.value = true
+}
 
 const loading = ref(false)
 const services = ref([])
