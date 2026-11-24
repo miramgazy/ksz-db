@@ -177,3 +177,66 @@ def parse_clearbat_license_log(text: str) -> Dict[str, Any]:
         "modules": modules,
         "parsed_at": datetime.now().isoformat(),
     }
+
+
+def is_license_active(license_data: Dict[str, Any], key_modules: Optional[List[str]] = None) -> bool:
+    """
+    Определяет, является ли лицензия действующей (активной).
+    Учитывает приоритетные модули (по умолчанию ChainOperations (Chain), RMS (Front Fast Food))
+    или общую дату expiration из заголовка лога.
+    """
+    if not license_data or not isinstance(license_data, dict):
+        return False
+    if not license_data.get('success', False):
+        return False
+
+    if key_modules is None:
+        key_modules = ['ChainOperations (Chain)', 'RMS (Front Fast Food)']
+
+    modules = license_data.get('modules') or []
+    matched_module = None
+    for km in key_modules:
+        if not km:
+            continue
+        km_clean = km.strip().lower()
+        for m in modules:
+            name = (m.get('name') or '').strip().lower()
+            if name == km_clean:
+                matched_module = m
+                break
+        if matched_module:
+            break
+
+    effective_date_str = None
+    if matched_module:
+        effective_date_str = matched_module.get('to')
+        if not effective_date_str:
+            # Бессрочный ключевой модуль
+            return True
+    elif license_data.get('expiration'):
+        effective_date_str = license_data['expiration']
+    elif modules:
+        # Есть модули, но нет ограничений по дате
+        return True
+    else:
+        return False
+
+    if not effective_date_str:
+        return False
+
+    try:
+        from datetime import date
+        raw = str(effective_date_str).split()[0].strip()
+        exp_date = None
+        for fmt in ('%Y-%m-%d', '%d.%m.%Y', '%Y/%m/%d'):
+            try:
+                exp_date = datetime.strptime(raw, fmt).date()
+                break
+            except ValueError:
+                pass
+        if exp_date:
+            return exp_date >= date.today()
+    except Exception:
+        pass
+
+    return False

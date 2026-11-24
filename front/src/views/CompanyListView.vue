@@ -1053,13 +1053,20 @@ const handleLaunchLicenseFromTable = async () => {
         })
 
         if (pollRes.success) {
+          const wasInactive = !c.status
+          let autoActivated = false
           try {
-            const compRes = await companiesApi.get(c.id)
+            const compRes = await companiesApi.getCompany(c.id)
             if (compRes.data) {
               selectedCompanyForLicense.value = compRes.data
               const idx = companies.value.findIndex(item => item.id === c.id)
               if (idx !== -1) {
                 companies.value[idx] = compRes.data
+              }
+              if (wasInactive && compRes.data.status) {
+                autoActivated = true
+                loadFilterOptions()
+                loadCompanies()
               }
             }
           } catch (e) {}
@@ -1067,8 +1074,8 @@ const handleLaunchLicenseFromTable = async () => {
           const modCount = pollRes.data?.modules_count || selectedCompanyForLicense.value?.license_data?.modules?.length || 0
           toast.add({
             severity: 'success',
-            summary: 'Лицензия обновлена',
-            detail: `Данные лицензии успешно сохранены в базе! Активных модулей: ${modCount}`,
+            summary: autoActivated ? 'Лицензия обновлена (Заведение активировано!)' : 'Лицензия обновлена',
+            detail: `Данные лицензии успешно сохранены в базе! Активных модулей: ${modCount}${autoActivated ? ' • Заведение стало активным' : ''}`,
             life: 5000,
           })
         } else if (pollRes.error && !pollRes.timeout) {

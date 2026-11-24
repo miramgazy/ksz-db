@@ -169,10 +169,14 @@
         </div>
       </div>
 
-      <!-- Mode Switch: View vs Edit -->
-      <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-2">
-        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">
-          {{ !company?.id ? 'Параметры нового заведения' : 'Реквизиты заведения' }}
+      <!-- Mode Switch: View vs Edit (Sticky when scrolling) -->
+      <div
+        class="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-2.5 sticky top-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xs z-20 py-2 -mt-2 transition-all"
+        :class="{ 'shadow-xs': isEditing }"
+      >
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-2">
+          <span>{{ !company?.id ? 'Параметры нового заведения' : (isEditing ? 'Редактирование реквизитов' : 'Реквизиты заведения') }}</span>
+          <Tag v-if="isEditing" value="Режим правки" severity="warn" class="!text-[10px]" />
         </h3>
         <div v-if="authStore.canEdit">
           <Button
@@ -183,9 +187,9 @@
             text
             @click="startEdit"
           />
-          <div v-else class="flex gap-2">
+          <div v-else class="flex items-center gap-2">
             <Button label="Отмена" severity="secondary" size="small" text @click="cancelEdit" />
-            <Button label="Сохранить" icon="pi pi-check" size="small" :loading="saving" @click="saveEdit" />
+            <Button label="Сохранить" icon="pi pi-check" size="small" severity="success" :loading="saving" @click="saveEdit" />
           </div>
         </div>
       </div>
@@ -894,9 +898,28 @@
       </template>
     </Dialog>
 
-    <!-- Superadmin Delete Venue Footer in Drawer -->
-    <template #footer v-if="company?.id && !isEditing && authStore.isSuperAdmin">
-      <div class="flex items-center justify-end w-full py-1">
+    <!-- Drawer Footer: Fixed Bottom Action Bar during Edit, Delete button for Superadmin in View Mode -->
+    <template #footer v-if="isEditing || (company?.id && authStore.isSuperAdmin)">
+      <div v-if="isEditing" class="flex items-center justify-between w-full py-1 gap-3">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0"></span>
+          <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 truncate">
+            {{ editForm.place_name || company?.place_name || 'Создание заведения' }}
+          </span>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <Button label="Отмена" severity="secondary" size="small" text @click="cancelEdit" />
+          <Button
+            label="Сохранить"
+            icon="pi pi-check"
+            size="small"
+            severity="success"
+            :loading="saving"
+            @click="saveEdit"
+          />
+        </div>
+      </div>
+      <div v-else-if="company?.id && authStore.isSuperAdmin" class="flex items-center justify-end w-full py-1">
         <Button
           label="Удалить заведение"
           icon="pi pi-trash"
@@ -1392,19 +1415,21 @@ const handleLaunchLicense = async () => {
         })
 
         if (pollRes.success) {
+          const wasInactive = !c.status
           // Успех! Перезапрашиваем данные заведения
           try {
-            const compRes = await companiesApi.get(c.id)
+            const compRes = await companiesApi.getCompany(c.id)
             if (compRes.data) {
               company.value = compRes.data
             }
           } catch (e) {}
 
           const modCount = pollRes.data?.modules_count || company.value?.license_data?.modules?.length || 0
+          const autoActivated = wasInactive && company.value?.status
           toast.add({
             severity: 'success',
-            summary: 'Лицензия обновлена',
-            detail: `Данные лицензии успешно сохранены в базе! Активных модулей: ${modCount}`,
+            summary: autoActivated ? 'Лицензия обновлена (Заведение активировано!)' : 'Лицензия обновлена',
+            detail: `Данные лицензии успешно сохранены в базе! Активных модулей: ${modCount}${autoActivated ? ' • Заведение автоматически активировано' : ''}`,
             life: 5000,
           })
           emit('updated', company.value)

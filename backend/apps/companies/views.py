@@ -364,12 +364,15 @@ class CompanyViewSet(viewsets.ModelViewSet):
         # Parse log_text if provided, or use provided license_data dict
         parsed = None
         if log_text:
-            from .license_parser import parse_clearbat_license_log
+            from .license_parser import parse_clearbat_license_log, is_license_active
             parsed = parse_clearbat_license_log(log_text)
         elif isinstance(data.get('license_data'), dict):
+            from .license_parser import is_license_active
             parsed = data.get('license_data')
             if 'success' not in parsed:
                 parsed['success'] = True
+        else:
+            from .license_parser import is_license_active
 
         if not parsed:
             return Response({
@@ -397,12 +400,24 @@ class CompanyViewSet(viewsets.ModelViewSet):
                 'last_license_error': company.last_license_error
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        # Check if license is active/valid
+        key_modules = data.get('key_modules')
+        license_is_active = is_license_active(parsed, key_modules=key_modules)
+
         # Success - save license_data
         company.license_data = parsed
         company.license_updated_at = timezone.now()
         company.last_license_error = ''
 
         update_fields = ['license_data', 'license_updated_at', 'last_license_error']
+
+        # Auto-activate company if active license is obtained successfully
+        was_inactive = not company.status
+        auto_activated = False
+        if license_is_active and was_inactive:
+            company.status = True
+            update_fields.append('status')
+            auto_activated = True
 
         # Auto-fill missing company attributes from parsed license
         if not company.crm_id and parsed.get('crm_id'):
@@ -426,18 +441,23 @@ class CompanyViewSet(viewsets.ModelViewSet):
                     'status': 'completed',
                     'company_id': company.id,
                     'modules_count': parsed.get('modules_count', 0),
-                    'expiration': parsed.get('expiration')
+                    'expiration': parsed.get('expiration'),
+                    'is_active': company.status,
+                    'auto_activated': auto_activated,
                 })
             except Exception:
                 pass
 
         return Response({
             'success': True,
-            'message': 'Данные лицензии успешно сохранены',
+            'message': 'Данные лицензии успешно сохранены' + (' (заведение автоматически активировано)' if auto_activated else ''),
+            'is_active': company.status,
+            'auto_activated': auto_activated,
             'license_data': company.license_data,
             'license_updated_at': company.license_updated_at,
             'company': {
                 'id': company.id,
+                'status': company.status,
                 'crm_id': company.crm_id,
                 'uid': company.uid,
                 'iiko_version': company.iiko_version,
