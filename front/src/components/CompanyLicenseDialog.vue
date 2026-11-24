@@ -18,7 +18,14 @@
                 Текущие лицензии: {{ company?.place_name }}
               </h3>
               <Tag
-                v-if="expirationStatus"
+                v-if="updating"
+                severity="warn"
+                icon="pi pi-spin pi-spinner"
+                value="Парсинг лога..."
+                class="text-xs"
+              />
+              <Tag
+                v-else-if="expirationStatus"
                 :severity="expirationStatus.severity"
                 :value="expirationStatus.label"
                 class="text-xs"
@@ -33,6 +40,30 @@
     </template>
 
     <div class="flex flex-col gap-3.5 py-1">
+      <!-- Индикатор процесса парсинга и обновления -->
+      <div
+        v-if="updating"
+        class="flex flex-col gap-2 p-3.5 rounded-xl bg-amber-500/10 dark:bg-amber-400/10 border border-amber-300 dark:border-amber-600/60 shadow-sm transition-all"
+      >
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-amber-500/20 dark:bg-amber-400/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+              <i class="pi pi-spin pi-spinner text-base"></i>
+            </div>
+            <div>
+              <div class="font-bold text-xs uppercase tracking-wider text-amber-900 dark:text-amber-200 flex items-center gap-2">
+                <span>Выполняется обновление и парсинг лицензии</span>
+                <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+              </div>
+              <div class="text-xs text-amber-800 dark:text-amber-300 mt-0.5">
+                {{ statusText || 'Запрос отправлен агенту. Ожидаем завершения и считывания лога CLEAR_bat...' }}
+              </div>
+            </div>
+          </div>
+          <Tag value="В процессе" severity="warn" class="text-[10px] shrink-0 font-bold" />
+        </div>
+        <ProgressBar mode="indeterminate" style="height: 4px;" class="mt-1" />
+      </div>
       <!-- Error Alert (if last update failed) -->
       <div
         v-if="company?.last_license_error"
@@ -203,6 +234,7 @@
           :paginator="true"
           :rows="12"
           :rows-per-page-options="[12, 25, 50, 100]"
+          :loading="updating"
           size="small"
           striped-rows
           responsive-layout="scroll"
@@ -395,6 +427,7 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
+import ProgressBar from 'primevue/progressbar'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import { useCompanionStore } from '@/stores/companion'
@@ -411,6 +444,10 @@ const props = defineProps({
   updating: {
     type: Boolean,
     default: false
+  },
+  statusText: {
+    type: String,
+    default: ''
   }
 })
 

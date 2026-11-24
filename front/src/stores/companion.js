@@ -110,10 +110,13 @@ export const useCompanionStore = defineStore('companion', {
       return { success: false, message: 'Не удалось запустить обновление лицензии' }
     },
 
-    async pollLicenseTaskStatus(taskId, companyId, { maxAttempts = 3, intervalMs = 7000 } = {}) {
+    async pollLicenseTaskStatus(taskId, companyId, { maxAttempts = 3, intervalMs = 7000, onAttempt } = {}) {
       if (!taskId) return { success: false, timeout: false, error: 'task_id отсутствует' }
 
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        if (typeof onAttempt === 'function') {
+          onAttempt(attempt, maxAttempts)
+        }
         await new Promise(r => setTimeout(r, intervalMs))
 
         try {

@@ -912,6 +912,7 @@
       v-model="licenseDialogVisible"
       :company="company"
       :updating="updatingLicense"
+      :status-text="updatingStatusText"
       @refresh="handleLaunchLicense"
     />
   </Drawer>
@@ -967,6 +968,7 @@ const companionStore = useCompanionStore()
 const router = useRouter()
 
 const updatingLicense = ref(false)
+const updatingStatusText = ref('')
 const licenseDialogVisible = ref(false)
 
 const licenseButtonLabel = computed(() => {
@@ -1298,6 +1300,7 @@ const handleLaunchLicense = async () => {
 
   if (companionStore.isOnline) {
     updatingLicense.value = true
+    updatingStatusText.value = 'Запуск CLEAR_bat и ожидание записи в лог...'
     toast.add({
       severity: 'info',
       summary: 'Обновление лицензии',
@@ -1323,6 +1326,15 @@ const handleLaunchLicense = async () => {
         const pollRes = await companionStore.pollLicenseTaskStatus(taskId, c.id, {
           maxAttempts: 3,
           intervalMs: 7000,
+          onAttempt: (attempt, max) => {
+            if (attempt === 1) {
+              updatingStatusText.value = `Считывание и парсинг логов CLEAR_bat... (попытка ${attempt} из ${max})`
+            } else if (attempt === 2) {
+              updatingStatusText.value = `Ожидание ответа сервера лицензирования... (попытка ${attempt} из ${max})`
+            } else {
+              updatingStatusText.value = `Завершение синхронизации данных... (попытка ${attempt} из ${max})`
+            }
+          }
         })
 
         if (pollRes.success) {
@@ -1375,6 +1387,7 @@ const handleLaunchLicense = async () => {
       })
     } finally {
       updatingLicense.value = false
+      updatingStatusText.value = ''
     }
   } else if (licenseUrl) {
     window.location.href = licenseUrl
