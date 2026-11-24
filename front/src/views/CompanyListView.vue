@@ -319,6 +319,49 @@
             @click="clearChainFilter"
           />
         </div>
+
+        <!-- Active Column Filters Banner (Versions and License Status) -->
+        <div
+          v-if="selectedVersions.length > 0 || selectedLicenseStatuses.length > 0"
+          class="mt-3 flex flex-wrap items-center gap-2 px-3 py-2 bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs"
+        >
+          <span class="text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1">
+            <i class="pi pi-filter text-[11px] text-slate-400"></i>
+            Фильтры колонок:
+          </span>
+
+          <!-- Version Filter Tag -->
+          <span
+            v-if="selectedVersions.length > 0"
+            class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-medium"
+          >
+            <span>Версии ({{ selectedVersions.length }}): <strong>{{ selectedVersions.join(', ') }}</strong></span>
+            <button
+              type="button"
+              class="hover:text-indigo-900 dark:hover:text-white cursor-pointer ml-0.5"
+              title="Сбросить фильтр версий"
+              @click="clearVersionFilter"
+            >
+              <i class="pi pi-times text-[10px]"></i>
+            </button>
+          </span>
+
+          <!-- License Status Filter Tag -->
+          <span
+            v-if="selectedLicenseStatuses.length > 0"
+            class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 font-medium"
+          >
+            <span>Лицензии: <strong>{{ getSelectedLicenseStatusesLabels() }}</strong></span>
+            <button
+              type="button"
+              class="hover:text-amber-950 dark:hover:text-white cursor-pointer ml-0.5"
+              title="Сбросить фильтр лицензий"
+              @click="clearLicenseStatusFilter"
+            >
+              <i class="pi pi-times text-[10px]"></i>
+            </button>
+          </span>
+        </div>
       </div>
 
       <!-- Main Data Table -->
@@ -430,7 +473,29 @@
           </Column>
 
           <!-- Row Action Buttons (positioned right after venue name) -->
-          <Column header="Действия" style="min-width: 95px; width: 95px; text-align: center">
+          <Column style="min-width: 110px; width: 110px; text-align: center">
+            <template #header>
+              <div class="flex items-center justify-center gap-1.5 w-full" @click.stop>
+                <span class="font-bold text-slate-700 dark:text-slate-200">Действия</span>
+                <button
+                  type="button"
+                  class="relative w-6 h-6 rounded flex items-center justify-center transition cursor-pointer"
+                  :class="selectedLicenseStatuses.length > 0
+                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 font-bold border border-amber-300 dark:border-amber-700 shadow-2xs'
+                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'"
+                  :title="selectedLicenseStatuses.length > 0 ? `Фильтр лицензий: выбрано ${selectedLicenseStatuses.length}` : 'Фильтр по состоянию лицензий'"
+                  @click.stop="toggleLicenseStatusPopover"
+                >
+                  <i class="pi pi-filter text-[11px]"></i>
+                  <span
+                    v-if="selectedLicenseStatuses.length > 0"
+                    class="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-amber-600 text-white text-[9px] font-bold flex items-center justify-center shadow-xs"
+                  >
+                    {{ selectedLicenseStatuses.length }}
+                  </span>
+                </button>
+              </div>
+            </template>
             <template #body="{ data }">
               <div class="flex items-center justify-center gap-0.5" @click.stop>
                 <!-- Launch BackOffice (only for iiko) -->
@@ -534,7 +599,29 @@
           </Column>
 
           <!-- Version / Distribution -->
-          <Column field="iiko_version" header="Версия" :sortable="true" style="min-width: 110px; white-space: nowrap">
+          <Column field="iiko_version" :sortable="true" style="min-width: 130px; white-space: nowrap">
+            <template #header>
+              <div class="flex items-center justify-between gap-1 w-full" @click.stop>
+                <span class="font-bold text-slate-700 dark:text-slate-200">Версия</span>
+                <button
+                  type="button"
+                  class="relative w-6 h-6 rounded flex items-center justify-center transition cursor-pointer"
+                  :class="selectedVersions.length > 0
+                    ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300 font-bold border border-indigo-300 dark:border-indigo-700 shadow-2xs'
+                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'"
+                  :title="selectedVersions.length > 0 ? `Фильтр версий: выбрано ${selectedVersions.length}` : 'Фильтр по версии iiko'"
+                  @click.stop="toggleVersionPopover"
+                >
+                  <i class="pi pi-filter text-[11px]"></i>
+                  <span
+                    v-if="selectedVersions.length > 0"
+                    class="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-indigo-600 text-white text-[9px] font-bold flex items-center justify-center shadow-xs"
+                  >
+                    {{ selectedVersions.length }}
+                  </span>
+                </button>
+              </div>
+            </template>
             <template #body="{ data }">
               <div class="flex items-center gap-1 text-xs whitespace-nowrap">
                 <span v-if="data.software_type !== 'ROSTA'" class="font-medium font-mono text-slate-700 dark:text-slate-200">
@@ -775,6 +862,124 @@
       v-model="showVersionSelectModal"
       :station="selectedStationForLaunch"
     />
+
+    <!-- Column Header Filter: iiko Version Popover -->
+    <Popover ref="versionPopover">
+      <div class="w-64 p-2 flex flex-col gap-2 text-xs">
+        <div class="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
+          <span class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+            <i class="pi pi-code text-indigo-600 dark:text-indigo-400 text-xs"></i>
+            Фильтр версий
+          </span>
+          <button
+            v-if="selectedVersions.length > 0"
+            type="button"
+            class="text-[11px] text-rose-500 hover:text-rose-700 dark:hover:text-rose-400 cursor-pointer font-medium"
+            @click="clearVersionFilter"
+          >
+            Сбросить ({{ selectedVersions.length }})
+          </button>
+        </div>
+
+        <!-- Search input -->
+        <div class="relative">
+          <IconField iconPosition="left" class="w-full">
+            <InputIcon class="pi pi-search text-xs text-slate-400" />
+            <InputText
+              v-model="versionSearchQuery"
+              placeholder="Поиск версии (от 3 симв.)..."
+              class="w-full !text-xs !py-1 !pl-7 !pr-6"
+            />
+          </IconField>
+          <button
+            v-if="versionSearchQuery"
+            type="button"
+            class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-[10px] cursor-pointer"
+            @click="versionSearchQuery = ''"
+          >
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+
+        <!-- Status / Hint -->
+        <div
+          v-if="versionSearchQuery.length > 0 && versionSearchQuery.length < 3"
+          class="text-[10px] text-amber-600 dark:text-amber-400 px-1 font-medium"
+        >
+          Введите ещё минимум {{ 3 - versionSearchQuery.length }} симв. для поиска
+        </div>
+        <div
+          v-else-if="!versionSearchQuery"
+          class="text-[10px] text-slate-400 dark:text-slate-500 px-1"
+        >
+          10 последних версий:
+        </div>
+
+        <!-- Checkbox list -->
+        <div class="max-h-52 overflow-y-auto flex flex-col gap-1 pr-1 divide-y divide-slate-100 dark:divide-slate-800/60">
+          <label
+            v-for="ver in displayedVersionsList"
+            :key="ver"
+            class="flex items-center gap-2 p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer select-none transition"
+          >
+            <Checkbox
+              v-model="selectedVersions"
+              :value="ver"
+              @change="onVersionFilterChange"
+            />
+            <span class="font-mono text-xs text-slate-800 dark:text-slate-200">{{ ver }}</span>
+          </label>
+          <div
+            v-if="displayedVersionsList.length === 0"
+            class="text-slate-400 dark:text-slate-500 text-center py-3 text-xs italic"
+          >
+            Версий не найдено
+          </div>
+        </div>
+      </div>
+    </Popover>
+
+    <!-- Column Header Filter: License Status Popover -->
+    <Popover ref="licenseStatusPopover">
+      <div class="w-64 p-2 flex flex-col gap-2 text-xs">
+        <div class="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
+          <span class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+            <i class="pi pi-id-card text-amber-600 dark:text-amber-400 text-xs"></i>
+            Состояние лицензий
+          </span>
+          <button
+            v-if="selectedLicenseStatuses.length > 0"
+            type="button"
+            class="text-[11px] text-rose-500 hover:text-rose-700 dark:hover:text-rose-400 cursor-pointer font-medium"
+            @click="clearLicenseStatusFilter"
+          >
+            Сбросить ({{ selectedLicenseStatuses.length }})
+          </button>
+        </div>
+
+        <!-- Checkbox list of statuses -->
+        <div class="flex flex-col gap-1 pt-1">
+          <label
+            v-for="st in licenseStatusOptions"
+            :key="st.value"
+            class="flex items-center justify-between p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer select-none transition"
+          >
+            <div class="flex items-center gap-2">
+              <Checkbox
+                v-model="selectedLicenseStatuses"
+                :value="st.value"
+                @change="onLicenseStatusFilterChange"
+              />
+              <span class="flex items-center gap-1.5 font-medium text-slate-800 dark:text-slate-200">
+                <span :class="st.dotClass" class="w-2.5 h-2.5 rounded-full inline-block shrink-0"></span>
+                <span>{{ st.label }}</span>
+              </span>
+            </div>
+            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{{ st.desc }}</span>
+          </label>
+        </div>
+      </div>
+    </Popover>
   </div>
 </template>
 
@@ -789,6 +994,8 @@ import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
+import Popover from 'primevue/popover'
+import Checkbox from 'primevue/checkbox'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useAuthStore } from '../stores/auth'
@@ -943,6 +1150,8 @@ const hasActiveFiltersOrSort = computed(() => {
     selectedIts.value ||
     selectedLicenceType.value ||
     selectedBusinessType.value ||
+    selectedVersions.value.length > 0 ||
+    selectedLicenseStatuses.value.length > 0 ||
     (selectedOrdering.value && selectedOrdering.value !== 'chain_smart')
   )
 })
@@ -970,6 +1179,73 @@ const itsFilterOptions = [
 
 const showDrawer = ref(false)
 const selectedCompanyId = ref(null)
+
+// Column header filters: iiko_version
+const versionPopover = ref(null)
+const versionSearchQuery = ref('')
+const selectedVersions = ref([])
+
+const displayedVersionsList = computed(() => {
+  const allVersions = filterOptions.value?.iiko_versions || []
+  const q = versionSearchQuery.value.trim().toLowerCase()
+  if (q.length >= 3) {
+    return allVersions.filter(v => v.toLowerCase().includes(q))
+  }
+  const top10 = allVersions.slice(0, 10)
+  const set = new Set(top10)
+  selectedVersions.value.forEach(v => {
+    if (v) set.add(v)
+  })
+  return Array.from(set)
+})
+
+const toggleVersionPopover = (event) => {
+  versionPopover.value?.toggle(event)
+}
+
+const onVersionFilterChange = () => {
+  currentPage.value = 1
+  loadCompanies()
+}
+
+const clearVersionFilter = () => {
+  selectedVersions.value = []
+  versionSearchQuery.value = ''
+  currentPage.value = 1
+  loadCompanies()
+}
+
+// Column header filters: license_status
+const licenseStatusPopover = ref(null)
+const selectedLicenseStatuses = ref([])
+
+const licenseStatusOptions = [
+  { value: 'active', label: 'Действующая', desc: 'Активна', dotClass: 'bg-emerald-500' },
+  { value: 'error', label: 'С ошибками', desc: 'Ошибка', dotClass: 'bg-red-500' },
+  { value: 'expired', label: 'Просроченная', desc: 'Истекла', dotClass: 'bg-amber-500' },
+  { value: 'not_requested', label: 'Не запрошенная', desc: 'Нет данных', dotClass: 'bg-slate-400' },
+]
+
+const toggleLicenseStatusPopover = (event) => {
+  licenseStatusPopover.value?.toggle(event)
+}
+
+const onLicenseStatusFilterChange = () => {
+  currentPage.value = 1
+  loadCompanies()
+}
+
+const clearLicenseStatusFilter = () => {
+  selectedLicenseStatuses.value = []
+  currentPage.value = 1
+  loadCompanies()
+}
+
+const getSelectedLicenseStatusesLabels = () => {
+  return selectedLicenseStatuses.value
+    .map(val => licenseStatusOptions.find(o => o.value === val)?.label || val)
+    .join(', ')
+}
 
 const showCompanyAnydeskModal = ref(false)
 const selectedCompanyForAnydesk = ref(null)
@@ -1015,6 +1291,17 @@ const handleLicenseReloadFromTable = (freshCompany) => {
 const handleLaunchLicenseFromTable = async () => {
   const c = selectedCompanyForLicense.value
   if (!c) return
+
+  const serverName = (c.server_name || '').trim()
+  if (!serverName) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Отсутствует адрес сервера',
+      detail: 'Адрес сервера не заполнен. Запрос на обновление лицензии не может быть отправлен.',
+      life: 5000,
+    })
+    return
+  }
 
   let licenseUrl = ''
   let plainPass = c.system_admin_password || ''
@@ -1306,6 +1593,9 @@ const resetAllFiltersAndSorting = () => {
   selectedLicenceType.value = null
   selectedBusinessType.value = null
   selectedOrdering.value = 'chain_smart'
+  selectedVersions.value = []
+  versionSearchQuery.value = ''
+  selectedLicenseStatuses.value = []
   currentPage.value = 1
   loadCompanies()
   toast.add({
@@ -1394,6 +1684,12 @@ const loadCompanies = async () => {
     if (selectedLicenceType.value) params.licence_type = selectedLicenceType.value
     if (selectedBusinessType.value) params.business_type = selectedBusinessType.value
     if (selectedOrdering.value) params.ordering = selectedOrdering.value
+    if (selectedVersions.value && selectedVersions.value.length > 0) {
+      params.iiko_version = selectedVersions.value.join(',')
+    }
+    if (selectedLicenseStatuses.value && selectedLicenseStatuses.value.length > 0) {
+      params.license_status = selectedLicenseStatuses.value.join(',')
+    }
 
     const res = await companiesApi.getCompanies(params)
     companies.value = res.data.results || res.data

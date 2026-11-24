@@ -77,6 +77,15 @@ export const useCompanionStore = defineStore('companion', {
     },
 
     async launchLicense({ company_id, server, port, login, password, place_name, licenseUrl }) {
+      const serverName = (server || '').trim()
+      if (!serverName) {
+        return {
+          success: false,
+          error: 'Адрес сервера не заполнен. Запрос на обновление лицензии не может быть отправлен.',
+          message: 'Адрес сервера не заполнен. Запрос на обновление лицензии не может быть отправлен.'
+        }
+      }
+
       if (this.isOnline) {
         try {
           const res = await companionApi.launchLicense({

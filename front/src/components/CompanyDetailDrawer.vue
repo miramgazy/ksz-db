@@ -1463,6 +1463,19 @@ const handleInsertClearbat = async () => {
 
 const handleLaunchLicense = async () => {
   const c = company.value
+  if (!c) return
+
+  const serverName = (c.server_name || '').trim()
+  if (!serverName) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Отсутствует адрес сервера',
+      detail: 'Адрес сервера не заполнен. Запрос на обновление лицензии не может быть отправлен.',
+      life: 5000,
+    })
+    return
+  }
+
   let licenseUrl = ''
   let plainPass = c.system_admin_password || ''
   try {

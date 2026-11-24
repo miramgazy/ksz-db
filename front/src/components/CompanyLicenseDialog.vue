@@ -962,6 +962,16 @@ const getModuleDateClass = (toDateStr) => {
 }
 
 const handleRefreshLicense = () => {
+  const serverName = (activeCompany.value?.server_name || props.company?.server_name || '').trim()
+  if (!serverName) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Отсутствует адрес сервера',
+      detail: 'Адрес сервера не заполнен. Запрос на обновление лицензии не может быть отправлен.',
+      life: 5000,
+    })
+    return
+  }
   emit('refresh')
 }
 

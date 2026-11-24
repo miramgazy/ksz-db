@@ -153,6 +153,42 @@ class CompanyViewSet(viewsets.ModelViewSet):
             elif its == 'expired':
                 qs = qs.filter(its_expires_at__lt=today)
 
+        # Filter by iiko_version
+        versions_param = self.request.query_params.get('iiko_version')
+        if versions_param:
+            version_list = [v.strip() for v in versions_param.split(',') if v.strip()]
+            if version_list:
+                ver_q = Q(iiko_version__in=version_list)
+                for v in version_list:
+                    parts = v.split('.')
+                    if len(parts) == 3:
+                        ver_q |= Q(iiko_version__startswith=f"{v}.")
+                qs = qs.filter(ver_q)
+
+        # Filter by license_status
+        license_status_param = self.request.query_params.get('license_status')
+        if license_status_param:
+            from .license_parser import is_license_active
+            selected_statuses = set(s.strip() for s in license_status_param.split(',') if s.strip())
+            if 'none' in selected_statuses:
+                selected_statuses.add('not_requested')
+
+            matched_ids = []
+            candidates = qs.values_list('id', 'last_license_error', 'license_data', 'license_updated_at')
+            for cid, err, lic, updated_at in candidates:
+                if err:
+                    c_status = 'error'
+                elif not lic or not isinstance(lic, dict) or (not lic.get('success') and not lic.get('modules') and not lic.get('expiration') and not updated_at):
+                    c_status = 'not_requested'
+                elif is_license_active(lic):
+                    c_status = 'active'
+                else:
+                    c_status = 'expired'
+
+                if c_status in selected_statuses:
+                    matched_ids.append(cid)
+            qs = qs.filter(id__in=matched_ids)
+
         ordering = self.request.query_params.get('ordering', '')
         if not ordering or ordering == 'chain_smart':
             # Default smart sort:

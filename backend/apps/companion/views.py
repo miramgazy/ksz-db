@@ -78,6 +78,17 @@ class CompanionLaunchLicenseView(APIView):
             except Exception:
                 pass
 
+        server = (data.get('server') or '').strip()
+        if not server:
+            return Response(
+                {
+                    "success": False,
+                    "error": "Адрес сервера не указан. Запрос на обновление лицензии не может быть отправлен.",
+                    "message": "Адрес сервера не указан. Запрос на обновление лицензии не может быть отправлен."
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         res = send_task_async(request.user.id, "launch_license", data)
         http_status = status.HTTP_200_OK if res.get("success") else status.HTTP_400_BAD_REQUEST
         return Response(res, status=http_status)
