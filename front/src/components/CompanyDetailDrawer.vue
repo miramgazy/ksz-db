@@ -921,7 +921,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Drawer from 'primevue/drawer'
 import Dialog from 'primevue/dialog'
@@ -957,6 +957,7 @@ import {
   formatDaysRemaining,
   getLicenseSeverity,
   getLicenseTooltip,
+  getEffectiveLicenseInfo,
 } from '../utils/expiration'
 
 const props = defineProps({
@@ -974,9 +975,30 @@ const router = useRouter()
 const updatingLicense = ref(false)
 const updatingStatusText = ref('')
 const licenseDialogVisible = ref(false)
+const keyModulesVersion = ref(0)
+
+const onKeyModulesUpdated = () => {
+  keyModulesVersion.value++
+}
+
+onMounted(() => {
+  window.addEventListener('ksz_key_modules_updated', onKeyModulesUpdated)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('ksz_key_modules_updated', onKeyModulesUpdated)
+})
+
+const effectiveLicense = computed(() => {
+  const _ = keyModulesVersion.value
+  return getEffectiveLicenseInfo(company.value)
+})
 
 const licenseButtonSeverity = computed(() => {
-  return getLicenseSeverity(company.value)
+  if (effectiveLicense.value.status === 'error') return 'danger'
+  if (effectiveLicense.value.status === 'active') return 'success'
+  if (effectiveLicense.value.status === 'expired') return 'warn'
+  return 'secondary'
 })
 
 const licenseButtonLabel = computed(() => {
@@ -984,10 +1006,13 @@ const licenseButtonLabel = computed(() => {
   if (c?.last_license_error) {
     return 'Лицензия (Ошибка)'
   }
-  const exp = c?.license_data?.expiration
-  if (exp) {
+  const info = effectiveLicense.value
+  if (info.isPermanent) {
+    return 'Лицензия (Бессрочно)'
+  }
+  if (info.date) {
     try {
-      const parts = exp.split('-')
+      const parts = info.date.split('-')
       if (parts.length === 3) {
         return `Лицензия (${parts[2]}.${parts[1]})`
       }

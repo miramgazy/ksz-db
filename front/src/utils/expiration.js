@@ -123,70 +123,202 @@ export const getExpirationDrawerBg = (days) => {
   return '!bg-rose-50/60 !border-rose-300 dark:!bg-rose-950/40 dark:!border-rose-800'
 }
 
-/**
- * Статус лицензии заведения:
- * 'active'  - еще не просрочен (зеленый)
- * 'expired' - срок прошел (оранжевый)
- * 'none'    - отсутствует запись (серый)
- */
-export const getLicenseStatus = (company) => {
-  if (!company) return 'none'
-  const lic = company.license_data
-  if (!lic || typeof lic !== 'object') return 'none'
+export const DEFAULT_KEY_LICENSE_MODULES = [
+  'ChainOperations (Chain)',
+  'RMS (Front Fast Food)',
+]
 
-  const exp = lic.expiration
-  if (!exp) {
-    if (Array.isArray(lic.modules) && lic.modules.length > 0) {
-      return 'active' // бессрочная при наличии модулей
+export const getKeyLicenseModules = () => {
+  try {
+    const raw = localStorage.getItem('ksz_key_license_modules')
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed
+      }
     }
-    return 'none'
+  } catch (e) {}
+  return [...DEFAULT_KEY_LICENSE_MODULES]
+}
+
+export const setKeyLicenseModules = (modules) => {
+  try {
+    localStorage.setItem('ksz_key_license_modules', JSON.stringify(modules))
+  } catch (e) {}
+}
+
+/**
+ * Рассчитывает эффективный срок и статус лицензии заведения по списку приоритетных модулей.
+ * Приоритет по умолчанию:
+ * 1. ChainOperations (Chain)
+ * 2. RMS (Front Fast Food)
+ * 3. Общий срок из заголовка лога (expiration)
+ */
+export const getEffectiveLicenseInfo = (company, customKeyModules = null) => {
+  if (!company) {
+    return {
+      status: 'none',
+      date: null,
+      source: null,
+      isPermanent: false,
+      daysRemaining: null,
+      error: null
+    }
   }
 
-  const target = new Date(exp)
-  if (isNaN(target.getTime())) {
-    if (Array.isArray(lic.modules) && lic.modules.length > 0) {
-      return 'active'
+  if (company.last_license_error) {
+    return {
+      status: 'error',
+      date: null,
+      source: null,
+      isPermanent: false,
+      daysRemaining: null,
+      error: company.last_license_error
     }
-    return 'none'
+  }
+
+  const lic = company.license_data
+  if (!lic || typeof lic !== 'object') {
+    return {
+      status: 'none',
+      date: null,
+      source: null,
+      isPermanent: false,
+      daysRemaining: null,
+      error: null
+    }
+  }
+
+  const keyModules = customKeyModules || getKeyLicenseModules()
+  const modules = Array.isArray(lic.modules) ? lic.modules : []
+
+  // Ищем первый совпавший приоритетный модуль
+  let matchedModule = null
+  for (const keyName of keyModules) {
+    if (!keyName) continue
+    const found = modules.find(m => m.name && m.name.trim().toLowerCase() === keyName.trim().toLowerCase())
+    if (found) {
+      matchedModule = found
+      break
+    }
+  }
+
+  let effectiveDate = null
+  let isPermanent = false
+  let source = null
+
+  if (matchedModule) {
+    source = matchedModule.name
+    if (matchedModule.to) {
+      effectiveDate = matchedModule.to
+    } else {
+      isPermanent = true
+    }
+  } else if (lic.expiration) {
+    effectiveDate = lic.expiration
+    source = 'Общий срок'
+  } else if (modules.length > 0) {
+    isPermanent = true
+    source = 'Модули'
+  } else {
+    return {
+      status: 'none',
+      date: null,
+      source: null,
+      isPermanent: false,
+      daysRemaining: null,
+      error: null
+    }
+  }
+
+  if (isPermanent) {
+    return {
+      status: 'active',
+      date: null,
+      source,
+      isPermanent: true,
+      daysRemaining: null,
+      error: null
+    }
+  }
+
+  if (!effectiveDate) {
+    return {
+      status: 'none',
+      date: null,
+      source,
+      isPermanent: false,
+      daysRemaining: null,
+      error: null
+    }
+  }
+
+  const target = new Date(effectiveDate)
+  if (isNaN(target.getTime())) {
+    return {
+      status: 'none',
+      date: effectiveDate,
+      source,
+      isPermanent: false,
+      daysRemaining: null,
+      error: null
+    }
   }
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   target.setHours(0, 0, 0, 0)
 
-  return target >= today ? 'active' : 'expired'
+  const daysRemaining = Math.round((target - today) / (1000 * 60 * 60 * 24))
+  const status = daysRemaining >= 0 ? 'active' : 'expired'
+
+  return {
+    status,
+    date: effectiveDate,
+    source,
+    isPermanent: false,
+    daysRemaining,
+    error: null
+  }
+}
+
+export const getLicenseStatus = (company) => {
+  return getEffectiveLicenseInfo(company).status
 }
 
 export const getLicenseIconClass = (company) => {
-  const st = getLicenseStatus(company)
-  if (st === 'active') {
+  const info = getEffectiveLicenseInfo(company)
+  if (info.status === 'active') {
     return '!text-emerald-500 hover:!bg-emerald-50 dark:!text-emerald-400 dark:hover:!bg-emerald-950/40'
   }
-  if (st === 'expired') {
+  if (info.status === 'expired') {
     return '!text-amber-500 hover:!bg-amber-50 dark:!text-amber-400 dark:hover:!bg-amber-950/40'
   }
   return '!text-slate-400 hover:!bg-slate-100 dark:!text-slate-500 dark:hover:!bg-slate-800'
 }
 
 export const getLicenseSeverity = (company) => {
-  if (company?.last_license_error) return 'danger'
-  const st = getLicenseStatus(company)
-  if (st === 'active') return 'success'
-  if (st === 'expired') return 'warn'
+  const info = getEffectiveLicenseInfo(company)
+  if (info.status === 'error') return 'danger'
+  if (info.status === 'active') return 'success'
+  if (info.status === 'expired') return 'warn'
   return 'secondary'
 }
 
 export const getLicenseTooltip = (company) => {
-  if (company?.last_license_error) {
-    return `Текущие лицензии: ошибка (${company.last_license_error})`
+  const info = getEffectiveLicenseInfo(company)
+  if (info.error) {
+    return `Текущие лицензии: ошибка (${info.error})`
   }
-  const st = getLicenseStatus(company)
-  const exp = company?.license_data?.expiration
-  if (st === 'active') {
-    return exp ? `Текущие лицензии: активна (до ${exp})` : 'Текущие лицензии: активна (бессрочная)'
+  const sourcePart = info.source ? ` • ${info.source}` : ''
+  if (info.status === 'active') {
+    if (info.isPermanent) {
+      return `Текущие лицензии: активна (бессрочная${sourcePart})`
+    }
+    return `Текущие лицензии: активна (до ${info.date}${sourcePart})`
   }
-  if (st === 'expired') {
-    return `Текущие лицензии: срок истек (${exp || 'просрочена'})`
+  if (info.status === 'expired') {
+    return `Текущие лицензии: срок истек (до ${info.date}${sourcePart})`
   }
   return 'Текущие лицензии: нет данных (нажмите для просмотра)'
 }

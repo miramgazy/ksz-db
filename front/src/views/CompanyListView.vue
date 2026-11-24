@@ -464,8 +464,8 @@
                   text
                   rounded
                   size="small"
-                  :class="getLicenseIconClass(data)"
-                  :title="getLicenseTooltip(data)"
+                  :class="getCompanyLicenseIconClass(data)"
+                  :title="getCompanyLicenseTooltip(data)"
                   @click="openCompanyLicense(data)"
                 />
               </div>
@@ -770,7 +770,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Dialog from 'primevue/dialog'
@@ -1475,8 +1475,28 @@ const deleteCompany = (company) => {
   })
 }
 
+const keyModulesVersion = ref(0)
+const onKeyModulesUpdated = () => {
+  keyModulesVersion.value++
+}
+
+const getCompanyLicenseIconClass = (company) => {
+  const _ = keyModulesVersion.value
+  return getLicenseIconClass(company)
+}
+
+const getCompanyLicenseTooltip = (company) => {
+  const _ = keyModulesVersion.value
+  return getLicenseTooltip(company)
+}
+
 onMounted(() => {
+  window.addEventListener('ksz_key_modules_updated', onKeyModulesUpdated)
   loadFilterOptions()
   loadCompanies()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('ksz_key_modules_updated', onKeyModulesUpdated)
 })
 </script>

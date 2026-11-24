@@ -84,15 +84,32 @@
       <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5">
         <!-- Card 1: Expiration -->
         <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 flex flex-col justify-between">
-          <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-            Срок лицензии
-          </span>
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Срок лицензии
+            </span>
+            <button
+              type="button"
+              class="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-slate-200/50 dark:hover:bg-slate-700 transition cursor-pointer"
+              title="Настроить приоритет ключевых модулей для расчета срока лицензии"
+              @click="openKeyModulesSettings"
+            >
+              <i class="pi pi-cog text-xs"></i>
+            </button>
+          </div>
           <div class="mt-1">
             <div class="font-bold text-base text-slate-900 dark:text-white">
               {{ expirationFormatted }}
             </div>
-            <div class="text-xs text-slate-500 dark:text-slate-400">
-              {{ daysRemainingText }}
+            <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              <span>{{ daysRemainingText }}</span>
+              <span
+                v-if="effectiveLicenseInfo.source"
+                class="text-[10px] font-mono text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-1.5 py-0.5 rounded truncate max-w-[130px]"
+                :title="`Расчет по модулю: ${effectiveLicenseInfo.source}`"
+              >
+                {{ effectiveLicenseInfo.source }}
+              </span>
             </div>
           </div>
         </div>
@@ -438,10 +455,135 @@
       </div>
     </template>
   </Dialog>
+
+  <!-- Key Modules Settings Dialog for Expiration Date -->
+  <Dialog
+    v-model:visible="showKeyModulesDialog"
+    header="Настройка ключевых модулей для расчета срока лицензии"
+    :modal="true"
+    :style="{ width: '560px', maxWidth: '95vw' }"
+  >
+    <div class="flex flex-col gap-3 py-1">
+      <div class="p-2.5 rounded-lg bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-900/60 text-xs text-indigo-900 dark:text-indigo-200 leading-relaxed">
+        Срок лицензии заведения определяется по первому совпавшему модулю из списка приоритетов (по умолчанию: <strong>ChainOperations (Chain)</strong> для сетей и <strong>RMS (Front Fast Food)</strong> для RMS). Если совпадений нет, используется общий срок из ответа ClearBat.
+      </div>
+
+      <!-- Current Priority List -->
+      <div class="flex flex-col gap-1.5 mt-1">
+        <label class="text-xs font-semibold text-slate-700 dark:text-slate-200">
+          Приоритет расчета срока лицензии (сверху вниз):
+        </label>
+        <div class="flex flex-col gap-1.5 max-h-[220px] overflow-y-auto pr-1">
+          <div
+            v-for="(modName, index) in keyModulesList"
+            :key="modName"
+            class="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs"
+          >
+            <div class="flex items-center gap-2 min-w-0 pr-2">
+              <span class="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-[10px] text-slate-700 dark:text-slate-200 shrink-0">
+                {{ index + 1 }}
+              </span>
+              <span class="font-medium text-slate-800 dark:text-slate-100 truncate" :title="modName">
+                {{ modName }}
+              </span>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                :disabled="index === 0"
+                class="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-20 cursor-pointer"
+                title="Поднять выше"
+                @click="moveKeyModuleUp(index)"
+              >
+                <i class="pi pi-arrow-up text-[10px]"></i>
+              </button>
+              <button
+                type="button"
+                :disabled="index === keyModulesList.length - 1"
+                class="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-20 cursor-pointer"
+                title="Опустить ниже"
+                @click="moveKeyModuleDown(index)"
+              >
+                <i class="pi pi-arrow-down text-[10px]"></i>
+              </button>
+              <button
+                type="button"
+                class="w-6 h-6 rounded flex items-center justify-center text-slate-300 hover:text-red-500 transition cursor-pointer ml-1"
+                title="Удалить из списка"
+                @click="removeKeyModule(index)"
+              >
+                <i class="pi pi-trash text-[11px]"></i>
+              </button>
+            </div>
+          </div>
+          <div v-if="!keyModulesList.length" class="text-xs text-slate-400 italic py-2 text-center">
+            Список пуст (будет использоваться только общий срок).
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Module Section -->
+      <div class="flex flex-col gap-1.5 pt-2 border-t border-slate-200 dark:border-slate-700">
+        <label class="text-xs font-semibold text-slate-700 dark:text-slate-200">
+          Добавить модуль в список приоритетов:
+        </label>
+        <div class="flex items-center gap-2">
+          <Select
+            v-model="selectedNewKeyModule"
+            :options="availableModulesForKeyList"
+            option-label="name"
+            option-value="name"
+            placeholder="Выберите модуль из списка..."
+            filter
+            class="flex-1 text-xs"
+          />
+          <Button
+            label="Добавить"
+            icon="pi pi-plus"
+            size="small"
+            severity="primary"
+            :disabled="!selectedNewKeyModule"
+            class="!text-xs shrink-0 !py-1.5"
+            @click="addKeyModule"
+          />
+        </div>
+      </div>
+    </div>
+
+    <template #footer>
+      <div class="flex items-center justify-between w-full pt-2">
+        <Button
+          label="Сбросить по умолчанию"
+          icon="pi pi-replay"
+          severity="secondary"
+          size="small"
+          text
+          class="!text-xs"
+          @click="resetKeyModulesToDefault"
+        />
+        <div class="flex items-center gap-2">
+          <Button
+            label="Отмена"
+            severity="secondary"
+            size="small"
+            text
+            @click="showKeyModulesDialog = false"
+          />
+          <Button
+            label="Сохранить"
+            icon="pi pi-check"
+            severity="success"
+            size="small"
+            @click="saveKeyModulesSettings"
+          />
+        </div>
+      </div>
+    </template>
+  </Dialog>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
@@ -455,6 +597,12 @@ import Column from 'primevue/column'
 import { useToast } from 'primevue/usetoast'
 import { useCompanionStore } from '@/stores/companion'
 import { companiesApi } from '@/api/companies'
+import {
+  DEFAULT_KEY_LICENSE_MODULES,
+  getKeyLicenseModules,
+  setKeyLicenseModules,
+  getEffectiveLicenseInfo,
+} from '@/utils/expiration'
 
 const props = defineProps({
   modelValue: {
@@ -629,8 +777,88 @@ const filteredModules = computed(() => {
   })
 })
 
+// Key Modules Settings Logic for Expiration calculation
+const showKeyModulesDialog = ref(false)
+const keyModulesList = ref(getKeyLicenseModules())
+const selectedNewKeyModule = ref('')
+const keyModulesTrigger = ref(0)
+
+const onKeyModulesUpdated = () => {
+  keyModulesTrigger.value++
+  keyModulesList.value = getKeyLicenseModules()
+}
+
+onMounted(() => {
+  window.addEventListener('ksz_key_modules_updated', onKeyModulesUpdated)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('ksz_key_modules_updated', onKeyModulesUpdated)
+})
+
+const openKeyModulesSettings = () => {
+  keyModulesList.value = getKeyLicenseModules()
+  selectedNewKeyModule.value = ''
+  showKeyModulesDialog.value = true
+}
+
+const availableModulesForKeyList = computed(() => {
+  return modulesList.value.filter(m => m.name && !keyModulesList.value.includes(m.name))
+})
+
+const addKeyModule = () => {
+  if (selectedNewKeyModule.value && !keyModulesList.value.includes(selectedNewKeyModule.value)) {
+    keyModulesList.value.push(selectedNewKeyModule.value)
+    selectedNewKeyModule.value = ''
+  }
+}
+
+const removeKeyModule = (index) => {
+  keyModulesList.value.splice(index, 1)
+}
+
+const moveKeyModuleUp = (index) => {
+  if (index > 0) {
+    const item = keyModulesList.value[index]
+    keyModulesList.value.splice(index, 1)
+    keyModulesList.value.splice(index - 1, 0, item)
+  }
+}
+
+const moveKeyModuleDown = (index) => {
+  if (index < keyModulesList.value.length - 1) {
+    const item = keyModulesList.value[index]
+    keyModulesList.value.splice(index, 1)
+    keyModulesList.value.splice(index + 1, 0, item)
+  }
+}
+
+const resetKeyModulesToDefault = () => {
+  keyModulesList.value = [...DEFAULT_KEY_LICENSE_MODULES]
+}
+
+const saveKeyModulesSettings = () => {
+  setKeyLicenseModules(keyModulesList.value)
+  keyModulesTrigger.value++
+  window.dispatchEvent(new CustomEvent('ksz_key_modules_updated'))
+  showKeyModulesDialog.value = false
+  toast.add({
+    severity: 'success',
+    summary: 'Настройки сохранены',
+    detail: 'Приоритет ключевых модулей для расчета срока лицензии обновлен',
+    life: 3000
+  })
+}
+
+const effectiveLicenseInfo = computed(() => {
+  const _ = keyModulesTrigger.value
+  return getEffectiveLicenseInfo(activeCompany.value)
+})
+
 const expirationFormatted = computed(() => {
-  const exp = licenseData.value?.expiration
+  const info = effectiveLicenseInfo.value
+  if (info.isPermanent) return 'Бессрочная'
+  const exp = info.date
   if (!exp) return '—'
   try {
     const d = new Date(exp)
@@ -660,18 +888,13 @@ const lastUpdatedFormatted = computed(() => {
 })
 
 const daysRemaining = computed(() => {
-  const exp = licenseData.value?.expiration
-  if (!exp) return null
-  const target = new Date(exp)
-  if (isNaN(target)) return null
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  target.setHours(0, 0, 0, 0)
-  return Math.round((target - today) / (1000 * 60 * 60 * 24))
+  return effectiveLicenseInfo.value.daysRemaining
 })
 
 const daysRemainingText = computed(() => {
-  const days = daysRemaining.value
+  const info = effectiveLicenseInfo.value
+  if (info.isPermanent) return 'Бессрочная лицензия'
+  const days = info.daysRemaining
   if (days === null) return 'Бессрочная / нет данных'
   if (days < 0) return `Истекла ${Math.abs(days)} дн. назад`
   if (days === 0) return 'Истекает сегодня'
@@ -679,7 +902,14 @@ const daysRemainingText = computed(() => {
 })
 
 const expirationStatus = computed(() => {
-  const days = daysRemaining.value
+  const info = effectiveLicenseInfo.value
+  if (info.status === 'error') {
+    return { severity: 'danger', label: 'Ошибка лицензии' }
+  }
+  if (info.isPermanent) {
+    return { severity: 'success', label: 'Бессрочная' }
+  }
+  const days = info.daysRemaining
   if (days === null) {
     if (!modulesList.value.length) return null
     return { severity: 'success', label: 'Бессрочная' }
