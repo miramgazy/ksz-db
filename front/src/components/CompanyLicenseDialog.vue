@@ -143,7 +143,7 @@
         </div>
       </div>
 
-      <!-- Блок: Часто просматриваемые лицензии (Pinned Modules Block) -->
+      <!-- Блок: Список избранных лицензий (Pinned Modules Block) -->
       <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80">
         <div class="flex items-center justify-between mb-2.5">
           <div class="flex items-center gap-2">
@@ -151,7 +151,7 @@
               <i class="pi pi-star-fill text-xs"></i>
             </span>
             <span class="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-100">
-              Часто просматриваемые лицензии
+              Список избранных лицензий
             </span>
             <span class="text-[11px] font-mono text-slate-400">({{ pinnedModulesList.length }})</span>
           </div>
@@ -178,20 +178,27 @@
               <div class="font-semibold text-xs text-slate-800 dark:text-slate-100 truncate" :title="item.name">
                 {{ item.name }}
               </div>
-              <div class="flex items-center gap-2 mt-1">
-                <Tag
+              <div class="flex items-center justify-between gap-1.5 mt-1.5">
+                <span
                   v-if="item.found"
-                  :value="`Кол-во: ${item.count}`"
-                  severity="warn"
-                  class="text-[11px] font-bold !px-1.5 !py-0.5"
-                />
-                <span v-else class="text-[11px] text-slate-400 italic">
+                  class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-900/60 shrink-0"
+                >
+                  {{ item.count }} шт.
+                </span>
+                <span v-else class="text-[10px] text-slate-400 italic shrink-0">
                   Не активирован
                 </span>
-                <span v-if="item.found && item.to" class="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                <span
+                  v-if="item.found && item.to"
+                  class="text-[10px] text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap shrink-0"
+                  :title="`Действует до ${item.to}`"
+                >
                   до {{ item.to }}
                 </span>
-                <span v-else-if="item.found && !item.to" class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                <span
+                  v-else-if="item.found && !item.to"
+                  class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium whitespace-nowrap shrink-0"
+                >
                   Бессрочно
                 </span>
               </div>
@@ -199,7 +206,7 @@
             <button
               type="button"
               class="w-6 h-6 rounded flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 dark:text-slate-600 dark:hover:text-red-400 dark:hover:bg-red-950/40 transition shrink-0 cursor-pointer"
-              title="Убрать из часто просматриваемых"
+              title="Убрать из избранных"
               @click="unpinModule(item.name)"
             >
               <i class="pi pi-times text-xs"></i>
@@ -208,20 +215,20 @@
         </div>
 
         <div v-else class="text-xs text-slate-400 py-2 text-center">
-          Нет закрепленных лицензий. Нажмите «+ Добавить», чтобы выбрать модули для первоочередного просмотра (например, RMS Front Fast Food).
+          Нет избранных лицензий. Нажмите «+ Добавить», чтобы выбрать модули для первоочередного просмотра (например, RMS Front Fast Food).
         </div>
       </div>
 
       <!-- Search & Filters Bar for General List -->
       <div class="flex items-center justify-between gap-3 pt-1">
-        <div class="relative flex-1">
-          <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+        <IconField iconPosition="left" class="flex-1">
+          <InputIcon class="pi pi-search text-slate-400 text-sm" />
           <InputText
             v-model="searchQuery"
             placeholder="Поиск по названию лицензии/модуля или ID из общего списка..."
-            class="w-full pl-9 text-sm"
+            class="w-full text-sm"
           />
-        </div>
+        </IconField>
         <div class="text-xs text-slate-500 dark:text-slate-400 shrink-0">
           Найдено: <strong class="text-slate-800 dark:text-slate-200">{{ filteredModules.length }}</strong> из {{ modulesList.length }}
         </div>
@@ -259,7 +266,7 @@
               <button
                 type="button"
                 class="w-6 h-6 rounded flex items-center justify-center transition cursor-pointer"
-                :title="pinnedNames.includes(data.name) ? 'Убрать из часто просматриваемых' : 'Закрепить в часто просматриваемые'"
+                :title="pinnedNames.includes(data.name) ? 'Убрать из избранных' : 'Добавить в избранное'"
                 @click="togglePinModule(data.name)"
               >
                 <i
@@ -377,7 +384,7 @@
   <!-- Add Pinned Module Dialog -->
   <Dialog
     v-model:visible="showAddPinnedDialog"
-    header="Закрепить лицензию в быстрый просмотр"
+    header="Добавить лицензию в список избранных"
     :modal="true"
     :style="{ width: '460px', maxWidth: '95vw' }"
   >
@@ -408,7 +415,7 @@
       <div class="flex justify-end gap-2 pt-2">
         <Button label="Отмена" severity="secondary" size="small" text @click="showAddPinnedDialog = false" />
         <Button
-          label="Закрепить (+)"
+          label="В избранное (+)"
           icon="pi pi-check"
           size="small"
           severity="warning"
@@ -425,6 +432,8 @@ import { ref, computed } from 'vue'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import ProgressBar from 'primevue/progressbar'
