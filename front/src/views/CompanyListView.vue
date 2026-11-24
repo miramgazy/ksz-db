@@ -320,14 +320,30 @@
           />
         </div>
 
-        <!-- Active Column Filters Banner (Versions and License Status) -->
+        <!-- Active Column Filters Banner (City, Versions, Licence Type, License Status) -->
         <div
-          v-if="selectedVersions.length > 0 || selectedLicenseStatuses.length > 0"
+          v-if="selectedCities.length > 0 || selectedVersions.length > 0 || selectedLicenceTypes.length > 0 || selectedLicenseStatuses.length > 0"
           class="mt-3 flex flex-wrap items-center gap-2 px-3 py-2 bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs"
         >
           <span class="text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1">
             <i class="pi pi-filter text-[11px] text-slate-400"></i>
             Фильтры колонок:
+          </span>
+
+          <!-- City Filter Tag -->
+          <span
+            v-if="selectedCities.length > 0"
+            class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-medium"
+          >
+            <span>Города ({{ selectedCities.length }}): <strong>{{ selectedCities.join(', ') }}</strong></span>
+            <button
+              type="button"
+              class="hover:text-blue-900 dark:hover:text-white cursor-pointer ml-0.5"
+              title="Сбросить фильтр городов"
+              @click="clearCityFilter"
+            >
+              <i class="pi pi-times text-[10px]"></i>
+            </button>
           </span>
 
           <!-- Version Filter Tag -->
@@ -346,12 +362,28 @@
             </button>
           </span>
 
+          <!-- Licence Type Filter Tag -->
+          <span
+            v-if="selectedLicenceTypes.length > 0"
+            class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-medium"
+          >
+            <span>Лицензии ({{ selectedLicenceTypes.length }}): <strong>{{ selectedLicenceTypes.join(', ') }}</strong></span>
+            <button
+              type="button"
+              class="hover:text-purple-900 dark:hover:text-white cursor-pointer ml-0.5"
+              title="Сбросить фильтр типов лицензий"
+              @click="clearLicenceTypeFilter"
+            >
+              <i class="pi pi-times text-[10px]"></i>
+            </button>
+          </span>
+
           <!-- License Status Filter Tag -->
           <span
             v-if="selectedLicenseStatuses.length > 0"
             class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 font-medium"
           >
-            <span>Лицензии: <strong>{{ getSelectedLicenseStatusesLabels() }}</strong></span>
+            <span>Состояние лицензий: <strong>{{ getSelectedLicenseStatusesLabels() }}</strong></span>
             <button
               type="button"
               class="hover:text-amber-950 dark:hover:text-white cursor-pointer ml-0.5"
@@ -388,7 +420,29 @@
           </template>
 
           <!-- Place Name & City with Chain/RMS hierarchy -->
-          <Column field="place_name" header="Заведение / Юр. лицо" :sortable="true" style="min-width: 240px">
+          <Column field="place_name" :sortable="true" style="min-width: 250px">
+            <template #header>
+              <div class="flex items-center justify-between gap-1.5 w-full" @click.stop>
+                <span class="font-bold text-slate-700 dark:text-slate-200">Заведение / Юр. лицо</span>
+                <button
+                  type="button"
+                  class="relative w-6 h-6 rounded flex items-center justify-center transition cursor-pointer shrink-0"
+                  :class="selectedCities.length > 0
+                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 font-bold border border-blue-300 dark:border-blue-700 shadow-2xs'
+                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'"
+                  :title="selectedCities.length > 0 ? `Фильтр городов: выбрано ${selectedCities.length}` : 'Фильтр по городам'"
+                  @click.stop="toggleCityPopover"
+                >
+                  <i class="pi pi-map-marker text-[11px]"></i>
+                  <span
+                    v-if="selectedCities.length > 0"
+                    class="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-blue-600 text-white text-[9px] font-bold flex items-center justify-center shadow-xs"
+                  >
+                    {{ selectedCities.length }}
+                  </span>
+                </button>
+              </div>
+            </template>
             <template #body="{ data }">
               <div class="flex flex-col">
                 <div class="flex items-center gap-1.5 flex-wrap">
@@ -590,7 +644,29 @@
           </Column>
 
           <!-- License Type -->
-          <Column field="licence_type" header="Лицензия" :sortable="true" style="min-width: 120px; white-space: nowrap">
+          <Column field="licence_type" :sortable="true" style="min-width: 135px; white-space: nowrap">
+            <template #header>
+              <div class="flex items-center justify-between gap-1 w-full" @click.stop>
+                <span class="font-bold text-slate-700 dark:text-slate-200">Лицензия</span>
+                <button
+                  type="button"
+                  class="relative w-6 h-6 rounded flex items-center justify-center transition cursor-pointer shrink-0"
+                  :class="selectedLicenceTypes.length > 0
+                    ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300 font-bold border border-purple-300 dark:border-purple-700 shadow-2xs'
+                    : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'"
+                  :title="selectedLicenceTypes.length > 0 ? `Фильтр типов лицензий: выбрано ${selectedLicenceTypes.length}` : 'Фильтр по типу лицензии'"
+                  @click.stop="toggleLicenceTypePopover"
+                >
+                  <i class="pi pi-filter text-[11px]"></i>
+                  <span
+                    v-if="selectedLicenceTypes.length > 0"
+                    class="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-purple-600 text-white text-[9px] font-bold flex items-center justify-center shadow-xs"
+                  >
+                    {{ selectedLicenceTypes.length }}
+                  </span>
+                </button>
+              </div>
+            </template>
             <template #body="{ data }">
               <span class="text-xs font-medium text-slate-700 dark:text-slate-200 whitespace-nowrap">
                 {{ data.licence_type || (data.software_type === 'ROSTA' ? 'Rosta' : '—') }}
@@ -980,6 +1056,130 @@
         </div>
       </div>
     </Popover>
+
+    <!-- Column Header Filter: City Popover -->
+    <Popover ref="cityPopover">
+      <div class="w-64 p-2 flex flex-col gap-2 text-xs">
+        <div class="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
+          <span class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+            <i class="pi pi-map-marker text-blue-600 dark:text-blue-400 text-xs"></i>
+            Фильтр по городам
+          </span>
+          <button
+            v-if="selectedCities.length > 0"
+            type="button"
+            class="text-[11px] text-rose-500 hover:text-rose-700 dark:hover:text-rose-400 cursor-pointer font-medium"
+            @click="clearCityFilter"
+          >
+            Сбросить ({{ selectedCities.length }})
+          </button>
+        </div>
+
+        <!-- Search input for City -->
+        <div class="relative">
+          <IconField iconPosition="left" class="w-full">
+            <InputIcon class="pi pi-search text-xs text-slate-400" />
+            <InputText
+              v-model="citySearchQuery"
+              placeholder="Поиск города..."
+              class="w-full !text-xs !py-1 !pl-7 !pr-6"
+            />
+          </IconField>
+          <button
+            v-if="citySearchQuery"
+            type="button"
+            class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-[10px] cursor-pointer"
+            @click="citySearchQuery = ''"
+          >
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+
+        <!-- Checkbox list of cities -->
+        <div class="max-h-52 overflow-y-auto flex flex-col gap-1 pr-1 divide-y divide-slate-100 dark:divide-slate-800/60">
+          <label
+            v-for="c in displayedCitiesList"
+            :key="c"
+            class="flex items-center gap-2 p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer select-none transition"
+          >
+            <Checkbox
+              v-model="selectedCities"
+              :value="c"
+              @change="onCityFilterChange"
+            />
+            <span class="text-xs text-slate-800 dark:text-slate-200">{{ c }}</span>
+          </label>
+          <div
+            v-if="displayedCitiesList.length === 0"
+            class="text-slate-400 dark:text-slate-500 text-center py-3 text-xs italic"
+          >
+            Городов не найдено
+          </div>
+        </div>
+      </div>
+    </Popover>
+
+    <!-- Column Header Filter: Licence Type Popover -->
+    <Popover ref="licenceTypePopover">
+      <div class="w-64 p-2 flex flex-col gap-2 text-xs">
+        <div class="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
+          <span class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+            <i class="pi pi-id-card text-purple-600 dark:text-purple-400 text-xs"></i>
+            Тип лицензии
+          </span>
+          <button
+            v-if="selectedLicenceTypes.length > 0"
+            type="button"
+            class="text-[11px] text-rose-500 hover:text-rose-700 dark:hover:text-rose-400 cursor-pointer font-medium"
+            @click="clearLicenceTypeFilter"
+          >
+            Сбросить ({{ selectedLicenceTypes.length }})
+          </button>
+        </div>
+
+        <!-- Search input for Licence Type -->
+        <div class="relative">
+          <IconField iconPosition="left" class="w-full">
+            <InputIcon class="pi pi-search text-xs text-slate-400" />
+            <InputText
+              v-model="licenceTypeSearchQuery"
+              placeholder="Поиск типа лицензии..."
+              class="w-full !text-xs !py-1 !pl-7 !pr-6"
+            />
+          </IconField>
+          <button
+            v-if="licenceTypeSearchQuery"
+            type="button"
+            class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-[10px] cursor-pointer"
+            @click="licenceTypeSearchQuery = ''"
+          >
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+
+        <!-- Checkbox list of licence types -->
+        <div class="max-h-52 overflow-y-auto flex flex-col gap-1 pr-1 divide-y divide-slate-100 dark:divide-slate-800/60">
+          <label
+            v-for="lt in displayedLicenceTypesList"
+            :key="lt"
+            class="flex items-center gap-2 p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer select-none transition"
+          >
+            <Checkbox
+              v-model="selectedLicenceTypes"
+              :value="lt"
+              @change="onLicenceTypeFilterChange"
+            />
+            <span class="text-xs text-slate-800 dark:text-slate-200 font-medium">{{ lt }}</span>
+          </label>
+          <div
+            v-if="displayedLicenceTypesList.length === 0"
+            class="text-slate-400 dark:text-slate-500 text-center py-3 text-xs italic"
+          >
+            Типов лицензий не найдено
+          </div>
+        </div>
+      </div>
+    </Popover>
   </div>
 </template>
 
@@ -1146,9 +1346,11 @@ const hasActiveFiltersOrSort = computed(() => {
     selectedNodeType.value ||
     selectedChain.value ||
     selectedCity.value ||
+    selectedCities.value.length > 0 ||
     (selectedStatus.value !== null && selectedStatus.value !== undefined && selectedStatus.value !== '') ||
     selectedIts.value ||
     selectedLicenceType.value ||
+    selectedLicenceTypes.value.length > 0 ||
     selectedBusinessType.value ||
     selectedVersions.value.length > 0 ||
     selectedLicenseStatuses.value.length > 0 ||
@@ -1179,6 +1381,34 @@ const itsFilterOptions = [
 
 const showDrawer = ref(false)
 const selectedCompanyId = ref(null)
+
+// Column header filters: city
+const cityPopover = ref(null)
+const citySearchQuery = ref('')
+const selectedCities = ref([])
+
+const displayedCitiesList = computed(() => {
+  const all = filterOptions.value?.cities || []
+  const q = citySearchQuery.value.trim().toLowerCase()
+  if (!q) return all
+  return all.filter(c => c && c.toLowerCase().includes(q))
+})
+
+const toggleCityPopover = (event) => {
+  cityPopover.value?.toggle(event)
+}
+
+const onCityFilterChange = () => {
+  currentPage.value = 1
+  loadCompanies()
+}
+
+const clearCityFilter = () => {
+  selectedCities.value = []
+  citySearchQuery.value = ''
+  currentPage.value = 1
+  loadCompanies()
+}
 
 // Column header filters: iiko_version
 const versionPopover = ref(null)
@@ -1245,6 +1475,34 @@ const getSelectedLicenseStatusesLabels = () => {
   return selectedLicenseStatuses.value
     .map(val => licenseStatusOptions.find(o => o.value === val)?.label || val)
     .join(', ')
+}
+
+// Column header filters: licence_type
+const licenceTypePopover = ref(null)
+const licenceTypeSearchQuery = ref('')
+const selectedLicenceTypes = ref([])
+
+const displayedLicenceTypesList = computed(() => {
+  const all = filterOptions.value?.licence_types || []
+  const q = licenceTypeSearchQuery.value.trim().toLowerCase()
+  if (!q) return all
+  return all.filter(lt => lt && lt.toLowerCase().includes(q))
+})
+
+const toggleLicenceTypePopover = (event) => {
+  licenceTypePopover.value?.toggle(event)
+}
+
+const onLicenceTypeFilterChange = () => {
+  currentPage.value = 1
+  loadCompanies()
+}
+
+const clearLicenceTypeFilter = () => {
+  selectedLicenceTypes.value = []
+  licenceTypeSearchQuery.value = ''
+  currentPage.value = 1
+  loadCompanies()
 }
 
 const showCompanyAnydeskModal = ref(false)
@@ -1593,8 +1851,12 @@ const resetAllFiltersAndSorting = () => {
   selectedLicenceType.value = null
   selectedBusinessType.value = null
   selectedOrdering.value = 'chain_smart'
+  selectedCities.value = []
+  citySearchQuery.value = ''
   selectedVersions.value = []
   versionSearchQuery.value = ''
+  selectedLicenceTypes.value = []
+  licenceTypeSearchQuery.value = ''
   selectedLicenseStatuses.value = []
   currentPage.value = 1
   loadCompanies()
@@ -1676,12 +1938,28 @@ const loadCompanies = async () => {
     if (selectedSoftwareType.value) params.software_type = selectedSoftwareType.value
     if (selectedNodeType.value) params.node_type = selectedNodeType.value
     if (selectedChain.value) params.chain_id = selectedChain.value
-    if (selectedCity.value) params.city = selectedCity.value
+
+    const allCities = [...selectedCities.value]
+    if (selectedCity.value && !allCities.includes(selectedCity.value)) {
+      allCities.push(selectedCity.value)
+    }
+    if (allCities.length > 0) {
+      params.city = allCities.join(',')
+    }
+
     if (selectedStatus.value !== null && selectedStatus.value !== undefined && selectedStatus.value !== '') {
       params.status = selectedStatus.value
     }
     if (selectedIts.value) params.its = selectedIts.value
-    if (selectedLicenceType.value) params.licence_type = selectedLicenceType.value
+
+    const allLicTypes = [...selectedLicenceTypes.value]
+    if (selectedLicenceType.value && !allLicTypes.includes(selectedLicenceType.value)) {
+      allLicTypes.push(selectedLicenceType.value)
+    }
+    if (allLicTypes.length > 0) {
+      params.licence_type = allLicTypes.join(',')
+    }
+
     if (selectedBusinessType.value) params.business_type = selectedBusinessType.value
     if (selectedOrdering.value) params.ordering = selectedOrdering.value
     if (selectedVersions.value && selectedVersions.value.length > 0) {

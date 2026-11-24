@@ -101,8 +101,8 @@ class CompanyViewSet(viewsets.ModelViewSet):
         'crm_id', 'uid', 'server_name', 'city'
     )
     filterset_fields = (
-        'city', 'status', 'iiko_rosta', 'business_type',
-        'licence_type', 'software_type', 'node_type', 'parent_chain',
+        'status', 'iiko_rosta', 'business_type',
+        'software_type', 'node_type', 'parent_chain',
         'helpdesk_its'
     )
     ordering_fields = (
@@ -152,6 +152,20 @@ class CompanyViewSet(viewsets.ModelViewSet):
                 qs = qs.filter(its_expires_at=today)
             elif its == 'expired':
                 qs = qs.filter(its_expires_at__lt=today)
+
+        # Filter by city (supports single or comma-separated multiple cities)
+        city_param = self.request.query_params.get('city')
+        if city_param:
+            city_list = [c.strip() for c in city_param.split(',') if c.strip()]
+            if city_list:
+                qs = qs.filter(city__in=city_list)
+
+        # Filter by licence_type (supports single or comma-separated multiple licence types)
+        licence_type_param = self.request.query_params.get('licence_type')
+        if licence_type_param:
+            licence_type_list = [lt.strip() for lt in licence_type_param.split(',') if lt.strip()]
+            if licence_type_list:
+                qs = qs.filter(licence_type__in=licence_type_list)
 
         # Filter by iiko_version
         versions_param = self.request.query_params.get('iiko_version')
