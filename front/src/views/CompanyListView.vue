@@ -667,12 +667,13 @@
       @updated="handleUpdated"
     />
 
-    <!-- Company License Dialog (opened from table actions icon) -->
+    <!-- Company License Drawer (opened from table actions icon) -->
     <CompanyLicenseDialog
       v-model="showLicenseDialog"
       :company="selectedCompanyForLicense"
       :updating="updatingLicense"
       :status-text="updatingStatusText"
+      :as-drawer="true"
       @refresh="handleLaunchLicenseFromTable"
       @reload="handleLicenseReloadFromTable"
     />

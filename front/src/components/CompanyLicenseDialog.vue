@@ -1,9 +1,13 @@
 <template>
-  <Dialog
+  <component
+    :is="asDrawer ? Drawer : Dialog"
     v-model:visible="visible"
     :modal="true"
-    :style="{ width: '960px', maxWidth: '96vw' }"
+    :position="asDrawer ? 'right' : undefined"
+    :class="asDrawer ? '!w-full md:!w-[760px] lg:!w-[880px] xl:!w-[960px] 2xl:!w-[1020px]' : undefined"
+    :style="!asDrawer ? { width: '960px', maxWidth: '96vw' } : undefined"
     :closable="true"
+    :dismissable="true"
     :dismissable-mask="true"
   >
     <template #header>
@@ -421,7 +425,7 @@
         </div>
       </div>
     </template>
-  </Dialog>
+  </component>
 
   <!-- Add Pinned Module Dialog -->
   <Dialog
@@ -597,6 +601,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import Dialog from 'primevue/dialog'
+import Drawer from 'primevue/drawer'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import IconField from 'primevue/iconfield'
@@ -632,6 +637,10 @@ const props = defineProps({
   statusText: {
     type: String,
     default: ''
+  },
+  asDrawer: {
+    type: Boolean,
+    default: false
   }
 })
 
