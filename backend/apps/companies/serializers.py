@@ -112,7 +112,56 @@ class CompanyServiceSerializer(serializers.ModelSerializer):
         return ret
 
 
-class CompanyListSerializer(serializers.ModelSerializer):
+class CompanyWebkassaMixin:
+    def _get_active_cash_registers(self, obj):
+        if hasattr(obj, '_cached_active_cash_registers'):
+            return obj._cached_active_cash_registers
+        try:
+            regs = [r for r in obj.cash_registers.all() if getattr(r, 'is_active', True)]
+        except Exception:
+            regs = []
+        obj._cached_active_cash_registers = regs
+        return regs
+
+    def get_webkassa_count(self, obj):
+        return len(self._get_active_cash_registers(obj))
+
+    def get_webkassa_expires_at(self, obj):
+        regs = [r for r in self._get_active_cash_registers(obj) if r.expires_at]
+        if not regs:
+            return None
+        earliest = min(regs, key=lambda r: r.expires_at)
+        return earliest.expires_at
+
+    def get_webkassa_days_remaining(self, obj):
+        regs = [r for r in self._get_active_cash_registers(obj) if r.expires_at]
+        if not regs:
+            return None
+        earliest = min(regs, key=lambda r: r.expires_at)
+        from datetime import date
+        return (earliest.expires_at - date.today()).days
+
+    def get_webkassa_registers(self, obj):
+        regs = self._get_active_cash_registers(obj)
+        if not regs:
+            return []
+        from datetime import date
+        today = date.today()
+        return [
+            {
+                'id': r.id,
+                'name': r.name,
+                'serial_number': r.serial_number,
+                'status': r.status,
+                'ofd': r.ofd,
+                'expires_at': r.expires_at.isoformat() if r.expires_at else None,
+                'days_remaining': (r.expires_at - today).days if r.expires_at else None,
+            }
+            for r in regs
+        ]
+
+
+class CompanyListSerializer(CompanyWebkassaMixin, serializers.ModelSerializer):
     stations_count = serializers.IntegerField(source='anydesk_stations.count', read_only=True)
     anydesk_stations = AnydeskStationSerializer(many=True, read_only=True)
     branches_count = serializers.SerializerMethodField()
@@ -120,6 +169,10 @@ class CompanyListSerializer(serializers.ModelSerializer):
     system_admin_password = serializers.SerializerMethodField()
     distribution_link = serializers.SerializerMethodField()
     its_days_remaining = serializers.SerializerMethodField()
+    webkassa_count = serializers.SerializerMethodField()
+    webkassa_days_remaining = serializers.SerializerMethodField()
+    webkassa_expires_at = serializers.SerializerMethodField()
+    webkassa_registers = serializers.SerializerMethodField()
     updated_by_name = serializers.SerializerMethodField()
 
     def get_branches_count(self, obj):
@@ -134,10 +187,11 @@ class CompanyListSerializer(serializers.ModelSerializer):
             'business_type', 'licence_type', 'iiko_version',
             'server_name', 'port_number', 'city', 'status',
             'iiko_rosta', 'sort_number', 'no_ip', 'helpdesk_its', 'its_expires_at', 'its_days_remaining', 'its_cost', 'iiko_web_address',
+            'webkassa_count', 'webkassa_days_remaining', 'webkassa_expires_at', 'webkassa_registers',
             'license_data', 'license_updated_at', 'last_license_error',
             'stations_count', 'anydesk_stations', 'distribution_link', 'created_at', 'updated_at', 'updated_by_name'
         )
-        read_only_fields = ('its_cost', 'its_days_remaining')
+        read_only_fields = ('its_cost', 'its_days_remaining', 'webkassa_count', 'webkassa_days_remaining', 'webkassa_expires_at', 'webkassa_registers')
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
@@ -173,7 +227,7 @@ class CompanyListSerializer(serializers.ModelSerializer):
         return obj.updated_by.full_name or obj.updated_by.username
 
 
-class CompanyDetailSerializer(serializers.ModelSerializer):
+class CompanyDetailSerializer(CompanyWebkassaMixin, serializers.ModelSerializer):
     anydesk_stations = AnydeskStationSerializer(many=True, read_only=True)
     company_services = CompanyServiceSerializer(many=True, read_only=True)
     branches_count = serializers.SerializerMethodField()
@@ -181,6 +235,10 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
     system_admin_password = serializers.CharField(required=False, allow_blank=True, write_only=False)
     distribution_link = serializers.SerializerMethodField()
     its_days_remaining = serializers.SerializerMethodField()
+    webkassa_count = serializers.SerializerMethodField()
+    webkassa_days_remaining = serializers.SerializerMethodField()
+    webkassa_expires_at = serializers.SerializerMethodField()
+    webkassa_registers = serializers.SerializerMethodField()
     updated_by_name = serializers.SerializerMethodField()
     its_cost = serializers.DecimalField(max_digits=12, decimal_places=2, required=False, allow_null=True, read_only=True)
 
@@ -201,10 +259,11 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
             'business_type', 'licence_type', 'iiko_version',
             'server_name', 'port_number', 'image_link', 'no_ip',
             'iiko_rosta', 'sort_number', 'helpdesk_its', 'its_expires_at', 'its_days_remaining', 'its_cost', 'city',
+            'webkassa_count', 'webkassa_days_remaining', 'webkassa_expires_at', 'webkassa_registers',
             'status', 'iiko_web_address', 'license_data', 'license_updated_at', 'last_license_error', 'anydesk_stations', 'company_services',
             'distribution_link', 'created_at', 'updated_at', 'updated_by_name'
         )
-        read_only_fields = ('its_cost', 'its_days_remaining')
+        read_only_fields = ('its_cost', 'its_days_remaining', 'webkassa_count', 'webkassa_days_remaining', 'webkassa_expires_at', 'webkassa_registers')
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)

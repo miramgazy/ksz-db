@@ -114,7 +114,7 @@ class CompanyViewSet(viewsets.ModelViewSet):
         # Annotate with effective_chain_id to group Chain + Branches together
         # If company has parent_chain, group by parent_chain_id. If it is Chain, group by its own id.
         from django.db.models import Q
-        qs = Company.objects.select_related('parent_chain').prefetch_related('anydesk_stations', 'branches').annotate(
+        qs = Company.objects.select_related('parent_chain').prefetch_related('anydesk_stations', 'branches', 'cash_registers').annotate(
             effective_chain_id=Coalesce('parent_chain_id', 'id'),
             is_branch=Case(
                 When(node_type='CHAIN', then=Value(0)),

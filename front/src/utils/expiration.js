@@ -325,3 +325,74 @@ export const getLicenseTooltip = (company) => {
   }
   return 'Текущие лицензии: нет данных (нажмите для просмотра)'
 }
+
+/**
+ * WebKassa cash register badge styling and tooltips for CompanyListView
+ */
+export const getWebkassaBadgeClass = (days) => {
+  if (days === null || days === undefined || days > 15) {
+    // 🌐 Sky Blue (> 15 days)
+    return 'bg-sky-50 text-sky-700 border-sky-300 dark:bg-sky-950/80 dark:text-sky-300 dark:border-sky-700'
+  }
+  if (days >= 8 && days <= 15) {
+    // 🔵 Blue (8–15 days)
+    return 'bg-blue-100 text-blue-900 border-blue-300 font-semibold dark:bg-blue-950/80 dark:text-blue-300 dark:border-blue-700'
+  }
+  if (days >= 4 && days <= 7) {
+    // 🟡 Amber / Yellow (4–7 days)
+    return 'bg-amber-100 text-amber-900 border-amber-300 font-semibold dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-700'
+  }
+  if (days >= 2 && days <= 3) {
+    // 🟠 Orange (2–3 days)
+    return 'bg-orange-100 text-orange-950 border-orange-400 font-extrabold shadow-xs dark:bg-orange-950/80 dark:text-orange-300 dark:border-orange-700'
+  }
+  if (days >= 0 && days <= 1) {
+    // 🔴 Red / 1 day (0–1 day)
+    return 'bg-red-100 text-red-950 border-red-400 font-extrabold shadow-xs dark:bg-red-950/80 dark:text-red-300 dark:border-red-700'
+  }
+  // 🔴 Rose / Expired (< 0 days)
+  return 'bg-rose-100 text-rose-950 border-rose-400 font-extrabold shadow-xs dark:bg-rose-950/80 dark:text-rose-300 dark:border-rose-700'
+}
+
+export const getWebkassaIconClass = (days) => {
+  if (days === null || days === undefined || days > 15) {
+    return 'text-sky-600 dark:text-sky-400'
+  }
+  if (days >= 8 && days <= 15) {
+    return 'text-blue-600 dark:text-blue-400'
+  }
+  if (days >= 4 && days <= 7) {
+    return 'text-amber-600 dark:text-amber-400'
+  }
+  if (days >= 2 && days <= 3) {
+    return 'text-orange-600 dark:text-orange-400'
+  }
+  if (days >= 0 && days <= 1) {
+    return 'text-red-600 dark:text-red-400'
+  }
+  return 'text-rose-600 dark:text-rose-400'
+}
+
+export const getWebkassaTooltip = (data) => {
+  if (!data || !data.webkassa_count) return 'WebKassa'
+  const count = data.webkassa_count
+  const days = data.webkassa_days_remaining
+  const regs = data.webkassa_registers || []
+
+  if (count === 1 && regs.length === 1) {
+    const reg = regs[0]
+    const dateStr = reg.expires_at ? formatDate(reg.expires_at) : 'без срока'
+    const daysText = reg.days_remaining !== null && reg.days_remaining !== undefined
+      ? ` (${formatDaysRemaining(reg.days_remaining)})`
+      : ''
+    return `WebKassa: ${reg.serial_number} (${reg.name || 'Касса'})\nСрок: ${dateStr}${daysText}\nОФД: ${reg.ofd || '—'} [${reg.status || '—'}]`
+  }
+
+  const dateFormatted = data.webkassa_expires_at ? formatDate(data.webkassa_expires_at) : '—'
+  const daysText = days !== null && days !== undefined ? ` (${formatDaysRemaining(days)})` : ''
+  let title = `WebKassa (${count} касс)\nБлижайшее окончание: ${dateFormatted}${daysText}`
+  if (regs.length > 0) {
+    title += '\n' + regs.map(r => `• ${r.serial_number} (${r.name}): до ${r.expires_at ? formatDate(r.expires_at) : '—'}`).join('\n')
+  }
+  return title
+}

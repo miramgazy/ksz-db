@@ -527,6 +527,22 @@
                         {{ formatDaysRemaining(data.its_days_remaining ?? getDaysRemaining(data.its_expires_at)) }}
                       </span>
                     </span>
+
+                    <!-- WebKassa Globe Badge -->
+                    <span
+                      v-if="data.webkassa_count > 0"
+                      class="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md shrink-0 shadow-2xs border transition cursor-pointer"
+                      :class="getWebkassaBadgeClass(data.webkassa_days_remaining)"
+                      :title="getWebkassaTooltip(data)"
+                    >
+                      <i class="pi pi-globe text-[10px]" :class="getWebkassaIconClass(data.webkassa_days_remaining)"></i>
+                      <span
+                        v-if="data.webkassa_days_remaining !== null && data.webkassa_days_remaining <= 15"
+                        class="text-[9px] font-mono opacity-90 ml-0.5 font-bold"
+                      >
+                        {{ formatDaysRemaining(data.webkassa_days_remaining) }}
+                      </span>
+                    </span>
                   </span>
                 </div>
 
@@ -1233,6 +1249,9 @@ import {
   getExpirationTextClass,
   getExpirationIcon,
   getItsTooltip,
+  getWebkassaBadgeClass,
+  getWebkassaIconClass,
+  getWebkassaTooltip,
   formatDaysRemaining,
   formatDate,
   getLicenseIconClass,
