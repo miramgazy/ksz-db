@@ -3,7 +3,7 @@
     v-model:visible="visible"
     header="Генератор надежных паролей"
     :modal="true"
-    :style="{ width: '420px' }"
+    :style="{ width: '440px' }"
   >
     <div class="flex flex-col gap-4 py-2">
       <!-- Generated Password Box -->
@@ -12,15 +12,17 @@
           type="text"
           readonly
           :value="password"
-          class="w-full bg-transparent font-mono text-lg font-semibold text-slate-800 dark:text-slate-100 outline-none pr-10"
+          class="w-full bg-transparent font-mono text-lg font-semibold text-slate-800 dark:text-slate-100 outline-none pr-10 cursor-pointer select-all"
+          @click="$event.target.select()"
+          title="Нажмите, чтобы выделить"
         />
         <Button
-          icon="pi pi-copy"
+          :icon="isCopied ? 'pi pi-check' : 'pi pi-copy'"
           text
           rounded
-          class="!absolute right-2"
+          :class="['!absolute right-2 transition-colors', isCopied ? '!text-green-600 dark:!text-green-400' : '']"
           @click="copyPassword"
-          title="Скопировать пароль"
+          :title="isCopied ? 'Скопировано!' : 'Скопировать пароль'"
         />
       </div>
 
@@ -55,18 +57,45 @@
     </div>
 
     <template #footer>
-      <div class="flex justify-between w-full">
+      <div class="flex items-center justify-between w-full gap-2 pt-2">
         <Button
-          label="Сгенерировать новый"
+          label="Обновить"
           icon="pi pi-refresh"
           severity="secondary"
+          text
+          size="small"
           @click="generate"
+          title="Сгенерировать другой пароль"
         />
-        <Button
-          label="Скопировать и закрыть"
-          icon="pi pi-check"
-          @click="copyAndClose"
-        />
+
+        <div class="flex items-center gap-2">
+          <Button
+            label="Скопировать"
+            :icon="isCopied ? 'pi pi-check' : 'pi pi-copy'"
+            severity="secondary"
+            outlined
+            size="small"
+            @click="copyPassword"
+          />
+
+          <Button
+            v-if="canSelect"
+            label="Использовать пароль"
+            icon="pi pi-check"
+            severity="primary"
+            size="small"
+            @click="usePassword"
+          />
+
+          <Button
+            v-else
+            label="Скопировать и закрыть"
+            icon="pi pi-check"
+            severity="primary"
+            size="small"
+            @click="copyAndClose"
+          />
+        </div>
       </div>
     </template>
   </Dialog>
@@ -83,6 +112,10 @@ import { toolsApi } from '../api/tools'
 
 const props = defineProps({
   modelValue: Boolean,
+  canSelect: {
+    type: Boolean,
+    default: false,
+  },
 })
 const emit = defineEmits(['update:modelValue', 'selected'])
 
@@ -99,6 +132,7 @@ const useLower = ref(true)
 const useDigits = ref(true)
 const useSymbols = ref(true)
 const password = ref('')
+const isCopied = ref(false)
 const toast = useToast()
 
 const generate = async () => {
@@ -112,12 +146,12 @@ const generate = async () => {
     })
     password.value = res.data.password
   } catch (e) {
-    // Client-side fallback
+    // Client-side fallback (safe symbols without & to prevent URL/cmd issues)
     let chars = ''
     if (useUpper.value) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     if (useLower.value) chars += 'abcdefghijklmnopqrstuvwxyz'
     if (useDigits.value) chars += '0123456789'
-    if (useSymbols.value) chars += '!@#$%^&*()'
+    if (useSymbols.value) chars += '!@#$%*()-_=+'
     if (!chars) chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
 
     let res = ''
@@ -128,13 +162,83 @@ const generate = async () => {
   }
 }
 
+/**
+ * Robust clipboard copy supporting modern Clipboard API with execCommand fallback.
+ */
+const copyToClipboard = async (text) => {
+  if (!text) return false
+  let ok = false
+
+  if (navigator?.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text)
+      ok = true
+    } catch (e) {
+      console.warn('navigator.clipboard.writeText failed, using execCommand fallback', e)
+    }
+  }
+
+  if (!ok) {
+    try {
+      const textArea = document.createElement('textarea')
+      textArea.value = text
+      textArea.style.position = 'fixed'
+      textArea.style.top = '0'
+      textArea.style.left = '0'
+      textArea.style.width = '2em'
+      textArea.style.height = '2em'
+      textArea.style.padding = '0'
+      textArea.style.border = 'none'
+      textArea.style.outline = 'none'
+      textArea.style.boxShadow = 'none'
+      textArea.style.background = 'transparent'
+      document.body.appendChild(textArea)
+      textArea.focus()
+      textArea.select()
+      ok = document.execCommand('copy')
+      document.body.removeChild(textArea)
+    } catch (err) {
+      console.error('Fallback execCommand failed:', err)
+      ok = false
+    }
+  }
+
+  return ok
+}
+
 const copyPassword = async () => {
   if (!password.value) return
-  await navigator.clipboard.writeText(password.value)
+  const ok = await copyToClipboard(password.value)
+  if (ok) {
+    isCopied.value = true
+    setTimeout(() => {
+      isCopied.value = false
+    }, 2000)
+    toast.add({
+      severity: 'success',
+      summary: 'Скопировано',
+      detail: `Пароль скопирован в буфер обмена`,
+      life: 2500,
+    })
+  } else {
+    toast.add({
+      severity: 'warn',
+      summary: 'Внимание',
+      detail: 'Не удалось скопировать автоматически. Выделите пароль и нажмите Ctrl+C',
+      life: 4000,
+    })
+  }
+}
+
+const usePassword = async () => {
+  if (!password.value) return
+  await copyToClipboard(password.value)
+  emit('selected', password.value)
+  visible.value = false
   toast.add({
     severity: 'success',
-    summary: 'Пароль скопирован',
-    detail: `'${password.value}'`,
+    summary: 'Пароль применен',
+    detail: 'Пароль подставлен в форму и скопирован в буфер',
     life: 2500,
   })
 }

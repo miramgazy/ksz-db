@@ -1208,6 +1208,7 @@ import CompanyDetailDrawer from '../components/CompanyDetailDrawer.vue'
 import AnydeskVersionSelectModal from '../components/AnydeskVersionSelectModal.vue'
 import CompanyLicenseDialog from '../components/CompanyLicenseDialog.vue'
 import { anydeskApi } from '../api/anydesk'
+import { matchesSmartSearch } from '../utils/keyboard'
 import {
   getDaysRemaining,
   getExpirationBadgeClass,
@@ -1389,9 +1390,9 @@ const selectedCities = ref([])
 
 const displayedCitiesList = computed(() => {
   const all = filterOptions.value?.cities || []
-  const q = citySearchQuery.value.trim().toLowerCase()
+  const q = citySearchQuery.value.trim()
   if (!q) return all
-  return all.filter(c => c && c.toLowerCase().includes(q))
+  return all.filter(c => c && matchesSmartSearch(c, q))
 })
 
 const toggleCityPopover = (event) => {
@@ -1417,9 +1418,9 @@ const selectedVersions = ref([])
 
 const displayedVersionsList = computed(() => {
   const allVersions = filterOptions.value?.iiko_versions || []
-  const q = versionSearchQuery.value.trim().toLowerCase()
+  const q = versionSearchQuery.value.trim()
   if (q.length >= 3) {
-    return allVersions.filter(v => v.toLowerCase().includes(q))
+    return allVersions.filter(v => matchesSmartSearch(v, q))
   }
   const top10 = allVersions.slice(0, 10)
   const set = new Set(top10)
@@ -1484,9 +1485,9 @@ const selectedLicenceTypes = ref([])
 
 const displayedLicenceTypesList = computed(() => {
   const all = filterOptions.value?.licence_types || []
-  const q = licenceTypeSearchQuery.value.trim().toLowerCase()
+  const q = licenceTypeSearchQuery.value.trim()
   if (!q) return all
-  return all.filter(lt => lt && lt.toLowerCase().includes(q))
+  return all.filter(lt => lt && matchesSmartSearch(lt, q))
 })
 
 const toggleLicenceTypePopover = (event) => {

@@ -39,8 +39,8 @@ class PasswordGeneratorView(APIView):
             chars += string.digits
             guaranteed.append(secrets.choice(string.digits))
         if include_symbols:
-            # Safe special symbols commonly used in passwords
-            symbols = '!@#$%^&*()-_=+'
+            # Safe special symbols commonly used in passwords (excluding '&' to prevent CLI/URL split issues)
+            symbols = '!@#$%*()-_=+'
             chars += symbols
             guaranteed.append(secrets.choice(symbols))
 

@@ -77,7 +77,7 @@
 
     <!-- Sub-modals -->
     <OcrModal v-model="showOcr" @recognized="(id) => form.anydesk_id = id" />
-    <PasswordGeneratorModal v-model="showPassGen" @selected="(p) => form.any_pass = p" />
+    <PasswordGeneratorModal v-model="showPassGen" :can-select="true" @selected="(p) => form.any_pass = p" />
   </Dialog>
 </template>
 

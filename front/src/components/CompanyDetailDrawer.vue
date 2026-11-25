@@ -803,6 +803,7 @@
     />
     <PasswordGeneratorModal
       v-model="showPassGen"
+      :can-select="true"
       @selected="(p) => editForm.system_admin_password = p"
     />
     <CityManagementModal
