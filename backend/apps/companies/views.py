@@ -97,7 +97,7 @@ class CompanyViewSet(viewsets.ModelViewSet):
     permission_classes = (ReadOnlyForViewer,)
     pagination_class = CompanyPagination
     search_fields = (
-        'place_name', 'company_name', 'cabinet_name',
+        'place_name', 'company_name', 'bin', 'cabinet_name',
         'crm_id', 'uid', 'server_name', 'city'
     )
     filterset_fields = (

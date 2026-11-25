@@ -21,11 +21,11 @@
             </router-link>
 
             <router-link
-              to="/anydesk"
-              class="px-3 py-1.5 rounded-md text-sm font-medium transition"
-              :class="$route.path === '/anydesk' ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'"
+              to="/webkassa"
+              class="px-3 py-1.5 rounded-md text-sm font-medium transition flex items-center"
+              :class="$route.path === '/webkassa' ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'"
             >
-              <i class="pi pi-desktop mr-1.5 text-xs"></i>Все AnyDesk
+              <i class="pi pi-receipt mr-1.5 text-xs text-amber-500 dark:text-amber-400"></i>WebKassa
             </router-link>
 
             <router-link

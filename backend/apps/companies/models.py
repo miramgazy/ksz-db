@@ -77,6 +77,7 @@ class Company(models.Model):
 
     place_name = models.CharField(max_length=255, verbose_name='Название заведения')
     company_name = models.CharField(max_length=255, blank=True, verbose_name='Юр. лицо / Компания')
+    bin = models.CharField(max_length=20, blank=True, db_index=True, verbose_name='БИН / ИИН')
     cabinet_name = models.CharField(max_length=255, blank=True, verbose_name='Название кабинета')
     crm_id = models.CharField(max_length=100, blank=True, db_index=True, verbose_name='CRM ID')
     uid = models.CharField(max_length=100, blank=True, db_index=True, verbose_name='UID')

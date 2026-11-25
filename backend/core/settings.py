@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'apps.companies',
     'apps.tools',
     'apps.companion',
+    'apps.webkassa',
 ]
 
 # Redis settings
@@ -132,7 +133,7 @@ REST_FRAMEWORK = {
         'apps.common.search.SmartSearchFilter',
         'rest_framework.filters.OrderingFilter',
     ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'apps.common.pagination.StandardResultsSetPagination',
     'PAGE_SIZE': 20,
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }

@@ -57,6 +57,7 @@
             </div>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex flex-wrap items-center gap-1.5">
               <span>{{ company?.company_name || 'Юр. лицо не указано' }}</span>
+              <span v-if="company?.bin" class="font-mono text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-1 py-0.2 rounded text-[11px] font-semibold" title="БИН / ИИН">БИН: {{ company.bin }}</span>
               <span>•</span>
               <span class="font-medium text-slate-700 dark:text-slate-300">{{ company?.city || 'Город не указан' }}</span>
               <template v-if="company?.created_at">
@@ -302,8 +303,11 @@
 
         <div class="p-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg">
           <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Компания / Юр. лицо:</div>
-          <div class="mt-0.5 font-semibold text-slate-800 dark:text-slate-100 truncate" :title="company.company_name">
-            {{ company.company_name || '—' }}
+          <div class="mt-0.5 font-semibold text-slate-800 dark:text-slate-100 flex items-center justify-between gap-2">
+            <span class="truncate" :title="company.company_name">{{ company.company_name || '—' }}</span>
+            <span v-if="company.bin" class="text-xs font-mono font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700/60 px-1.5 py-0.5 rounded shrink-0" title="БИН / ИИН">
+              {{ company.bin }}
+            </span>
           </div>
         </div>
 
@@ -534,9 +538,15 @@
           <InputText v-model="editForm.place_name" class="w-full" />
         </div>
 
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Юр. лицо</label>
-          <InputText v-model="editForm.company_name" class="w-full text-sm" placeholder="ИП / ТОО..." />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">Юр. лицо</label>
+            <InputText v-model="editForm.company_name" class="w-full text-sm" placeholder="ИП / ТОО..." />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase mb-1">БИН / ИИН</label>
+            <InputText v-model="editForm.bin" class="w-full text-sm font-mono" placeholder="12 цифр..." maxlength="20" />
+          </div>
         </div>
 
         <div>
@@ -792,6 +802,78 @@
           </div>
         </div>
       </div>
+
+      <!-- WebKassa Cash Registers Section -->
+      <div v-if="company?.id && !isEditing" class="pt-4 border-t border-slate-200 dark:border-slate-700">
+        <div class="flex justify-between items-center mb-3">
+          <div class="flex items-center gap-2">
+            <i class="pi pi-receipt text-amber-500 dark:text-amber-400"></i>
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">
+              Кассы WebKassa ({{ companyRegisters.length }})
+            </h3>
+          </div>
+          <router-link
+            to="/webkassa"
+            class="text-xs text-blue-600 dark:text-blue-400 hover:underline font-semibold flex items-center gap-1"
+          >
+            <span>В реестр WebKassa</span>
+            <i class="pi pi-arrow-right text-[10px]"></i>
+          </router-link>
+        </div>
+
+        <div v-if="!companyRegisters.length" class="text-center py-5 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-slate-400 dark:text-slate-500 text-xs">
+          К этому заведению еще не привязано ни одной кассы WebKassa.
+        </div>
+
+        <div v-else class="flex flex-col gap-2">
+          <div
+            v-for="reg in companyRegisters"
+            :key="reg.id"
+            class="p-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg flex items-center justify-between hover:border-amber-300 dark:hover:border-amber-600 transition"
+          >
+            <div class="flex flex-col min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-800 dark:text-slate-100 text-sm truncate">{{ reg.name }}</span>
+                <Tag
+                  :value="reg.status || '—'"
+                  :severity="reg.status === 'Готова к работе' ? 'success' : 'danger'"
+                  class="!text-[9px] !px-1.5 font-bold"
+                />
+                <Tag
+                  v-if="reg.is_active === false"
+                  value="Не активна"
+                  severity="secondary"
+                  class="!text-[9px] !px-1.5 font-bold"
+                />
+              </div>
+              <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1 flex-wrap">
+                <span class="font-mono font-bold text-blue-600 dark:text-blue-400">{{ reg.serial_number }}</span>
+                <span v-if="reg.cto">• ЦТО: {{ reg.cto }}</span>
+                <span v-if="reg.ofd">• ОФД: {{ reg.ofd }}</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+              <div class="text-right">
+                <div class="font-bold text-xs" :class="getExpirationClass(reg.days_remaining)">
+                  {{ formatDate(reg.expires_at) }}
+                </div>
+                <div class="text-[10px] font-mono" :class="getExpirationClass(reg.days_remaining)">
+                  {{ formatDaysRemaining(reg.days_remaining) }}
+                </div>
+              </div>
+              <Button
+                icon="pi pi-pencil"
+                size="small"
+                text
+                severity="secondary"
+                title="Редактировать кассу"
+                @click="openEditRegister(reg)"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Modals -->
@@ -818,9 +900,17 @@
       v-model="showLicenceTypeModal"
       @updated="loadLicenceTypes"
     />
+    <!-- AnyDesk Version Select Modal -->
     <AnydeskVersionSelectModal
       v-model="showVersionSelectModal"
       :station="selectedStationForLaunch"
+    />
+
+    <!-- Webkassa Register Modal -->
+    <WebkassaRegisterModal
+      v-model:visible="showWebkassaRegisterModal"
+      :register="selectedWebkassaRegister"
+      @saved="loadCompanyRegisters(company?.id)"
     />
 
     <!-- Modal for Detailed Connected Services -->
@@ -1003,6 +1093,8 @@ import BusinessTypeManagementModal from './BusinessTypeManagementModal.vue'
 import LicenceTypeManagementModal from './LicenceTypeManagementModal.vue'
 import AnydeskVersionSelectModal from './AnydeskVersionSelectModal.vue'
 import CompanyLicenseDialog from './CompanyLicenseDialog.vue'
+import WebkassaRegisterModal from './WebkassaRegisterModal.vue'
+import { webkassaApi } from '../api/webkassa'
 import {
   getDaysRemaining,
   getExpirationBadgeClass,
@@ -1089,6 +1181,7 @@ watch(() => props.modelValue, async (val) => {
       company.value = {
         place_name: '',
         company_name: '',
+        bin: '',
         cabinet_name: '',
         status: true,
         is_its: false,
@@ -1099,6 +1192,7 @@ watch(() => props.modelValue, async (val) => {
       editForm.value = {
         place_name: '',
         company_name: '',
+        bin: '',
         cabinet_name: '',
         city: '',
         business_type: '',
@@ -1232,6 +1326,37 @@ const loadAllOptions = async () => {
   ])
 }
 
+const companyRegisters = ref([])
+const showWebkassaRegisterModal = ref(false)
+const selectedWebkassaRegister = ref(null)
+
+const loadCompanyRegisters = async (cid) => {
+  if (!cid) {
+    companyRegisters.value = []
+    return
+  }
+  try {
+    const res = await webkassaApi.getRegisters({ company_id: cid, page_size: 100 })
+    companyRegisters.value = res.data?.results || res.data || []
+  } catch (e) {
+    companyRegisters.value = []
+  }
+}
+
+const openEditRegister = (reg) => {
+  selectedWebkassaRegister.value = reg
+  showWebkassaRegisterModal.value = true
+}
+
+const getExpirationClass = (days) => {
+  if (days === null || days === undefined) return 'text-slate-400'
+  if (days < 0) return 'text-rose-600 dark:text-rose-400 font-bold'
+  if (days <= 3) return 'text-orange-600 dark:text-orange-400 font-bold'
+  if (days <= 7) return 'text-amber-600 dark:text-amber-400 font-semibold'
+  if (days <= 30) return 'text-blue-600 dark:text-blue-400'
+  return 'text-emerald-600 dark:text-emerald-400'
+}
+
 const loadCompany = async (id) => {
   loading.value = true
   isEditing.value = false
@@ -1239,6 +1364,7 @@ const loadCompany = async (id) => {
   try {
     const res = await companiesApi.getCompany(id)
     company.value = res.data
+    loadCompanyRegisters(id)
   } catch (err) {
     toast.add({ severity: 'error', summary: 'Ошибка', detail: 'Не удалось загрузить данные заведения', life: 3000 })
   } finally {
@@ -1278,6 +1404,7 @@ const startCopy = async () => {
     city: orig.city || '',
     // 8. Юр лицо
     company_name: orig.company_name || '',
+    bin: orig.bin || '',
     // 9. Тип заведения (бизнеса)
     business_type: orig.business_type || '',
 

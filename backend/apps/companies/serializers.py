@@ -129,7 +129,7 @@ class CompanyListSerializer(serializers.ModelSerializer):
         model = Company
         fields = (
             'id', 'software_type', 'node_type', 'parent_chain', 'parent_chain_name',
-            'branches_count', 'place_name', 'company_name', 'cabinet_name',
+            'branches_count', 'place_name', 'company_name', 'bin', 'cabinet_name',
             'crm_id', 'uid', 'system_admin_name', 'system_admin_password',
             'business_type', 'licence_type', 'iiko_version',
             'server_name', 'port_number', 'city', 'status',
@@ -196,7 +196,7 @@ class CompanyDetailSerializer(serializers.ModelSerializer):
         model = Company
         fields = (
             'id', 'software_type', 'node_type', 'parent_chain', 'parent_chain_name',
-            'branches_count', 'place_name', 'company_name', 'cabinet_name',
+            'branches_count', 'place_name', 'company_name', 'bin', 'cabinet_name',
             'crm_id', 'uid', 'system_admin_name', 'system_admin_password',
             'business_type', 'licence_type', 'iiko_version',
             'server_name', 'port_number', 'image_link', 'no_ip',

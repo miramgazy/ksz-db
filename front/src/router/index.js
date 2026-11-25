@@ -27,6 +27,12 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/webkassa',
+    name: 'WebKassa',
+    component: () => import('../views/WebKassaView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/services',
     name: 'Services',
     component: () => import('../views/ItsServicesView.vue'),

@@ -52,6 +52,17 @@
               @click="openCreateCompany"
             />
             <Button
+              label="Все AnyDesk"
+              icon="pi pi-desktop"
+              severity="secondary"
+              outlined
+              size="small"
+              title="Открыть реестр подключений AnyDesk"
+              class="transition-colors cursor-pointer"
+              :class="themeStore.isDark ? '!text-slate-200 !border-slate-700 hover:!bg-slate-800' : '!text-slate-700 !border-slate-300 hover:!bg-slate-100'"
+              @click="showAnydeskRegistryModal = true"
+            />
+            <Button
               icon="pi pi-refresh"
               severity="secondary"
               outlined
@@ -939,6 +950,12 @@
       :station="selectedStationForLaunch"
     />
 
+    <!-- Global AnyDesk Registry Modal -->
+    <AnydeskRegistryModal
+      v-model:visible="showAnydeskRegistryModal"
+      @open-company="handleOpenCompanyFromAnydesk"
+    />
+
     <!-- Column Header Filter: iiko Version Popover -->
     <Popover ref="versionPopover">
       <div class="w-64 p-2 flex flex-col gap-2 text-xs">
@@ -1206,6 +1223,7 @@ import Navbar from '../components/Navbar.vue'
 import QuickCopyBtn from '../components/QuickCopyBtn.vue'
 import CompanyDetailDrawer from '../components/CompanyDetailDrawer.vue'
 import AnydeskVersionSelectModal from '../components/AnydeskVersionSelectModal.vue'
+import AnydeskRegistryModal from '../components/AnydeskRegistryModal.vue'
 import CompanyLicenseDialog from '../components/CompanyLicenseDialog.vue'
 import { anydeskApi } from '../api/anydesk'
 import { matchesSmartSearch } from '../utils/keyboard'
@@ -1382,6 +1400,15 @@ const itsFilterOptions = [
 
 const showDrawer = ref(false)
 const selectedCompanyId = ref(null)
+const showAnydeskRegistryModal = ref(false)
+
+const handleOpenCompanyFromAnydesk = (companyId) => {
+  showAnydeskRegistryModal.value = false
+  if (companyId) {
+    selectedCompanyId.value = companyId
+    showDrawer.value = true
+  }
+}
 
 // Column header filters: city
 const cityPopover = ref(null)

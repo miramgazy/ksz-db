@@ -28,3 +28,21 @@ class SmartSearchFilter(SearchFilter):
             combined_q &= term_q
 
         return queryset.filter(combined_q)
+
+
+def apply_smart_search(queryset, search_query: str, fields):
+    """
+    Applies bilingual & Kazakh-normalized smart search across the given fields of a queryset.
+    """
+    if not search_query or not fields:
+        return queryset
+    terms = search_query.split()
+    combined_q = Q()
+    for term in terms:
+        variants = get_search_variants(term)
+        term_q = Q()
+        for variant in variants:
+            for field_name in fields:
+                term_q |= Q(**{f"{field_name}__icontains": variant})
+        combined_q &= term_q
+    return queryset.filter(combined_q)

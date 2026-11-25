@@ -19,6 +19,7 @@ urlpatterns = [
     path('api/v1/company-services/', include('apps.companies.urls_company_services')),
     path('api/v1/tools/', include('apps.tools.urls')),
     path('api/v1/companion/', include('apps.companion.urls')),
+    path('api/v1/webkassa/', include('apps.webkassa.urls')),
 
     # OpenAPI Documentation
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
