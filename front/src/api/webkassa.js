@@ -24,4 +24,7 @@ export const webkassaApi = {
   getCtoList() {
     return client.get('/webkassa/registers/cto-list/')
   },
+  getOfdList() {
+    return client.get('/webkassa/registers/ofd-list/')
+  },
 }

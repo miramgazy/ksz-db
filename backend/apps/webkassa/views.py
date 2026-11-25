@@ -46,6 +46,11 @@ class WebkassaCashRegisterViewSet(viewsets.ModelViewSet):
         if cto and cto.strip() and cto != 'all':
             qs = qs.filter(cto=cto.strip())
 
+        # 1.1 Фильтр по ОФД
+        ofd = self.request.query_params.get('ofd')
+        if ofd and ofd.strip() and ofd != 'all':
+            qs = qs.filter(ofd=ofd.strip())
+
         # 2. Фильтр по статусу кассы (Готова к работе, Заблокирована)
         st = self.request.query_params.get('status')
         if st and st.strip() and st != 'all':
@@ -130,6 +135,10 @@ class WebkassaCashRegisterViewSet(viewsets.ModelViewSet):
         if cto and cto != 'all':
             base_qs = base_qs.filter(cto=cto.strip())
 
+        ofd = request.query_params.get('ofd')
+        if ofd and ofd != 'all':
+            base_qs = base_qs.filter(ofd=ofd.strip())
+
         is_active = request.query_params.get('is_active')
         if is_active in ('true', '1'):
             base_qs = base_qs.filter(is_active=True)
@@ -179,6 +188,12 @@ class WebkassaCashRegisterViewSet(viewsets.ModelViewSet):
         from_registers = set(WebkassaCashRegister.objects.exclude(cto='').values_list('cto', flat=True))
         all_cto = sorted(list(from_model | from_registers))
         return Response(all_cto)
+
+    @action(detail=False, methods=['get'], url_path='ofd-list')
+    def ofd_list(self, request):
+        """Возвращает список всех известных названий ОФД для фильтрации."""
+        all_ofd = sorted(list(set(WebkassaCashRegister.objects.exclude(ofd='').values_list('ofd', flat=True))))
+        return Response(all_ofd)
 
 
 class WebkassaCTOViewSet(viewsets.ModelViewSet):

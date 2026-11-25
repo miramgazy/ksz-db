@@ -807,7 +807,7 @@
       <div v-if="company?.id && !isEditing" class="pt-4 border-t border-slate-200 dark:border-slate-700">
         <div class="flex justify-between items-center mb-3">
           <div class="flex items-center gap-2">
-            <i class="pi pi-receipt text-amber-500 dark:text-amber-400"></i>
+            <i class="pi pi-globe text-sky-500 dark:text-sky-400"></i>
             <h3 class="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">
               Кассы WebKassa ({{ companyRegisters.length }})
             </h3>

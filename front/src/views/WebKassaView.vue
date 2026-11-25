@@ -7,8 +7,8 @@
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center shadow-xs">
-              <i class="pi pi-receipt text-sm"></i>
+            <div class="w-8 h-8 rounded-lg bg-sky-500 text-white flex items-center justify-center shadow-xs">
+              <i class="pi pi-globe text-sm"></i>
             </div>
             <span>Реестр касс WebKassa</span>
             <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono">
@@ -252,17 +252,6 @@
             </IconField>
           </div>
 
-          <!-- CTO Filter -->
-          <Select
-            v-model="selectedCto"
-            :options="ctoFilterOptions"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Все ЦТО"
-            class="w-40 text-xs font-medium"
-            @change="onFilterChange"
-          />
-
           <!-- Status Filter -->
           <Select
             v-model="selectedStatus"
@@ -271,6 +260,17 @@
             optionValue="value"
             placeholder="Все статусы"
             class="w-36 text-xs font-medium"
+            @change="onFilterChange"
+          />
+
+          <!-- OFD Filter -->
+          <Select
+            v-model="selectedOfd"
+            :options="ofdFilterOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Все ОФД"
+            class="w-48 text-xs font-medium"
             @change="onFilterChange"
           />
 
@@ -317,7 +317,7 @@
         >
           <template #empty>
             <div class="text-center py-12 text-slate-400">
-              <i class="pi pi-receipt text-4xl mb-2 text-slate-300 dark:text-slate-600"></i>
+              <i class="pi pi-globe text-4xl mb-2 text-slate-300 dark:text-slate-600"></i>
               <p class="text-sm font-medium">Кассы WebKassa не найдены.</p>
               <p class="text-xs text-slate-400 mt-1">Загрузите CSV файл или измените параметры фильтрации.</p>
             </div>
@@ -361,8 +361,8 @@
             </template>
           </Column>
 
-          <!-- 2. Serial Number -->
-          <Column header="Заводской номер" style="min-width: 150px">
+          <!-- 2. SWK Номер -->
+          <Column header="SWK Номер" style="min-width: 140px">
             <template #body="{ data }">
               <button
                 type="button"
@@ -385,12 +385,17 @@
             </template>
           </Column>
 
-          <!-- 4. CTO -->
-          <Column field="cto" header="Обслуживающее ЦТО" style="min-width: 140px">
+          <!-- 4. Expiration Date & Days Badge -->
+          <Column header="Срок окончания" style="min-width: 160px">
             <template #body="{ data }">
-              <span class="font-medium text-slate-700 dark:text-slate-300 text-xs">
-                {{ data.cto || '—' }}
-              </span>
+              <div class="flex flex-col">
+                <span class="font-bold text-xs" :class="getExpirationClass(data.days_remaining)">
+                  {{ formatDate(data.expires_at) }}
+                </span>
+                <span class="text-[10px] font-mono mt-0.5" :class="getExpirationClass(data.days_remaining)">
+                  {{ formatDaysRemaining(data.days_remaining) }}
+                </span>
+              </div>
             </template>
           </Column>
 
@@ -414,8 +419,8 @@
             </template>
           </Column>
 
-          <!-- 7. BIN / IIN & Organization from WebKassa -->
-          <Column header="Организация (WebKassa) / БИН" style="min-width: 220px">
+          <!-- 7. Organization / BIN (убрано слово WebKassa) -->
+          <Column header="Организация / БИН" style="min-width: 220px">
             <template #body="{ data }">
               <div class="flex flex-col">
                 <span class="font-semibold text-slate-800 dark:text-slate-200 text-xs truncate" :title="data.organization">
@@ -428,49 +433,45 @@
             </template>
           </Column>
 
-          <!-- 8. Expiration Date & Days Badge -->
-          <Column header="Срок окончания" style="min-width: 160px">
-            <template #body="{ data }">
-              <div class="flex flex-col">
-                <span class="font-bold text-xs" :class="getExpirationClass(data.days_remaining)">
-                  {{ formatDate(data.expires_at) }}
-                </span>
-                <span class="text-[10px] font-mono mt-0.5" :class="getExpirationClass(data.days_remaining)">
-                  {{ formatDaysRemaining(data.days_remaining) }}
-                </span>
-              </div>
-            </template>
-          </Column>
-
-          <!-- 9. Actions with Active Status Icon and Column Filter -->
-          <Column style="min-width: 175px; text-align: right">
+          <!-- 8. Actions with Active Status Icon and Column Filter -->
+          <Column style="min-width: 125px; text-align: right">
             <template #header>
-              <div class="flex items-center justify-end gap-1.5 w-full">
-                <span class="text-xs font-bold text-slate-700 dark:text-slate-200">Действия</span>
-                <!-- Filter by active status directly in this column -->
+              <div class="flex items-center justify-end w-full">
+                <!-- Filter by active status (icon only, without inscription) -->
                 <Select
                   v-model="selectedActive"
                   :options="activeFilterHeaderOptions"
                   optionLabel="label"
                   optionValue="value"
                   size="small"
-                  class="!w-[102px] !text-[11px] !py-0 !px-1 font-medium shadow-none"
+                  class="!w-7 !h-7 !min-w-0 !p-0 !border-0 !bg-transparent hover:!bg-slate-200 dark:hover:!bg-slate-800 !rounded-lg !shadow-none flex items-center justify-center cursor-pointer transition [&_.p-select-dropdown]:!hidden [&_.p-select-label]:!p-0 [&_.p-select-label]:!flex [&_.p-select-label]:!items-center [&_.p-select-label]:!justify-center"
                   @change="onFilterChange"
-                  title="Фильтр активности (Все / Активные / Неактивные)"
+                  title="Фильтр активности касс (Все / Активные / Неактивные)"
                 >
+                  <template #dropdownicon>
+                    <span class="hidden"></span>
+                  </template>
                   <template #value="{ value }">
-                    <span class="flex items-center gap-1 text-[11px]">
-                      <i v-if="value === 'active'" class="pi pi-check text-emerald-600 text-[10px] font-bold"></i>
-                      <i v-else-if="value === 'inactive'" class="pi pi-ban text-rose-600 text-[10px] font-bold"></i>
-                      <i v-else class="pi pi-filter text-slate-400 text-[10px]"></i>
-                      <span class="truncate font-semibold">{{ getActiveFilterHeaderLabel(value) }}</span>
+                    <span class="w-7 h-7 flex items-center justify-center">
+                      <i
+                        v-if="value === 'active'"
+                        class="pi pi-check text-emerald-600 dark:text-emerald-400 font-bold text-xs"
+                      ></i>
+                      <i
+                        v-else-if="value === 'inactive'"
+                        class="pi pi-ban text-rose-600 dark:text-rose-400 font-bold text-xs"
+                      ></i>
+                      <i
+                        v-else
+                        class="pi pi-filter text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-xs"
+                      ></i>
                     </span>
                   </template>
                   <template #option="{ option }">
-                    <div class="flex items-center gap-1.5 text-xs">
-                      <i v-if="option.value === 'active'" class="pi pi-check text-emerald-600 text-xs font-bold"></i>
-                      <i v-else-if="option.value === 'inactive'" class="pi pi-ban text-rose-600 text-xs font-bold"></i>
-                      <i v-else class="pi pi-list text-slate-400 text-xs"></i>
+                    <div class="flex items-center gap-2 text-xs py-0.5">
+                      <i v-if="option.value === 'active'" class="pi pi-check text-emerald-600 font-bold"></i>
+                      <i v-else-if="option.value === 'inactive'" class="pi pi-ban text-rose-600 font-bold"></i>
+                      <i v-else class="pi pi-list text-slate-400"></i>
                       <span>{{ option.label }}</span>
                     </div>
                   </template>
@@ -521,6 +522,15 @@
                   @click="deleteRegister(data)"
                 />
               </div>
+            </template>
+          </Column>
+
+          <!-- 9. CTO (переименовано в ЦТО) -->
+          <Column field="cto" header="ЦТО" style="min-width: 140px">
+            <template #body="{ data }">
+              <span class="font-medium text-slate-700 dark:text-slate-300 text-xs">
+                {{ data.cto || '—' }}
+              </span>
             </template>
           </Column>
         </DataTable>
@@ -707,6 +717,8 @@ const visiblePages = computed(() => {
 const searchQuery = ref('')
 const selectedCto = ref('all')
 const ctoList = ref([])
+const selectedOfd = ref('all')
+const ofdList = ref([])
 const selectedStatus = ref('all')
 const selectedMatched = ref('all')
 const selectedActive = ref('all')
@@ -716,6 +728,14 @@ const ctoFilterOptions = computed(() => {
   const opts = [{ label: 'Все ЦТО', value: 'all' }]
   ctoList.value.forEach((cto) => {
     if (cto) opts.push({ label: cto, value: cto })
+  })
+  return opts
+})
+
+const ofdFilterOptions = computed(() => {
+  const opts = [{ label: 'Все ОФД', value: 'all' }]
+  ofdList.value.forEach((ofd) => {
+    if (ofd) opts.push({ label: ofd, value: ofd })
   })
   return opts
 })
@@ -753,7 +773,7 @@ const getActiveFilterHeaderLabel = (val) => {
 const hasActiveFilters = computed(() => {
   return (
     !!searchQuery.value.trim() ||
-    selectedCto.value !== 'all' ||
+    selectedOfd.value !== 'all' ||
     selectedStatus.value !== 'all' ||
     selectedMatched.value !== 'all' ||
     selectedActive.value !== 'all' ||
@@ -844,6 +864,7 @@ const changePage = (page) => {
 const resetFilters = () => {
   searchQuery.value = ''
   selectedCto.value = 'all'
+  selectedOfd.value = 'all'
   selectedStatus.value = 'all'
   selectedMatched.value = 'all'
   selectedActive.value = 'all'
@@ -858,6 +879,9 @@ const loadDashboard = async () => {
     const params = {}
     if (selectedCto.value && selectedCto.value !== 'all') {
       params.cto = selectedCto.value
+    }
+    if (selectedOfd.value && selectedOfd.value !== 'all') {
+      params.ofd = selectedOfd.value
     }
     if (selectedActive.value === 'active') {
       params.is_active = 'true'
@@ -880,6 +904,15 @@ const loadCtoList = async () => {
   }
 }
 
+const loadOfdList = async () => {
+  try {
+    const res = await webkassaApi.getOfdList()
+    ofdList.value = res.data || []
+  } catch (e) {
+    console.error('Ошибка загрузки списка ОФД:', e)
+  }
+}
+
 const loadRegisters = async () => {
   loading.value = true
   try {
@@ -889,6 +922,7 @@ const loadRegisters = async () => {
     }
     if (searchQuery.value.trim()) params.search = searchQuery.value.trim()
     if (selectedCto.value && selectedCto.value !== 'all') params.cto = selectedCto.value
+    if (selectedOfd.value && selectedOfd.value !== 'all') params.ofd = selectedOfd.value
     if (selectedStatus.value && selectedStatus.value !== 'all') params.status = selectedStatus.value
     if (selectedMatched.value && selectedMatched.value !== 'all') params.matched = selectedMatched.value
     if (selectedActive.value === 'active') params.is_active = 'true'
@@ -968,7 +1002,7 @@ const toggleRegisterActive = (register) => {
 }
 
 const handleRefresh = async () => {
-  await Promise.all([loadRegisters(), loadDashboard(), loadCtoList()])
+  await Promise.all([loadRegisters(), loadDashboard(), loadCtoList(), loadOfdList()])
   toast.add({ severity: 'info', summary: 'Обновлено', detail: 'Данные касс актуализированы', life: 2000 })
 }
 
@@ -986,6 +1020,7 @@ const onCsvUploaded = () => {
   loadRegisters()
   loadDashboard()
   loadCtoList()
+  loadOfdList()
 }
 
 const onRegisterSaved = () => {
@@ -1018,5 +1053,6 @@ onMounted(() => {
   loadRegisters()
   loadDashboard()
   loadCtoList()
+  loadOfdList()
 })
 </script>

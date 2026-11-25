@@ -16,15 +16,15 @@
         </div>
 
         <div>
-          <span class="text-slate-400 dark:text-slate-500 font-medium">Заводской номер:</span>
+          <span class="text-slate-400 dark:text-slate-500 font-medium">SWK Номер:</span>
           <div class="font-mono font-bold text-blue-600 dark:text-blue-400 text-sm mt-0.5 flex items-center gap-1.5">
             <span>{{ register.serial_number }}</span>
-            <QuickCopyBtn :text="register.serial_number" label="Заводской номер" />
+            <QuickCopyBtn :text="register.serial_number" label="SWK Номер" />
           </div>
         </div>
 
         <div>
-          <span class="text-slate-400 dark:text-slate-500 font-medium">Обслуживающее ЦТО:</span>
+          <span class="text-slate-400 dark:text-slate-500 font-medium">ЦТО:</span>
           <div class="font-semibold text-slate-700 dark:text-slate-300 mt-0.5">{{ register.cto || 'Не указано' }}</div>
         </div>
 
@@ -54,7 +54,7 @@
         </div>
 
         <div class="col-span-2 pt-1 border-t border-slate-200 dark:border-slate-800">
-          <span class="text-slate-400 dark:text-slate-500 font-medium">Организация из WebKassa (БИН):</span>
+          <span class="text-slate-400 dark:text-slate-500 font-medium">Организация (БИН):</span>
           <div class="font-medium text-slate-800 dark:text-slate-200 mt-0.5 flex items-center justify-between gap-2">
             <span>{{ register.organization || '—' }}</span>
             <span v-if="register.bin_iin" class="font-mono text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded">
