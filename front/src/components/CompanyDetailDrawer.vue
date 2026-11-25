@@ -1509,15 +1509,15 @@ const handleLaunchLicense = async () => {
       const taskId = res?.task_id
 
       if (taskId) {
-        // Запускаем асинхронный опрос (интервал 4 сек, до 8 попыток = до 32 сек)
+        // Запускаем асинхронный опрос (интервал 2.5 сек, до 14 попыток = до 35 сек)
         const pollRes = await companionStore.pollLicenseTaskStatus(taskId, c.id, {
-          maxAttempts: 8,
-          intervalMs: 4000,
+          maxAttempts: 14,
+          intervalMs: 2500,
           onAttempt: (attempt, max) => {
-            const elapsedSec = (attempt - 1) * 4
-            if (elapsedSec < 6) {
+            const elapsedSec = (attempt - 1) * 2.5
+            if (elapsedSec < 5) {
               updatingStatusText.value = `Запуск ClearBat и подключение к серверу iiko... (${attempt}/${max})`
-            } else if (elapsedSec < 18) {
+            } else if (elapsedSec < 15) {
               updatingStatusText.value = `Ожидание формирования лицензий сервером iiko... (${attempt}/${max})`
             } else {
               updatingStatusText.value = `Завершение синхронизации сведений о лицензии... (${attempt}/${max})`

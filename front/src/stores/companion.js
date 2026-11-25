@@ -119,7 +119,7 @@ export const useCompanionStore = defineStore('companion', {
       return { success: false, message: 'Не удалось запустить обновление лицензии' }
     },
 
-    async pollLicenseTaskStatus(taskId, companyId, { maxAttempts = 8, intervalMs = 4000, onAttempt } = {}) {
+    async pollLicenseTaskStatus(taskId, companyId, { maxAttempts = 14, intervalMs = 2500, onAttempt } = {}) {
       if (!taskId) return { success: false, timeout: false, error: 'task_id отсутствует' }
 
       for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -150,7 +150,7 @@ export const useCompanionStore = defineStore('companion', {
       return {
         success: false,
         timeout: true,
-        error: 'Превышено время ожидания ответа от сервера iiko (30 сек)'
+        error: 'Превышено время ожидания ответа от сервера iiko (35 сек)'
       }
     },
 

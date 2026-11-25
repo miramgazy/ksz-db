@@ -17,6 +17,7 @@ import json
 import time
 import socket
 import base64
+import shutil
 import sqlite3
 import getpass
 import threading
@@ -140,13 +141,38 @@ def launch_protocol_url(url: str):
             try:
                 os.startfile(url)
             except Exception:
-                subprocess.Popen(['rundll32.exe', 'url.dll,FileProtocolHandler', url])
+                try:
+                    subprocess.Popen(['explorer.exe', url])
+                except Exception:
+                    subprocess.Popen(['rundll32.exe', 'url.dll,FileProtocolHandler', url])
         elif sys.platform == 'darwin':
             subprocess.Popen(['open', url])
         else:
             subprocess.Popen(['xdg-open', url])
     except Exception as e:
         print(f"[!] Ошибка вызова протокола: {e}")
+
+
+def find_anydesk_exe(custom_exe: str = '') -> str:
+    """Ищет установленный исполняемый файл AnyDesk.exe по стандартным путям Windows."""
+    candidates = []
+    if custom_exe:
+        candidates.append(custom_exe)
+    candidates.extend([
+        r'C:\Program Files (x86)\AnyDesk\AnyDesk.exe',
+        r'C:\Program Files\AnyDesk\AnyDesk.exe',
+        os.path.expandvars(r'%LOCALAPPDATA%\Programs\AnyDesk\AnyDesk.exe'),
+        os.path.expandvars(r'%LOCALAPPDATA%\AnyDesk\AnyDesk.exe'),
+        os.path.expandvars(r'%APPDATA%\AnyDesk\AnyDesk.exe'),
+        os.path.expandvars(r'%PROGRAMDATA%\AnyDesk\AnyDesk.exe'),
+    ])
+    for c in candidates:
+        if c and os.path.exists(c):
+            return c
+    which_anydesk = shutil.which('AnyDesk.exe') or shutil.which('anydesk')
+    if which_anydesk:
+        return which_anydesk
+    return ''
 
 
 def set_windows_autostart(enable: bool):
@@ -683,8 +709,8 @@ class AgentApp:
 
         settings = self.config['SETTINGS'] if 'SETTINGS' in self.config else {}
         sandman_path = settings.get('sandman_path', r'C:\Program Files\Sandboxie-Plus\SandMan.exe')
-        default_exe = settings.get('default_anydesk_exe', r'C:\Program Files (x86)\AnyDesk\AnyDesk.exe')
-        exe_path = custom_exe if custom_exe else default_exe
+        default_exe = settings.get('default_anydesk_exe', '')
+        exe_path = find_anydesk_exe(custom_exe or default_exe)
 
         if any_pass:
             copy_to_clipboard(any_pass)
@@ -701,16 +727,16 @@ class AgentApp:
                         if os.path.exists(c):
                             sandman_path = c
                             break
-                cmd = f'"{sandman_path}" {sandbox_params} "{exe_path}" {anydesk_id}'
+                target_exe = exe_path or r'C:\Program Files (x86)\AnyDesk\AnyDesk.exe'
+                cmd = f'"{sandman_path}" {sandbox_params} "{target_exe}" {anydesk_id}'
                 subprocess.Popen(cmd, shell=True)
                 launched_mode = f"Sandboxie ({sandbox_params or 'Песочница'})"
             else:
-                if os.path.exists(exe_path):
+                if exe_path and os.path.exists(exe_path):
+                    args = [exe_path, anydesk_id]
                     if any_pass:
-                        cmd = f'"{exe_path}" {anydesk_id} --with-password {any_pass}'
-                    else:
-                        cmd = f'"{exe_path}" {anydesk_id}'
-                    subprocess.Popen(cmd, shell=True)
+                        args.extend(['--with-password', any_pass])
+                    subprocess.Popen(args)
                     launched_mode = "AnyDesk.exe"
                 else:
                     launch_protocol_url(f"anydesk:{anydesk_id}")
@@ -786,9 +812,9 @@ class AgentApp:
 
     def _watch_license_log(self, log_file: Path, initial_pos: int, company_id, task_id: str, server: str):
         self.log(f"[*] Начато наблюдение за логом CLEAR_bat ({log_file.name}) для: {server}...")
-        max_attempts = 22  # 22 * 1.5 сек ~ 33 сек
+        max_attempts = 35  # 35 * 1.0 сек = 35 сек
         for attempt in range(max_attempts):
-            time.sleep(1.5)
+            time.sleep(1.0)
 
             current_file = log_file
             if not current_file.exists():
