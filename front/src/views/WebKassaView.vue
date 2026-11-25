@@ -434,10 +434,11 @@
           </Column>
 
           <!-- 8. Actions with Active Status Icon and Column Filter -->
-          <Column style="min-width: 125px; text-align: right">
+          <Column style="min-width: 140px; text-align: right">
             <template #header>
-              <div class="flex items-center justify-end w-full">
-                <!-- Filter by active status (icon only, without inscription) -->
+              <div class="flex items-center justify-end gap-1.5 w-full">
+                <span class="text-xs font-bold text-slate-700 dark:text-slate-200">Действия</span>
+                <!-- Filter by active status (icon) -->
                 <Select
                   v-model="selectedActive"
                   :options="activeFilterHeaderOptions"
