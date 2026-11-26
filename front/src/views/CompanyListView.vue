@@ -990,7 +990,7 @@
             <InputIcon class="pi pi-search text-xs text-slate-400" />
             <InputText
               v-model="versionSearchQuery"
-              placeholder="Поиск версии (от 3 симв.)..."
+              placeholder="Поиск версии..."
               class="w-full !text-xs !py-1 !pl-7 !pr-6"
             />
           </IconField>
@@ -1004,22 +1004,16 @@
           </button>
         </div>
 
-        <!-- Status / Hint -->
-        <div
-          v-if="versionSearchQuery.length > 0 && versionSearchQuery.length < 3"
-          class="text-[10px] text-amber-600 dark:text-amber-400 px-1 font-medium"
-        >
-          Введите ещё минимум {{ 3 - versionSearchQuery.length }} симв. для поиска
-        </div>
-        <div
-          v-else-if="!versionSearchQuery"
-          class="text-[10px] text-slate-400 dark:text-slate-500 px-1"
-        >
-          10 последних версий:
+        <!-- Counter info -->
+        <div class="text-[10px] text-slate-400 dark:text-slate-500 px-1 flex items-center justify-between">
+          <span>Все доступные версии ({{ displayedVersionsList.length }}):</span>
+          <span v-if="selectedVersions.length > 0" class="text-indigo-600 dark:text-indigo-400 font-semibold">
+            Выбрано: {{ selectedVersions.length }}
+          </span>
         </div>
 
         <!-- Checkbox list -->
-        <div class="max-h-52 overflow-y-auto flex flex-col gap-1 pr-1 divide-y divide-slate-100 dark:divide-slate-800/60">
+        <div class="max-h-60 overflow-y-auto flex flex-col gap-1 pr-1 divide-y divide-slate-100 dark:divide-slate-800/60">
           <label
             v-for="ver in displayedVersionsList"
             :key="ver"
@@ -1459,15 +1453,8 @@ const selectedVersions = ref([])
 const displayedVersionsList = computed(() => {
   const allVersions = filterOptions.value?.iiko_versions || []
   const q = versionSearchQuery.value.trim()
-  if (q.length >= 3) {
-    return allVersions.filter(v => matchesSmartSearch(v, q))
-  }
-  const top10 = allVersions.slice(0, 10)
-  const set = new Set(top10)
-  selectedVersions.value.forEach(v => {
-    if (v) set.add(v)
-  })
-  return Array.from(set)
+  if (!q) return allVersions
+  return allVersions.filter(v => matchesSmartSearch(v, q))
 })
 
 const toggleVersionPopover = (event) => {
