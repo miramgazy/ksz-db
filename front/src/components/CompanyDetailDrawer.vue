@@ -848,7 +848,11 @@
               </div>
               <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mt-1 flex-wrap">
                 <span class="font-mono font-bold text-blue-600 dark:text-blue-400">{{ reg.serial_number }}</span>
-                <span v-if="reg.cto">• ЦТО: {{ reg.cto }}</span>
+                <span v-if="reg.organization || reg.bin_iin">
+                  • <span v-if="reg.organization" class="font-medium text-slate-700 dark:text-slate-300">{{ reg.organization }}</span>
+                  <span v-if="reg.organization && reg.bin_iin"> / </span>
+                  <span v-if="reg.bin_iin" class="font-mono text-slate-500 dark:text-slate-400">БИН: {{ reg.bin_iin }}</span>
+                </span>
                 <span v-if="reg.ofd">• ОФД: {{ reg.ofd }}</span>
               </div>
             </div>

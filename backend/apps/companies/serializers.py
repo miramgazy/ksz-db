@@ -154,6 +154,8 @@ class CompanyWebkassaMixin:
                 'serial_number': r.serial_number,
                 'status': r.status,
                 'ofd': r.ofd,
+                'organization': r.organization,
+                'bin_iin': r.bin_iin,
                 'expires_at': r.expires_at.isoformat() if r.expires_at else None,
                 'days_remaining': (r.expires_at - today).days if r.expires_at else None,
             }
