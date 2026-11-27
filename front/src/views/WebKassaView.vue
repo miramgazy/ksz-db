@@ -500,17 +500,6 @@
                   ></i>
                 </button>
 
-                <!-- Edit Button -->
-                <Button
-                  icon="pi pi-pencil"
-                  size="small"
-                  severity="secondary"
-                  text
-                  rounded
-                  title="Редактировать / привязать заведение"
-                  @click="openRegisterDetails(data)"
-                />
-
                 <!-- Delete Button -->
                 <Button
                   v-if="authStore.canEdit"

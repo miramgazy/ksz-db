@@ -324,11 +324,16 @@
           <!-- Service Name & Type Badge -->
           <Column header="Услуга" style="min-width: 180px">
             <template #body="{ data }">
-              <div class="flex items-center gap-1.5">
+              <button
+                type="button"
+                class="flex items-center gap-1.5 cursor-pointer text-left transition hover:opacity-85 group focus:outline-hidden"
+                title="Редактировать услугу"
+                @click="openEditService(data)"
+              >
                 <!-- ITS Badge -->
                 <span
                   v-if="data.is_its || data.service_code === 'ITS'"
-                  class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800 shadow-2xs"
+                  class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800 shadow-2xs group-hover:ring-2 group-hover:ring-emerald-400/50 transition"
                   title="ИТС"
                 >
                   <i class="pi pi-shield text-[10px] text-emerald-700 dark:text-emerald-400"></i>
@@ -338,7 +343,7 @@
                 <!-- noIP Badge -->
                 <span
                   v-else-if="data.service_code === 'NOIP'"
-                  class="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950/80 text-blue-900 dark:text-blue-200 border border-blue-300 dark:border-blue-800"
+                  class="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-950/80 text-blue-900 dark:text-blue-200 border border-blue-300 dark:border-blue-800 group-hover:ring-2 group-hover:ring-blue-400/50 transition"
                 >
                   <i class="pi pi-server text-[10px] text-blue-700 dark:text-blue-400"></i>
                   {{ data.service_name || 'Сервер noIP' }}
@@ -347,7 +352,7 @@
                 <!-- WhatsApp Badge -->
                 <span
                   v-else-if="data.service_code === 'WHATSAPP'"
-                  class="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-md bg-green-100 dark:bg-green-950/80 text-green-900 dark:text-green-200 border border-green-300 dark:border-green-800"
+                  class="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-md bg-green-100 dark:bg-green-950/80 text-green-900 dark:text-green-200 border border-green-300 dark:border-green-800 group-hover:ring-2 group-hover:ring-green-400/50 transition"
                 >
                   <i class="pi pi-whatsapp text-[10px] text-green-700 dark:text-green-400"></i>
                   {{ data.service_name || 'WhatsApp' }}
@@ -356,12 +361,12 @@
                 <!-- Custom Service Badge -->
                 <span
                   v-else
-                  class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700"
+                  class="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 group-hover:ring-2 group-hover:ring-primary-400/50 transition"
                 >
                   <i class="pi pi-box text-[10px] text-slate-600 dark:text-slate-400"></i>
                   {{ data.service_name }}
                 </span>
-              </div>
+              </button>
             </template>
           </Column>
 
@@ -440,18 +445,6 @@
                   class="!text-xs"
                   @click="openQuickRenew(data)"
                   title="Быстрое продление срока действия"
-                />
-
-                <!-- Edit Button -->
-                <Button
-                  v-if="authStore.canEdit"
-                  icon="pi pi-pencil"
-                  size="small"
-                  severity="secondary"
-                  text
-                  rounded
-                  @click="openEditService(data)"
-                  title="Редактировать услугу"
                 />
 
                 <!-- Duplicate Button -->
