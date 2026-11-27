@@ -45,11 +45,23 @@
         </div>
 
         <div>
-          <span class="text-slate-400 dark:text-slate-500 font-medium">Срок действия:</span>
-          <div class="font-bold mt-0.5 flex items-center gap-1.5" :class="expirationColorClass">
-            <i class="pi pi-calendar text-xs"></i>
-            <span>{{ formatDate(register.expires_at) }}</span>
-            <span class="text-[10px] font-mono font-normal">({{ formatDaysRemaining(register.days_remaining) }})</span>
+          <label for="reg_expires_at_input" class="text-slate-400 dark:text-slate-500 font-medium block">
+            Срок действия:
+          </label>
+          <div class="mt-0.5 flex items-center gap-1.5 flex-wrap">
+            <input
+              id="reg_expires_at_input"
+              type="date"
+              v-model="editExpiresAt"
+              class="px-2 py-1 text-xs border border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white rounded-md font-mono font-bold focus:outline-hidden focus:ring-1 focus:ring-blue-500 cursor-pointer"
+            />
+            <span
+              v-if="editExpiresAt"
+              class="text-[10px] font-mono font-semibold"
+              :class="computedExpirationClass"
+            >
+              {{ computedDaysRemainingText }}
+            </span>
           </div>
         </div>
 
@@ -262,14 +274,29 @@ const saving = ref(false)
 const selectedCompany = ref(null)
 const editComment = ref('')
 const editIsActive = ref(true)
+const editExpiresAt = ref('')
 const syncBinToCompany = ref(true)
 
 const companySearchQuery = ref('')
 const companyResults = ref([])
 let searchTimeout = null
 
-const expirationColorClass = computed(() => {
-  const days = props.register?.days_remaining
+const computedDaysRemaining = computed(() => {
+  if (!editExpiresAt.value) return null
+  const target = new Date(editExpiresAt.value)
+  const today = new Date()
+  target.setHours(0, 0, 0, 0)
+  today.setHours(0, 0, 0, 0)
+  return Math.round((target - today) / (1000 * 60 * 60 * 24))
+})
+
+const computedDaysRemainingText = computed(() => {
+  if (computedDaysRemaining.value === null) return ''
+  return `(${formatDaysRemaining(computedDaysRemaining.value)})`
+})
+
+const computedExpirationClass = computed(() => {
+  const days = computedDaysRemaining.value
   if (days === null || days === undefined) return 'text-slate-500'
   if (days < 0) return 'text-rose-600 dark:text-rose-400 font-bold'
   if (days <= 3) return 'text-orange-600 dark:text-orange-400 font-bold'
@@ -314,6 +341,7 @@ const saveChanges = async () => {
       company: selectedCompany.value ? selectedCompany.value.id : null,
       comment: editComment.value.trim(),
       is_active: editIsActive.value,
+      expires_at: editExpiresAt.value ? editExpiresAt.value : null,
     }
 
     await webkassaApi.updateRegister(props.register.id, payload)
@@ -361,6 +389,7 @@ watch(
     if (reg) {
       editComment.value = reg.comment || ''
       editIsActive.value = reg.is_active !== undefined ? reg.is_active : true
+      editExpiresAt.value = reg.expires_at ? reg.expires_at.split('T')[0] : ''
       companySearchQuery.value = ''
       companyResults.value = []
       syncBinToCompany.value = true
