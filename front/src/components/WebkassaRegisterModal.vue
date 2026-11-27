@@ -54,6 +54,7 @@
               type="date"
               v-model="editExpiresAt"
               class="px-2 py-1 text-xs border border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-white rounded-md font-mono font-bold focus:outline-hidden focus:ring-1 focus:ring-blue-500 cursor-pointer"
+              @input="selectedRenewPreset = null"
             />
             <span
               v-if="editExpiresAt"
@@ -62,6 +63,52 @@
             >
               {{ computedDaysRemainingText }}
             </span>
+          </div>
+
+          <!-- Quick renew preset buttons -->
+          <div class="mt-1.5 flex items-center gap-1 flex-wrap">
+            <button
+              type="button"
+              class="px-2 py-0.5 text-[11px] font-medium rounded border transition cursor-pointer"
+              :class="selectedRenewPreset === 1
+                ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'"
+              @click="applyQuickRenew(1)"
+              title="Продлить на 1 месяц"
+            >
+              +1мес
+            </button>
+            <button
+              type="button"
+              class="px-2 py-0.5 text-[11px] font-medium rounded border transition cursor-pointer"
+              :class="selectedRenewPreset === 6
+                ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'"
+              @click="applyQuickRenew(6)"
+              title="Продлить на 6 месяцев"
+            >
+              +6мес
+            </button>
+            <button
+              type="button"
+              class="px-2 py-0.5 text-[11px] font-medium rounded border transition cursor-pointer"
+              :class="selectedRenewPreset === 12
+                ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'"
+              @click="applyQuickRenew(12)"
+              title="Продлить на 1 год (12 месяцев)"
+            >
+              +1год
+            </button>
+            <button
+              v-if="editExpiresAt !== initialExpiresAt"
+              type="button"
+              class="px-1.5 py-0.5 text-[10px] text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 rounded border border-transparent hover:border-slate-300 dark:hover:border-slate-700 transition cursor-pointer ml-auto"
+              @click="resetExpiresAt"
+              title="Вернуть исходную дату"
+            >
+              <i class="pi pi-undo text-[9px]"></i>
+            </button>
           </div>
         </div>
 
@@ -275,6 +322,8 @@ const selectedCompany = ref(null)
 const editComment = ref('')
 const editIsActive = ref(true)
 const editExpiresAt = ref('')
+const initialExpiresAt = ref('')
+const selectedRenewPreset = ref(null)
 const syncBinToCompany = ref(true)
 
 const companySearchQuery = ref('')
@@ -304,6 +353,55 @@ const computedExpirationClass = computed(() => {
   if (days <= 30) return 'text-blue-600 dark:text-blue-400'
   return 'text-emerald-600 dark:text-emerald-400'
 })
+
+const addMonthsToDate = (dateStrOrObj, months) => {
+  let d
+  if (typeof dateStrOrObj === 'string' && dateStrOrObj) {
+    const parts = dateStrOrObj.split('-').map(Number)
+    d = new Date(parts[0], parts[1] - 1, parts[2])
+  } else {
+    d = new Date()
+  }
+
+  if (isNaN(d.getTime())) {
+    d = new Date()
+  }
+
+  const currentDay = d.getDate()
+  d.setMonth(d.getMonth() + months)
+
+  // Handle month day overflow (e.g. 31 Jan + 1 month -> 28 Feb)
+  if (d.getDate() !== currentDay) {
+    d.setDate(0)
+  }
+
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+const applyQuickRenew = (months) => {
+  const now = new Date()
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+
+  let baseStr = initialExpiresAt.value
+  if (!baseStr || baseStr < todayStr) {
+    baseStr = todayStr
+  }
+
+  if (selectedRenewPreset.value === months) {
+    editExpiresAt.value = addMonthsToDate(editExpiresAt.value || baseStr, months)
+  } else {
+    selectedRenewPreset.value = months
+    editExpiresAt.value = addMonthsToDate(baseStr, months)
+  }
+}
+
+const resetExpiresAt = () => {
+  editExpiresAt.value = initialExpiresAt.value
+  selectedRenewPreset.value = null
+}
 
 const onSearchCompanies = () => {
   clearTimeout(searchTimeout)
@@ -389,7 +487,10 @@ watch(
     if (reg) {
       editComment.value = reg.comment || ''
       editIsActive.value = reg.is_active !== undefined ? reg.is_active : true
-      editExpiresAt.value = reg.expires_at ? reg.expires_at.split('T')[0] : ''
+      const exp = reg.expires_at ? reg.expires_at.split('T')[0] : ''
+      editExpiresAt.value = exp
+      initialExpiresAt.value = exp
+      selectedRenewPreset.value = null
       companySearchQuery.value = ''
       companyResults.value = []
       syncBinToCompany.value = true
