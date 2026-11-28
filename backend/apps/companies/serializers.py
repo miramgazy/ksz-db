@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Company, AnydeskStation, IikoDistribution, City, BusinessType, LicenceType, AnydeskVersion, ServiceType, CompanyService
+from .models import Company, AnydeskStation, IikoDistribution, City, BusinessType, LicenceType, Department, AnydeskVersion, ServiceType, CompanyService
 from apps.common.crypto import encrypt_password, decrypt_password
 from .utils import clean_iiko_version, get_distribution_link
 
@@ -18,6 +18,12 @@ class BusinessTypeSerializer(serializers.ModelSerializer):
 class LicenceTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = LicenceType
+        fields = ('id', 'name', 'created_at')
+
+
+class DepartmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Department
         fields = ('id', 'name', 'created_at')
 
 
@@ -187,7 +193,7 @@ class CompanyListSerializer(CompanyWebkassaMixin, serializers.ModelSerializer):
             'branches_count', 'place_name', 'company_name', 'bin', 'cabinet_name',
             'crm_id', 'uid', 'system_admin_name', 'system_admin_password',
             'business_type', 'licence_type', 'iiko_version',
-            'server_name', 'port_number', 'city', 'status',
+            'server_name', 'port_number', 'city', 'department', 'status',
             'iiko_rosta', 'sort_number', 'no_ip', 'helpdesk_its', 'its_expires_at', 'its_days_remaining', 'its_cost', 'iiko_web_address',
             'webkassa_count', 'webkassa_days_remaining', 'webkassa_expires_at', 'webkassa_registers',
             'license_data', 'license_updated_at', 'last_license_error',
@@ -260,7 +266,7 @@ class CompanyDetailSerializer(CompanyWebkassaMixin, serializers.ModelSerializer)
             'crm_id', 'uid', 'system_admin_name', 'system_admin_password',
             'business_type', 'licence_type', 'iiko_version',
             'server_name', 'port_number', 'image_link', 'no_ip',
-            'iiko_rosta', 'sort_number', 'helpdesk_its', 'its_expires_at', 'its_days_remaining', 'its_cost', 'city',
+            'iiko_rosta', 'sort_number', 'helpdesk_its', 'its_expires_at', 'its_days_remaining', 'its_cost', 'city', 'department',
             'webkassa_count', 'webkassa_days_remaining', 'webkassa_expires_at', 'webkassa_registers',
             'status', 'iiko_web_address', 'license_data', 'license_updated_at', 'last_license_error', 'anydesk_stations', 'company_services',
             'distribution_link', 'created_at', 'updated_at', 'updated_by_name'
@@ -313,13 +319,15 @@ class CompanyDetailSerializer(CompanyWebkassaMixin, serializers.ModelSerializer)
             company.set_password(password)
             company.save(update_fields=['system_admin_password_enc'])
 
-        # Ensure city, business_type, licence_type exist in directory tables
+        # Ensure city, business_type, licence_type, department exist in directory tables
         if company.city:
             City.objects.get_or_create(name=company.city.strip())
         if company.business_type:
             BusinessType.objects.get_or_create(name=company.business_type.strip())
         if company.licence_type:
             LicenceType.objects.get_or_create(name=company.licence_type.strip())
+        if company.department:
+            Department.objects.get_or_create(name=company.department.strip())
 
         return company
 
@@ -333,13 +341,15 @@ class CompanyDetailSerializer(CompanyWebkassaMixin, serializers.ModelSerializer)
             company.set_password(password)
             company.save(update_fields=['system_admin_password_enc'])
 
-        # Ensure city, business_type, licence_type exist in directory tables
+        # Ensure city, business_type, licence_type, department exist in directory tables
         if company.city:
             City.objects.get_or_create(name=company.city.strip())
         if company.business_type:
             BusinessType.objects.get_or_create(name=company.business_type.strip())
         if company.licence_type:
             LicenceType.objects.get_or_create(name=company.licence_type.strip())
+        if company.department:
+            Department.objects.get_or_create(name=company.department.strip())
 
         return company
 

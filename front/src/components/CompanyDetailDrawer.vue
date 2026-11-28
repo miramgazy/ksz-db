@@ -60,6 +60,8 @@
               <span v-if="company?.bin" class="font-mono text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-1 py-0.2 rounded text-[11px] font-semibold" title="БИН / ИИН">БИН: {{ company.bin }}</span>
               <span>•</span>
               <span class="font-medium text-slate-700 dark:text-slate-300">{{ company?.city || 'Город не указан' }}</span>
+              <span>•</span>
+              <span class="font-medium text-indigo-700 dark:text-indigo-400">Департамент: {{ company?.department || 'Запад' }}</span>
               <template v-if="company?.created_at">
                 <span class="text-slate-400">•</span>
                 <span class="inline-flex items-center gap-1 text-slate-600 dark:text-slate-300 font-medium" title="Дата запуска (создания записи в базе)">
@@ -317,6 +319,14 @@
             <span class="font-semibold">{{ company.business_type || '—' }}</span>
             <span class="text-slate-400 dark:text-slate-600 mx-1.5">•</span>
             <span class="font-medium text-slate-700 dark:text-slate-300">{{ company.cabinet_name || company.company_name || '—' }}</span>
+          </div>
+        </div>
+
+        <div class="p-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg">
+          <div class="text-xs text-slate-500 dark:text-slate-400 font-medium">Департамент:</div>
+          <div class="mt-0.5 text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+            <i class="pi pi-compass text-blue-500 text-xs"></i>
+            <span class="font-semibold">{{ company.department || 'Запад' }}</span>
           </div>
         </div>
 
@@ -594,6 +604,29 @@
             v-model="editForm.business_type"
             :options="businessTypesList"
             placeholder="Выберите тип заведения"
+            editable
+            filter
+            class="w-full text-xs"
+          />
+        </div>
+
+        <!-- Department Dropdown with Manage Modal Trigger -->
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase">Департамент</label>
+            <Button
+              label="Управление департаментами"
+              icon="pi pi-cog"
+              text
+              size="small"
+              class="!p-0 !text-xs text-blue-600 dark:text-blue-400"
+              @click="showDepartmentModal = true"
+            />
+          </div>
+          <Select
+            v-model="editForm.department"
+            :options="departmentsList"
+            placeholder="Выберите департамент"
             editable
             filter
             class="w-full text-xs"
@@ -904,6 +937,10 @@
       v-model="showLicenceTypeModal"
       @updated="loadLicenceTypes"
     />
+    <DepartmentManagementModal
+      v-model="showDepartmentModal"
+      @updated="loadDepartments"
+    />
     <!-- AnyDesk Version Select Modal -->
     <AnydeskVersionSelectModal
       v-model="showVersionSelectModal"
@@ -1086,6 +1123,7 @@ import { useCompanionStore } from '../stores/companion'
 import { companiesApi } from '../api/companies'
 import { anydeskApi } from '../api/anydesk'
 import { citiesApi } from '../api/cities'
+import { departmentsApi } from '../api/departments'
 import { businessTypesApi } from '../api/businessTypes'
 import { licenceTypesApi } from '../api/licenceTypes'
 import { distributionsApi } from '../api/distributions'
@@ -1093,6 +1131,7 @@ import QuickCopyBtn from './QuickCopyBtn.vue'
 import AnydeskStationModal from './AnydeskStationModal.vue'
 import PasswordGeneratorModal from './PasswordGeneratorModal.vue'
 import CityManagementModal from './CityManagementModal.vue'
+import DepartmentManagementModal from './DepartmentManagementModal.vue'
 import BusinessTypeManagementModal from './BusinessTypeManagementModal.vue'
 import LicenceTypeManagementModal from './LicenceTypeManagementModal.vue'
 import AnydeskVersionSelectModal from './AnydeskVersionSelectModal.vue'
@@ -1199,6 +1238,7 @@ watch(() => props.modelValue, async (val) => {
         bin: '',
         cabinet_name: '',
         city: '',
+        department: 'Запад',
         business_type: '',
         server_name: '',
         port_number: '443',
@@ -1232,6 +1272,7 @@ const saving = ref(false)
 const showPassword = ref(false)
 const showPassGen = ref(false)
 const showCityModal = ref(false)
+const showDepartmentModal = ref(false)
 const showBusinessTypeModal = ref(false)
 const showLicenceTypeModal = ref(false)
 const showVersionSelectModal = ref(false)
@@ -1269,6 +1310,7 @@ const goToServices = () => {
 
 const chainsList = ref([])
 const citiesList = ref([])
+const departmentsList = ref([])
 const businessTypesList = ref([])
 const licenceTypesList = ref([])
 const iikoVersionsList = ref([])
@@ -1299,6 +1341,13 @@ const loadChains = async () => {
   } catch (e) {}
 }
 
+const loadDepartments = async () => {
+  try {
+    const res = await departmentsApi.getDepartments({ page_size: 200 })
+    departmentsList.value = (res.data.results || res.data).map(d => d.name)
+  } catch (e) {}
+}
+
 const loadBusinessTypes = async () => {
   try {
     const res = await businessTypesApi.getBusinessTypes({ page_size: 200 })
@@ -1323,6 +1372,7 @@ const loadIikoVersions = async () => {
 const loadAllOptions = async () => {
   await Promise.all([
     loadCities(),
+    loadDepartments(),
     loadChains(),
     loadBusinessTypes(),
     loadLicenceTypes(),
@@ -1406,6 +1456,7 @@ const startCopy = async () => {
     port_number: orig.port_number || '443',
     // 7. Город
     city: orig.city || '',
+    department: orig.department || 'Запад',
     // 8. Юр лицо
     company_name: orig.company_name || '',
     bin: orig.bin || '',
@@ -1439,6 +1490,7 @@ const startEdit = async () => {
   isCopyMode.value = false
   editForm.value = {
     ...company.value,
+    department: company.value.department || 'Запад',
     cabinet_name: company.value.cabinet_name || '',
     is_its: company.value.helpdesk_its === 'Да',
     its_expires_at: company.value.its_expires_at || '2026-12-31',

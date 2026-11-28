@@ -279,15 +279,14 @@
             />
           </div>
 
-          <!-- ITS Filter -->
+          <!-- Department Filter (replaces ITS filter in filter block) -->
           <div>
             <Select
-              v-model="selectedIts"
-              :options="itsFilterOptions"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="ИТС (Все)"
+              v-model="selectedDepartment"
+              :options="departmentFilterOptions"
+              placeholder="Департамент (Все)"
               showClear
+              filter
               class="w-full text-xs"
               @change="onFilterChange"
             />
@@ -740,6 +739,15 @@
                   <i class="pi pi-copy text-[11px]"></i>
                 </button>
               </div>
+            </template>
+          </Column>
+
+          <!-- Department -->
+          <Column field="department" header="Департамент" :sortable="true" style="min-width: 130px; white-space: nowrap">
+            <template #body="{ data }">
+              <span class="text-xs font-medium text-slate-700 dark:text-slate-200">
+                {{ data.department || 'Запад' }}
+              </span>
             </template>
           </Column>
 
@@ -1311,8 +1319,11 @@ const selectedBusinessType = ref(null)
 const selectedLicenceType = ref(null)
 const selectedOrdering = ref('chain_smart')
 
+const selectedDepartment = ref(null)
+
 const filterOptions = ref({
   cities: [],
+  departments: [],
   business_types: [],
   licence_types: [],
   iiko_rosta: [],
@@ -1360,6 +1371,7 @@ const isFiltered = computed(() => {
     searchQuery.value.trim() ||
     selectedChain.value ||
     selectedCity.value ||
+    selectedDepartment.value ||
     (selectedStatus.value !== null && selectedStatus.value !== undefined && selectedStatus.value !== '') ||
     selectedIts.value ||
     selectedNodeType.value
@@ -1373,6 +1385,7 @@ const hasActiveFiltersOrSort = computed(() => {
     selectedChain.value ||
     selectedCity.value ||
     selectedCities.value.length > 0 ||
+    selectedDepartment.value ||
     (selectedStatus.value !== null && selectedStatus.value !== undefined && selectedStatus.value !== '') ||
     selectedIts.value ||
     selectedLicenceType.value ||
@@ -1393,6 +1406,10 @@ const nodeTypeFilterOptions = [
   { label: 'Сети (Chain)', value: 'CHAIN' },
   { label: 'Точки (RMS)', value: 'RMS' },
 ]
+
+const departmentFilterOptions = computed(() => {
+  return filterOptions.value?.departments || ['Запад', 'Алматы', 'Шымкент', 'Астана', 'Караганды']
+})
 
 const selectedIts = ref(null)
 const itsFilterOptions = [
@@ -1874,6 +1891,7 @@ const resetAllFiltersAndSorting = () => {
   selectedNodeType.value = null
   selectedChain.value = null
   selectedCity.value = null
+  selectedDepartment.value = null
   selectedStatus.value = null
   selectedIts.value = null
   selectedLicenceType.value = null
@@ -1978,6 +1996,7 @@ const loadCompanies = async () => {
     if (selectedStatus.value !== null && selectedStatus.value !== undefined && selectedStatus.value !== '') {
       params.status = selectedStatus.value
     }
+    if (selectedDepartment.value) params.department = selectedDepartment.value
     if (selectedIts.value) params.its = selectedIts.value
 
     const allLicTypes = [...selectedLicenceTypes.value]

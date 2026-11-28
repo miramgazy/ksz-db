@@ -11,6 +11,7 @@ urlpatterns = [
     path('api/v1/companies/', include('apps.companies.urls_companies')),
     path('api/v1/cities/', include('apps.companies.urls_cities')),
     path('api/v1/business-types/', include('apps.companies.urls_business_types')),
+    path('api/v1/departments/', include('apps.companies.urls_departments')),
     path('api/v1/licence-types/', include('apps.companies.urls_licence_types')),
     path('api/v1/anydesk/', include('apps.companies.urls_anydesk')),
     path('api/v1/anydesk-versions/', include('apps.companies.urls_anydesk_versions')),

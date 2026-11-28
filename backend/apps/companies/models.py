@@ -42,6 +42,19 @@ class LicenceType(models.Model):
         return self.name
 
 
+class Department(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name='Департамент')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата добавления')
+
+    class Meta:
+        verbose_name = 'Департамент'
+        verbose_name_plural = 'Департаменты'
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
 class Company(models.Model):
     class SoftwareType(models.TextChoices):
         IIKO = 'IIKO', 'iiko'
@@ -96,6 +109,7 @@ class Company(models.Model):
     its_expires_at = models.DateField(null=True, blank=True, db_index=True, verbose_name='Срок действия ИТС')
     its_cost = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name='Стоимость ИТС (₸)')
     city = models.CharField(max_length=100, blank=True, db_index=True, verbose_name='Город')
+    department = models.CharField(max_length=100, default='Запад', blank=True, db_index=True, verbose_name='Департамент')
     status = models.BooleanField(default=True, db_index=True, verbose_name='Активен')
     iiko_web_address = models.TextField(blank=True, verbose_name='Адрес iikoWeb')
     license_data = models.JSONField(default=dict, blank=True, verbose_name='Информация о лицензиях')

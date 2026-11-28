@@ -6,7 +6,7 @@ from rest_framework import viewsets, permissions, status, pagination
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from apps.common.permissions import ReadOnlyForViewer
-from .models import Company, AnydeskStation, IikoDistribution, City, BusinessType, LicenceType, AnydeskVersion, ServiceType, CompanyService
+from .models import Company, AnydeskStation, IikoDistribution, City, BusinessType, LicenceType, Department, AnydeskVersion, ServiceType, CompanyService
 from .utils import (
     version_sort_key,
     clean_iiko_version,
@@ -24,6 +24,7 @@ from .serializers import (
     CitySerializer,
     BusinessTypeSerializer,
     LicenceTypeSerializer,
+    DepartmentSerializer,
     ChainOptionSerializer,
     AnydeskVersionSerializer,
     ServiceTypeSerializer,
@@ -80,6 +81,23 @@ class LicenceTypeViewSet(viewsets.ModelViewSet):
         new_name = instance.name
         if old_name != new_name:
             Company.objects.filter(licence_type=old_name).update(licence_type=new_name)
+
+
+class DepartmentViewSet(viewsets.ModelViewSet):
+    """
+    CRUD API for Departments directory (Запад, Алматы, etc.).
+    """
+    queryset = Department.objects.all().order_by('name')
+    serializer_class = DepartmentSerializer
+    permission_classes = (ReadOnlyForViewer,)
+    search_fields = ('name',)
+
+    def perform_update(self, serializer):
+        old_name = self.get_object().name
+        instance = serializer.save()
+        new_name = instance.name
+        if old_name != new_name:
+            Company.objects.filter(department=old_name).update(department=new_name)
 
 
 class CompanyPagination(pagination.PageNumberPagination):
@@ -167,6 +185,13 @@ class CompanyViewSet(viewsets.ModelViewSet):
             if licence_type_list:
                 qs = qs.filter(licence_type__in=licence_type_list)
 
+        # Filter by department (supports single or comma-separated multiple departments)
+        department_param = self.request.query_params.get('department')
+        if department_param:
+            department_list = [d.strip() for d in department_param.split(',') if d.strip()]
+            if department_list:
+                qs = qs.filter(department__in=department_list)
+
         # Filter by iiko_version
         versions_param = self.request.query_params.get('iiko_version')
         if versions_param:
@@ -218,6 +243,10 @@ class CompanyViewSet(viewsets.ModelViewSet):
             return qs.order_by('-place_name', '-id')
         elif ordering == 'city':
             return qs.order_by('city', 'place_name')
+        elif ordering == 'department':
+            return qs.order_by('department', 'place_name')
+        elif ordering == '-department':
+            return qs.order_by('-department', 'place_name')
         elif ordering in ('iiko_version', '-iiko_version'):
             from django.db import connection
             from django.db.models.expressions import RawSQL
@@ -272,6 +301,12 @@ class CompanyViewSet(viewsets.ModelViewSet):
         if not licence_types:
             licence_types = list(Company.objects.exclude(licence_type='').values_list('licence_type', flat=True).distinct().order_by('licence_type'))
 
+        departments = list(Department.objects.values_list('name', flat=True).order_by('name'))
+        if not departments:
+            departments = list(Company.objects.exclude(department='').values_list('department', flat=True).distinct().order_by('department'))
+        if not departments:
+            departments = ['Запад', 'Алматы', 'Шымкент', 'Астана', 'Караганды']
+
         raw_versions = set()
         for v in IikoDistribution.objects.values_list('iiko_version', flat=True):
             cleaned = clean_iiko_version(v)
@@ -310,6 +345,7 @@ class CompanyViewSet(viewsets.ModelViewSet):
 
         return Response({
             'cities': cities,
+            'departments': departments,
             'business_types': business_types,
             'licence_types': licence_types,
             'iiko_versions': iiko_versions,
